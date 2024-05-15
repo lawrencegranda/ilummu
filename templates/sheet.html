@@ -1,0 +1,33 @@
+<div id="spreadsheet-container">
+    <table id="spreadsheet-table" class="table">
+        <thead>
+            <tr>
+                {% for header in headings %}
+                <th class="text-center heading sheet-text">{{ header }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data %}
+            <tr>
+                <td class="align-items-center">
+                    <div class="rank">
+                        <h4 class="mb-0 text-center rank-text text_item_rank">{{ row[0] }}</h4>
+                    </div>
+                </td>
+                <td class="align-items-center">
+                    <h6 class="mb-0 text-center sheet-text text_item_name">{{ row[1] }}</h5>
+                </td>
+                <td class="text-center sheet-text text_item_grade">{{ row[2] }}</td>
+                <td class="text-center sheet-text text_item_points">{{ row[3] }}</td>
+                <td class="text-center sheet-text text_item_fundraiser">{{ row[4] }}</td>
+                <td class="text-center sheet-text text_item_volunteer">{{ row[5] }}</td>
+                <td class="text-center sheet-text text_item_lecture">{{ row[6] }}</td>
+                <td class="text-center sheet-text text_item_events">{{ row[7] }}</td>
+                <td class="text-center sheet-text text_item_tutoring">{{ row[8] }}</td>
+                <td class="text-center sheet-text text_item_attendance">{{ row[9] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
