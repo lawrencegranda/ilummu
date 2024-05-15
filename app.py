@@ -1,0 +1,14 @@
+from flask import Flask, render_template, request
+import time
+
+app = Flask(__name__)
+
+
+@app.route("/")
+def index():
+    return render_template("leaderboard.html")
+
+
+@app.route("/none", methods=["POST", "GET"])
+def category():
+    return None
