@@ -6,9 +6,9 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    return render_template("landing.html")
+    return render_template("dashboard.html")
 
 
 @app.route("/none", methods=["POST", "GET"])
 def category():
-    return None
+    return render_template("landing.html")
