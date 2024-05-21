@@ -244,13 +244,20 @@ label {
     border: none;
 }
 
+.btn:focus,
+.btn:active,
+.btn:hover,
+.btn:visited {
+    outline: none !important;
+    box-shadow: none;
+}
+
 .btn-primary {
     background-color: var(--blue--base);
     color: #fff;
 }
 
 .btn-primary:visited,
-.btn-primary:focus,
 .btn-primary:active,
 .btn-primary:hover {
     color: var(--blue--base) !important;
@@ -265,7 +272,6 @@ label {
 }
 
 .btn-dark:visited,
-.btn-dark:focus,
 .btn-dark:active,
 .btn-dark:hover {
     color: black !important;
@@ -274,6 +280,7 @@ label {
 
 .main-content {
     padding: 64px 5% 5vh;
+    position: relative;
 }
 
 #spacer1 {
@@ -377,6 +384,8 @@ label {
 }
 
 .footer {
+    position: relative;
+    z-index: 998;
     border-top: 1px solid var(--neutral--200);
     margin-top: 10px;
     width: 100%;
@@ -513,7 +522,6 @@ img.image-preview {
 }
 
 .add-button:visited,
-.add-button:focus,
 .add-button:active,
 .add-button:hover {
     background-color: white !important;
@@ -521,8 +529,143 @@ img.image-preview {
 }
 
 .add-button:visited .plus-add,
-.add-button:focus .plus-add,
 .add-button:active .plus-add,
 .add-button:hover .plus-add {
+    filter: invert(62%) sepia(29%) saturate(1717%) hue-rotate(176deg) brightness(94%) contrast(104%);
+}
+
+.problem-wrapper {
+    z-index: 997;
+    position: fixed;
+    top: 115px;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 1300px;
+    padding-left: 50px;
+    padding-right: 50px;
+    text-align: center;
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+.problem-container {
+    background-color: var(--neutral--300);
+    border-radius: 50px;
+    padding: 50px;
+    padding-top: 25px;
+    padding-bottom: 25px;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    height: 100%;
+}
+
+.problem-body {
+    background-color: transparent;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    height: 100%;
+    padding-top: 25px;
+    padding-bottom: 25px;
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.problem-body::-webkit-scrollbar {
+    display: none;
+}
+
+.problem-spacer {
+    position: absolute;
+    height: 6px;
+    opacity: 91%;
+    background-color: var(--neutral--300);
+    left: 0;
+    right: 0;
+}
+
+.initial-problem-spacer-top {
+    left: calc(50px + 50px);
+    right: calc(50px + 50px);
+    top: 25px;
+}
+
+.initial-problem-spacer-bottom {
+    left: calc(50px + 50px);
+    right: calc(50px + 50px);
+    bottom: 25px;
+}
+
+.position-top {
+    top: 6px;
+}
+
+.position-bottom {
+    bottom: 6px;
+}
+
+p.question-text {
+    font-size: 21px;
+    text-align: justify;
+    margin-bottom: 10px;
+}
+
+.problem-image {
+    object-fit: contain;
+    border: none;
+    border-radius: 20px;
+    margin: auto;
+    margin: 20px;
+    max-width: 60%;
+}
+
+.problem-bid {
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.minimize-button {
+    position: absolute;
+    z-index: 999;
+    top: 15px;
+    right: calc(50px + 15px);
+    min-width: 0;
+    min-height: 0;
+    width: 65px !important;
+    height: 65px !important;
+    background-color: none;
+    color: black;
+    border-radius: 80px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+    -webkit-tap-highlight-color: transparent !important;
+}
+
+.minimize-symbol {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.minimize-button:visited,
+.minimize-button:focus,
+.minimize-button:active,
+.minimize-button:hover {
+    background-color: transparent !important;
+    border: none !important;
+}
+
+.minimize-button:visited .minimize-symbol,
+.minimize-button:active .minimize-symbol,
+.minimize-button:hover .minimize-symbol {
     filter: invert(62%) sepia(29%) saturate(1717%) hue-rotate(176deg) brightness(94%) contrast(104%);
 }
