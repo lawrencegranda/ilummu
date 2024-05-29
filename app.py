@@ -11,7 +11,7 @@ def index():
 
 @app.route("/dash", methods=["POST", "GET"])
 def dashboard():
-    return render_template("dashboard2.html")
+    return render_template("dashboard.html")
 
 
 @app.route("/view", methods=["POST", "GET"])
