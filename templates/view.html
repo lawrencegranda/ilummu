@@ -4,14 +4,18 @@
     <meta charset="utf-8" />
     <title>Edify Dashboard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-    <!-- Main CSS file -->
-    <link rel="stylesheet" type="text/css" href="static/styles/styles.css">
     <meta content="width=device-width, initial-scale=1" name="viewport">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,100..900;1,100..900&family=Inter:wght@100..900&display=swap" rel="stylesheet">
+
+    <!-- Main CSS file -->
+    <link rel="stylesheet" type="text/css" href="static/styles/styles.css">
+
+    <!-- Main JS file -->
+    <script src="static/javascript/script_2024-03-19v3.js"></script>
   </head>
   <body>
     <div class="navbar">
@@ -27,8 +31,30 @@
         </div>
         <div class="navigation-right">
           <div class="navigation-button-wrap">
-            <button type="button" id="notification"><img class="image bell" src="static/bell.svg" alt=""/></button>
+            <button type="button" id="notification" onclick="toggleNotificationCenter()">
+              <img class="image bell" src="static/bell.svg" alt="" />
+            </button>
             <button class="btn btn-dark" type="button">Log Out</button>
+          </div>
+          <div id="notification-wrapper">
+            <div class="notification-center-dimensions notification-background"></div>
+            <div class="notification-center-dimensions notification-wrapper">
+              <div class="notification-center">
+                <p class="notifications-title">Notifcations</p>
+                <div class="notification">
+                  <p class="notification-text">An user replied to your comment.</p>
+                  <button class="btn btn-view" type="button">view</button>
+                </div>
+                <div class="notification">
+                  <p class="notification-text">An user commented on your question.</p>
+                  <button class="btn btn-view" type="button">view</button>
+                </div>
+                <div class="notification">
+                  <p class="notification-text">An user made an offer to help you.</p>
+                  <button class="btn btn-view" type="button">view</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -55,10 +81,6 @@
           <div class="offer-pair">
             <p class="offer-label">I have taken this class:</p>
             <input class="taken-class" type="checkbox">
-          </div>
-          <div class="offer-pair">
-            <p class="offer-label">Comments: </p>
-            <input type="text" class="offer-comment" placeholder="Type a comment..." name="text" class="form-control" autocomplete="off">
           </div>
           <div class="offer-pair">
             <p class="offer-label">Your fare: </p>
@@ -92,8 +114,7 @@
                       <button class="btn btn-reply" type="button">reply</button>
                     </div>
                   </div>
-                  <div class="replies-wrapper">
-                  </div>
+                  <div class="replies-wrapper"></div>
                 </div>
                 <div class="comment-container">
                   <div class="comment-wrapper">
@@ -114,8 +135,7 @@
                           <button class="btn btn-reply" type="button">reply</button>
                         </div>
                       </div>
-                      <div class="replies-wrapper">
-                      </div>
+                      <div class="replies-wrapper"></div>
                     </div>
                   </div>
                 </div>
