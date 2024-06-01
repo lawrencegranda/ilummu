@@ -26,6 +26,8 @@
 * {
     box-sizing: border-box;
     background-attachment: scroll !important;
+    outline: none !important;
+    box-shadow: none !important;
 }
 
 html {
@@ -257,7 +259,8 @@ label {
     transform: scale(1.05);
 }
 
-.btn-primary {
+.btn-primary,
+.btn-primary:focus {
     background-color: var(--blue--base);
     color: #fff;
 }
@@ -270,7 +273,8 @@ label {
     border: 2px solid var(--blue--base) !important;
 }
 
-.btn-dark {
+.btn-dark,
+.btn-dark:focus {
     color: black !important;
     background-color: #fff !important;
     border: none !important;
@@ -429,7 +433,8 @@ label {
     row-gap: 12px;
 }
 
-button.category {
+button.category,
+button.category:focus {
     text-align: left;
     height: fit-content;
     width: fit-content;
@@ -563,7 +568,8 @@ button.category.active {
     margin: 0;
 }
 
-.question-preview-button {
+.question-preview-button,
+.question-preview-button:not(.disabled):focus {
     height: min-content;
     width: min-content;
     padding: 7px;
@@ -587,7 +593,8 @@ button.category.active {
     border: 2px solid var(--blue--base) !important;
 }
 
-.question-preview-button.disabled {
+.question-preview-button.disabled,
+.question-preview-button.disabled:focus {
     opacity: 0.5;
     cursor: not-allowed;
     background-color: var(--neutral--400);
@@ -628,7 +635,8 @@ img.image-preview {
     border-radius: 30px;
 }
 
-.add-button {
+.add-button,
+.add-button:focus {
     position: fixed;
     z-index: 999;
     right: 30px;
@@ -717,6 +725,10 @@ img.image-preview {
     display: flex;
     flex-direction: column;
     row-gap: 20px;
+    border: none;
+    padding-bottom: 30px;
+    margin-bottom: 30px;
+    border-bottom: 2px solid var(--neutral--300);
 }
 
 .question-top {
@@ -727,6 +739,10 @@ img.image-preview {
 
 .question-right {
     width: fit-content;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    row-gap: 5px;
 }
 
 p.question-class {
@@ -750,15 +766,33 @@ p.question-status {
     padding: 25px;
     padding-top: 10px;
     padding-bottom: 10px;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
     border-radius: 500px;
-    border: none
+    border: none;
+    text-align: center;
+    margin: 0;
 }
 
 p.question-status.unsolved {
     background-color: var(--blue--base);
     color: white
+}
+
+
+.question-price {
+    width: 100%;
+    background-color: var(--neutral--300);
+    color: black;
+    padding: 25px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 500px;
+    text-align: center;
+    border: none;
+    margin: 0;
 }
 
 .question-bottom {
@@ -768,4 +802,193 @@ p.question-status.unsolved {
 p.question-text {
     font-size: 18px;
     margin: 0;
+}
+
+.question-comments {
+    height: max-content;
+    display: flex;
+    flex-direction: column;
+    row-gap: 20px;
+    border: none;
+}
+
+.comments-bar-container {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    column-gap: 15px;
+}
+
+.comments-list {
+    height: max-content;
+    display: flex;
+    flex-direction: column;
+    row-gap: 15px;
+    border: none;
+}
+
+.comment-wrapper {
+    position: relative;
+    background-color: var(--neutral--300);
+    border-radius: 25px;
+    padding: 20px;
+    border: none;
+}
+
+.comment-body {
+    width: auto;
+    height: max-content;
+    display: flex;
+    flex-direction: row;
+    column-gap: 20px;
+    border: none;
+    justify-content: space-between;
+    overflow: hidden;
+}
+
+p.comment-text {
+    max-width: calc(100% - 60px);
+    font-size: 17px;
+    margin: 0;
+}
+
+button.btn-reply,
+button.btn-reply:focus {
+    color: var(--neutral--400);
+    min-width: 0;
+    min-height: 0;
+    width: inherit !important;
+    height: fit-content;
+    padding: 0;
+    margin: 0;
+    font-weight: normal;
+}
+
+button.btn-reply:visited,
+button.btn-reply:active,
+button.btn-reply:hover {
+    color: var(--neutral--500);
+    font-weight: 500;
+}
+
+.replies-wrapper {
+    margin-top: 15px;
+    padding-left: 50px;
+    display: flex;
+    flex-direction: column;
+    border: none;
+    justify-content: flex-start;
+    overflow: hidden;
+}
+
+.offer-body {
+    padding-left: 15px;
+    display: flex;
+    flex-direction: column;
+    border: none;
+    justify-content: flex-start;
+    overflow: hidden;
+    padding-bottom: 30px;
+    margin-bottom: 30px;
+    border-bottom: 2px solid var(--neutral--300);
+}
+
+.offer-label {
+    font-weight: 500;
+    font-size: 18px;
+    margin: 0;
+    padding: 0;
+}
+
+.offer-pair {
+    display: flex;
+    flex-direction: row;
+    border: none;
+    justify-content: flex-start;
+    overflow: hidden;
+    column-gap: 25px;
+    height: 35px;
+}
+
+.taken-class {
+    margin-top: 5px;
+    margin-bottom: auto;
+    transform: scale(1.2);
+}
+
+.taken-class:checked {
+    accent-color: var(--blue--base);
+}
+
+.offer-comment {
+    height: 23px;
+    width: 150px;
+    border: 0px solid var(--neutral--600);
+    border-bottom-width: 1px;
+    background-color: transparent;
+    accent-color: none;
+    color: var(--neutral--500);
+}
+
+.offer-comment:active {
+    text-decoration: none;
+}
+
+.btn-offer {
+    margin-top: 10px;
+    height: 40px;
+    width: 150px;
+    font-size: 15px;
+    padding-top: auto;
+    padding-bottom: auto;
+}
+
+.offer-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+    margin-bottom: 15px;
+}
+
+#offer-fare,
+#offer-fare:focus {
+    height: 23px;
+    width: 170px;
+    accent-color: var(--blue--base);
+}
+
+#offer-fare:active,
+#offer-fare:hover,
+#offer-fare:visited {
+    accent-color: var(--blue--base);
+}
+
+.offer-value {
+    font-size: 16px;
+    margin: 0;
+    padding: 0;
+}
+
+#notification {
+    border: none;
+    background-color: transparent;
+    height: fit-content;
+    margin: 0;
+    padding: 0;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.bell {
+    height: 27px;
+}
+
+#notification:active,
+#notification:visited,
+#notification:hover {
+    filter: invert(62%) sepia(29%) saturate(1717%) hue-rotate(176deg) brightness(94%) contrast(104%);
+}
+
+#notification:active {
+    transform: scale(1.1);
 }
