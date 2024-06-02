@@ -1010,6 +1010,7 @@ button.btn-reply:hover {
 
 .notification-background {
     background-color: var(--neutral--300);
+    border: 3px solid rgb(255, 255, 255);
     opacity: 0.95;
 }
 
@@ -1064,4 +1065,91 @@ button.btn-view:active,
 button.btn-view:hover {
     color: var(--neutral--500);
     font-weight: 500;
+}
+
+.offer-list {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    row-gap: 20px;
+    padding-bottom: 30px;
+    margin-bottom: 30px;
+    border-bottom: 2px solid var(--neutral--300);
+}
+
+.offer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    column-gap: 20px;
+}
+
+.offer-left {}
+
+.offer-middle {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    row-gap: 7px;
+}
+
+.offer-right {
+    width: fit-content !important;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    column-gap: 0px;
+}
+
+.btn-my-offer {
+    height: 37px;
+    margin: 0;
+    min-width: 0;
+    width: fit-content;
+    padding: 12px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.btn-accept-offer {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    background-color: var(--blue--base);
+    border: 2px solid var(--blue--base);
+    border-right: none;
+    color: white;
+}
+
+.btn-decline-offer {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    background-color: var(--neutral--300);
+    border: 2px solid var(--neutral--300);
+    border-left: none;
+    color: black;
+}
+
+.btn-my-offer:visited,
+.btn-my-offer:active,
+.btn-my-offer:hover {
+    background-color: white;
+}
+
+.offer-label {
+    font-size: 17px;
+    margin-bottom: 5px;
+    font-weight: 500;
+    width: fit-content !important;
+}
+
+.offer-info {
+    font-size: 15px;
+    color: var(--neutral--500);
+    margin: 0;
+}
+
+.offer-details {
+    font-size: 15px;
+    color: var(--neutral--500);
+    margin: 0;
 }
