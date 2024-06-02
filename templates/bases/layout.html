@@ -13,11 +13,8 @@
 
     <body>
         <!-- Navbar -->
-        {% if logged %}
-            {% include 'bases/navbar-logged.html' %}
-        {% else %}
-            {% include 'bases/navbar-not-logged.html' %}
-        {% endif %}
+        {% block navbar %}
+        {% endblock %}
 
         <!-- Content -->
         <div class="container main-content">
