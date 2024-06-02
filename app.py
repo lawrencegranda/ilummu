@@ -17,3 +17,8 @@ def dashboard():
 @app.route("/view", methods=["POST", "GET"])
 def view():
     return render_template("view.html")
+
+
+@app.route("/view-owner", methods=["POST", "GET"])
+def view_owner():
+    return render_template("view-owner.html")
