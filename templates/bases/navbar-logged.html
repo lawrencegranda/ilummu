@@ -1,0 +1,41 @@
+<div class="navbar">
+    <div class="container navigation">
+        <div class="navigation-left">
+            <a class="brand" href="/">
+                <img class="image" src="https://assets-global.website-files.com/663e9d09bf17aecd0f01533c/663e9dd579b2ea25fbccac21_graduation-cap-svgrepo-com.svg" alt="" width="67" />
+            </a>
+            <div class="brand-name"> Edify </div>
+        </div>
+        <div class="navigation-center">
+            <input type="text" id="search-box" placeholder="Search for a question..." name="text" class="form-control" autocomplete="off">
+        </div>
+        <div class="navigation-right">
+            <div class="navigation-button-wrap">
+                <button type="button" id="notification" onclick="toggleNotificationCenter()">
+                    <img class="image bell" src="static/bell.svg" alt="" />
+                </button>
+                <button class="btn btn-dark" type="button">Log Out</button>
+            </div>
+            <div id="notification-wrapper" style="display: none;">
+                <div class="notification-center-dimensions notification-background"></div>
+                <div class="notification-center-dimensions notification-wrapper">
+                    <div class="notification-center">
+                        <p class="notifications-title">Notifcations</p>
+                        <div class="notification">
+                            <p class="notification-text">An user replied to your comment.</p>
+                            <button class="btn btn-view" type="button">view</button>
+                        </div>
+                        <div class="notification">
+                            <p class="notification-text">An user commented on your question.</p>
+                            <button class="btn btn-view" type="button">view</button>
+                        </div>
+                        <div class="notification">
+                            <p class="notification-text">An user made an offer to help you.</p>
+                            <button class="btn btn-view" type="button">view</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
