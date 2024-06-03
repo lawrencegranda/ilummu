@@ -12,7 +12,7 @@
 <div class="dashboard-container">
   <div class="dashboard-menu-container">
     <div class="dashboard-menu">
-      <button class="btn category all-majors">All Majors</button>
+      <button class="btn category all-majors">All Subjects</button>
       <button class="btn category">Mathematics</button>
       <button class="btn category">Computer Science</button>
       <button class="btn category">Engineering</button>
@@ -24,34 +24,30 @@
     </div>
   </div>
   <div class="grid">
-    <div class="element-box unsolved">
-      <div class="element-content-wrapper">
-        <div class="element-content">
-          <p class="question-preview-class">AEM 2200: Business Man and Org</p>
-          <p class="question-preview-solve-time">~5 min solve time</p>
-          <p class="question-preview-description"> How do I create a SWOT analysis? </p>
-        </div>
-        <div class="question-preview-side">
-          <p class="question-preview-time">2 min ago</p>
-          <div class="question-preview-price">+$2</div>
-          <button class="btn question-preview-button">ANSWER</button>
-        </div>
-      </div>
-    </div>
-    <div class="element-box solved">
-      <div class="element-content-wrapper">
-        <div class="element-content">
-          <p class="question-preview-class">CS 2800: Discrete Structures</p>
-          <p class="question-preview-solve-time">~15 min solve time</p>
-          <p class="question-preview-description"> How to I transition from a NFA to a DFA? </p>
-        </div>
-        <div class="question-preview-side">
-          <p class="question-preview-time">Yesterday</p>
-          <div class="question-preview-price">+$2.50</div>
-          <button class="btn question-preview-button disabled">ANSWER</button>
+    {% for q in questions %}
+      {% if q['solved'] %}
+      <div class="element-box solved">
+      {% else %}
+      <div class="element-box unsolved">
+      {% endif %}
+        <div class="element-content-wrapper" onclick="location.href='/question/{{q['id']}}';">
+          <div class="element-content">
+            <p class="question-preview-class">{{q['number']}}: {{q['name']}}</p>
+            <p class="question-preview-solve-time">~{{q['solve-time']}} min solve time</p>
+            <p class="question-preview-description">{{q['request']}}</p>
+          </div>
+          <div class="question-preview-side">
+            <p class="question-preview-time">{{q['time-ago']}}</p>
+            <div class="question-preview-price">+${{q['price']}}</div>
+            {% if q['solved'] %}
+            <button class="btn question-preview-button disabled">SOLVED</button>
+            {% else %}
+             <button class="btn question-preview-button">ANSWER</button>
+            {% endif %}
+          </div>
         </div>
       </div>
-    </div>
+    {% endfor %}
   </div>
 </div>
 {% endblock %}

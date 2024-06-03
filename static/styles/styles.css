@@ -290,12 +290,12 @@ label {
 }
 
 .main-content {
-    padding: 64px 5% 5vh;
+    padding: 40px 5% 40px;
     position: relative;
 }
 
 #spacer1 {
-    height: 50px;
+    height: 60px;
 }
 
 .header-content {
@@ -738,6 +738,7 @@ img.image-preview {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    column-gap: 15px;
 }
 
 .question-right {
@@ -826,7 +827,7 @@ p.question-text {
     height: max-content;
     display: flex;
     flex-direction: column;
-    row-gap: 15px;
+    row-gap: 0;
     border: none;
 }
 
@@ -929,8 +930,8 @@ button.btn-reply:hover {
     border: 0px solid var(--neutral--600);
     border-bottom-width: 1px;
     background-color: transparent;
-    accent-color: none;
     color: var(--neutral--500);
+    border-radius: 0;
 }
 
 .offer-comment:active {
@@ -945,6 +946,23 @@ button.btn-reply:hover {
     padding-top: auto;
     padding-bottom: auto;
 }
+
+.btn-offer.disabled,
+.btn-offer.disabled:focus {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: var(--neutral--400);
+    color: var(--neutral--300);
+}
+
+.btn-offer.disabled:visited,
+.btn-offer.disabled:active,
+.btn-offer.disabled:hover {
+    background-color: var(--neutral--400) !important;
+    color: var(--neutral--300) !important;
+    border: 2px solid transparent !important;
+}
+
 
 .offer-title {
     font-size: 20px;
@@ -1084,7 +1102,9 @@ button.btn-view:hover {
     column-gap: 20px;
 }
 
-.offer-left {}
+.offer-left {
+    width: 135px;
+}
 
 .offer-middle {
     display: flex;
@@ -1094,7 +1114,7 @@ button.btn-view:hover {
 }
 
 .offer-right {
-    width: fit-content !important;
+    width: 160px;
     display: flex;
     flex-direction: row;
     justify-content: flex-end;

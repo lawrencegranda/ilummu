@@ -13,87 +13,90 @@
   <div class="question-body">
     <div class="question-top">
       <div class="question-left">
-        <p class="question-class">CS 2110: Object Oriented Programming</p>
-        <p class="question-info">05.29.2024, 5:30pm &#x2022; Computer Science</p>
+        <p class="question-class">{{q['number']}}: {{q['name']}}</p>
+        <p class="question-info">{{q['date']}}, {{q['time']}} &#x2022; {{q['subject']}}</p>
       </div>
       <div class="question-right">
+        {% if q['solved'] %}
+        <p class="question-status solved">solved</p>
+        {% else %}
         <p class="question-status unsolved">unsolved</p>
-        <div class="question-price">+$2.00</div>
+        {% endif %}
+        <div class="question-price">+${{q['price']}}</div>
       </div>
     </div>
     <div class="question-bottom">
-      <p class="question-text"> How do I do a SWAT analysis? </p>
+      <p class="question-text">{{q['request']}}</p>
     </div>
   </div>
+  {% if q['solved'] %}
+  {% elif is_author %}
+  <p class="offer-title">Your offers:</p>
+  <div class="offer-list">
+    {% for offer in offers  %}
+    <div class="offer">
+      <div class="offer-left">
+        <p class="offer-label">Offer for ${{offer['amount']}}</p>
+      </div>
+      <div class="offer-middle">
+        <p class="offer-info">
+          <b>Major:</b> {{offer['major']}} &#x2022; <b>Year:</b> {{offer['year']}}
+        </p>
+        <p class="offer-details">
+          <b>Comments:</b> {{offer['comments']}}
+        </p>
+      </div>
+      <div class="offer-right">
+        <button class="btn btn-my-offer btn-accept-offer" type="button">accept</button>
+        <button class="btn btn-my-offer btn-decline-offer" type="button">decline</button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
   <p class="offer-title">Make an offer!</p>
   <div class="offer-body">
     <div class="offer-pair">
       <p class="offer-label">I have taken this class:</p>
-      <input class="taken-class" type="checkbox">
+      <input id="offer-taken-class" class="taken-class" type="checkbox"/>
     </div>
     <div class="offer-pair">
       <p class="offer-label">Comments: </p>
-      <input type="text" class="form-control offer-comment" placeholder="Type a comment..." name="text" autocomplete="off">
+      <input id="send-offer-comment" type="text" class="form-control offer-comment" placeholder="Type a comment..." name="text" autocomplete="off"/>
     </div>
     <div class="offer-pair">
       <p class="offer-label">Your fare: </p>
-      <input type="range" class="form-range" id="offer-fare" value="2.00" min="2.00" max="15.00" step="0.25" oninput="this.nextElementSibling.value = '$'+this.value">
-      <output class="offer-value">$2</output>
+      <input type="range" class="form-range" id="offer-fare" value="{{q['price']}}" min="{{q['price']}}" max="15.00" step="0.25" oninput="this.nextElementSibling.value = '$'+this.value"/>
+      <output class="offer-value">${{q['price']}}</output>
     </div>
-    <button class="btn btn-primary btn-offer" type="button">Send Offer!</button>
+    <button id="button-send-offer" class="btn btn-primary btn-offer" type="button">Send Offer!</button>
   </div>
+  {% endif %}
   <div class="question-comments">
+    {% if not q['solved'] %}
     <div class="comments-bar-container">
-      <input type="text" id="search-box" placeholder="Type a comment..." name="text" class="form-control" autocomplete="off">
+      <input type="text" id="search-box" placeholder="Type a comment..." name="text" class="form-control" autocomplete="off"/>
       <button class="btn btn-primary" type="button">Submit</button>
     </div>
+    {% endif %}
     <div class="comments-list">
+      {% for c in comments recursive %}
       <div class="comment-container">
         <div class="comment-wrapper">
           <div class="comment-body">
             <p class="comment-text">
-              <b>User: </b>What is your preferred platform?
+              <b>{{c['user']}}:</b> {{c['message']}}
             </p>
             <button class="btn btn-reply" type="button">reply</button>
           </div>
         </div>
         <div class="replies-wrapper">
-          <div class="comment-container">
-            <div class="comment-wrapper">
-              <div class="comment-body">
-                <p class="comment-text">
-                  <b>Author: </b>Zoom is fine.
-                </p>
-                <button class="btn btn-reply" type="button">reply</button>
-              </div>
-            </div>
-            <div class="replies-wrapper"></div>
-          </div>
-          <div class="comment-container">
-            <div class="comment-wrapper">
-              <div class="comment-body">
-                <p class="comment-text">
-                  <b>Author: </b>Actually, anything works.
-                </p>
-                <button class="btn btn-reply" type="button">reply</button>
-              </div>
-            </div>
-            <div class="replies-wrapper">
-              <div class="comment-container">
-                <div class="comment-wrapper">
-                  <div class="comment-body">
-                    <p class="comment-text">
-                      <b>User: </b>Perfect!
-                    </p>
-                    <button class="btn btn-reply" type="button">reply</button>
-                  </div>
-                </div>
-                <div class="replies-wrapper"></div>
-              </div>
-            </div>
-          </div>
+          {% if c['children'] %}
+            {{ loop(c['children']) }}
+          {% endif %}
         </div>
       </div>
+      {% endfor %}
     </div>
   </div>
 </div>
