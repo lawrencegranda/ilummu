@@ -1,30 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 
-    <head>
-        <meta charset="utf-8" />
-        <title>Edify: {% block title %}{% endblock %}</title>
+<head>
+	<meta charset="utf-8" />
+	<title>Edify: {% block title %}{% endblock %}</title>
+	
+	<!-- Styles -->
+	{% include 'bases/headers.html' %}
+	
+</head>
 
-        <!-- Styles -->
-        {% include 'bases/headers.html' %}
 
-    </head>
-
-
-    <body>
-        <!-- Navbar -->
-        {% block navbar %}
-        {% endblock %}
-
-        <!-- Content -->
-        <div class="container main-content">
-            {% block content %}
-            {% endblock %}
-        </div>
-
-        <!-- Footer -->
-        {% include 'bases/footer.html' %}
-
-    </body>
+<body>
+	<!-- Navbar -->
+	{% block navbar %}
+	{% endblock %}
+	
+	<!-- Content -->
+	<div class="container main-content">
+		{% block content %}
+		{% endblock %}
+	</div>
+	
+	<!-- Footer -->
+	{% include 'bases/footer.html' %}
+	
+</body>
 
 </html>
