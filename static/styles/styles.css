@@ -175,8 +175,8 @@ label {
 
 .container {
     padding: 0;
-    padding-left: 50px;
-    padding-right: 50px;
+    padding-left: 5%;
+    padding-right: 5%;
     margin-left: auto;
     margin-right: auto;
     max-width: 1300px;
@@ -355,8 +355,17 @@ label {
 }
 
 .main-content {
-    padding: 40px 5% 40px;
+    padding-top: 40px;
+    padding-bottom: 40px;
     position: relative;
+    min-height: calc(100vh - 90px - 67px);
+}
+
+@media only screen and (min-width: 0px) and (max-width: 700px) {
+    .main-content {
+        padding-top: 25px;
+        padding-bottom: 25px;
+    }
 }
 
 #spacer1 {
@@ -447,7 +456,7 @@ label {
     position: relative;
     z-index: 998;
     border-top: 1px solid var(--neutral--200);
-    margin-top: 10px;
+    /* margin-top: 10px; */
     width: 100%;
     background-color: #fff;
 }
@@ -806,23 +815,43 @@ img.image-preview {
     z-index: 999;
     right: 30px;
     bottom: 30px;
-    min-width: 0;
-    min-height: 0;
-    width: 70px !important;
-    height: 70px !important;
+    min-width: 50px;
+    min-height: 50px;
+    height: max(5vw, 5vh);
+    width: max(5vw, 5vh);
+    max-width: 70px;
+    max-height: 70px;
     background-color: var(--blue--base);
     color: black;
     border-radius: 80px;
-    align-items: center;
-    justify-content: center;
     text-align: center;
-    padding: 20px;
+    vertical-align: middle;
+    padding: 10px;
+    border: 1px solid white !important;
 }
 
 .plus-add {
-    max-width: 100%;
-    max-height: 100%;
+    min-width: 26px;
+    min-height: 26px;
+    height: 75%;
+    width: 75%;
     filter: invert(100%);
+}
+
+@media only screen and (max-aspect-ratio: 3/5) {
+
+    .add-button,
+    .add-button:focus {
+        min-width: 0;
+        min-height: 50px;
+        max-width: 1300px;
+        max-height: none;
+        width: auto;
+        height: 4vh;
+        left: 5%;
+        right: 5%;
+        bottom: 10px;
+    }
 }
 
 .add-button:visited,
@@ -882,7 +911,6 @@ img.image-preview {
     border-radius: 25px;
     padding: 40px;
     border: 2px solid var(--neutral--300);
-    min-height: 80vh;
 }
 
 .question-body {
@@ -1295,6 +1323,61 @@ button.btn-reply:hover {
     padding: 30px;
     overflow: hidden;
 }
+
+@media only screen and (min-width: 0px) and (max-width: 500px) {
+    .notification-center-dimensions {
+        width: calc(100vw - 100px);
+        height: calc(100vh - 80px);
+        top: 50px;
+    }
+}
+
+@media only screen and (min-width: 0px) and (max-width: 450px) {
+    .notification-center-dimensions {
+        top: 60px;
+        position: fixed;
+        right: 20px;
+        left: 20px;
+        width: auto;
+    }
+}
+
+@media only screen and (min-width: 501px) and (max-width: 700px) {
+    .notification-center-dimensions {
+        top: 90px;
+    }
+}
+
+@media only screen and (min-width: 1710px) {
+    .container {
+        width: 1710px;
+        max-width: none;
+        padding-left: 60px;
+        padding-right: 60px;
+    }
+
+    .main-content {
+        width: 1300px;
+        margin-left: calc(calc(100vw - 1300px - 350px - 60px) / 2);
+    }
+
+    .notification-center-dimensions {
+        position: fixed;
+        top: 130px;
+        width: 350px;
+        left: calc(1300px + calc(calc(100vw - 1300px - 350px - 60px) / 2));
+    }
+
+    #notification-wrapper {
+        display: block !important;
+    }
+
+    #notification {
+        display: none;
+    }
+}
+
+
 
 .notification-background {
     background-color: var(--neutral--300);
