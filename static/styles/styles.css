@@ -159,15 +159,6 @@ label {
     margin-bottom: 5px
 }
 
-.container {
-    padding: 0;
-    padding-left: 50px;
-    padding-right: 50px;
-    margin-left: auto;
-    margin-right: auto;
-    max-width: 1300px;
-}
-
 .navbar {
     background-color: #fff;
     border-bottom: 1px solid var(--neutral--200);
@@ -182,12 +173,43 @@ label {
     height: 90px;
 }
 
+.container {
+    padding: 0;
+    padding-left: 50px;
+    padding-right: 50px;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 1300px;
+}
+
+.navigation {
+    position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    /* column-gap: 15px; */
+}
+
 .navigation-left {
     align-items: center;
     display: flex;
     justify-content: flex-start;
-    width: 33%;
-    width: calc(100 / 3);
+    width: 30%;
+    min-width: 125px;
+}
+
+.navigation-center {
+    align-items: center;
+    display: flex;
+    justify-content: space-around;
+    width: 40%;
+}
+
+#search-box {
+    height: 38px;
+    border-radius: 30px;
+    width: 100%;
 }
 
 .navigation-right {
@@ -195,8 +217,8 @@ label {
     align-items: center;
     display: flex;
     justify-content: flex-end;
-    width: 33%;
-    width: calc(100 / 3);
+    width: 30%;
+    min-width: 125px;
 }
 
 .navigation-button-wrap {
@@ -233,10 +255,45 @@ label {
     transform: rotate(calc(4 * 180deg));
 }
 
+.brand-image {
+    width: 67px;
+}
+
 .brand-name {
-    margin-left: 2vw;
+    margin-left: 20px;
     font-family: "Lato", sans-serif;
     font-size: 25px;
+}
+
+@media only screen and (min-width: 0px) and (max-width: 700px) {
+    .navbar {
+        height: 115px;
+    }
+
+    .navigation-center {
+        top: 55px;
+        position: absolute;
+        align-items: center;
+        width: 100%;
+    }
+
+    #search-box {
+        font-size: 0.9rem;
+        height: 35px;
+    }
+
+    .brand-image {
+        width: 50px;
+    }
+
+    .brand-name {
+        font-size: 22px;
+    }
+
+
+    .bell {
+        height: 22px !important;
+    }
 }
 
 .btn {
@@ -247,6 +304,14 @@ label {
     font-size: 15px;
     transition: 300ms;
     border: none;
+}
+
+@media only screen and (min-width: 0px) and (max-width: 800px) {
+    .btn {
+        min-width: 80px;
+        height: 38px;
+        font-size: 14px;
+    }
 }
 
 .btn:focus,
@@ -436,6 +501,33 @@ label {
     row-gap: 12px;
 }
 
+.dashboard-menu-container-small {
+    display: none;
+    width: 100%;
+    margin-bottom: 25px;
+}
+
+.dashboard-menu-small {
+    border-radius: 20px;
+    background-color: var(--neutral--300);
+    border: none;
+    padding: 10px;
+    padding-left: 15px;
+    padding-right: 15px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#category-selector {
+    border-radius: 0;
+    background-color: transparent;
+    border: none;
+    width: 100%;
+    font-size: 16px;
+    font-weight: 500;
+}
+
 button.category,
 button.category:focus {
     text-align: left;
@@ -493,6 +585,27 @@ button.category.active {
     color: black;
     border: 2px solid var(--neutral--300);
     overflow: hidden;
+}
+
+@media only screen and (min-width: 0px) and (max-width: 800px) {
+
+    .dashboard-menu-container {
+        display: none;
+    }
+
+    .dashboard-menu-container-small {
+        display: block;
+    }
+
+    .grid {
+        padding: 0;
+        width: 100%;
+        margin: 0;
+    }
+
+    .element-box {
+        margin: 0;
+    }
 }
 
 .element-box:hover {
@@ -620,22 +733,71 @@ button.category.active {
     border-left: 10px solid var(--neutral--400)
 }
 
+@media only screen and (min-width: 0px) and (max-width: 800px) {
+    .question-preview-class {
+        font-size: 18px;
+    }
+
+    .question-preview-solve-time {
+        font-size: 14px;
+    }
+
+    .question-preview-description {
+        font-size: 15px;
+    }
+
+    .question-preview-time {
+        font-size: 13px;
+    }
+
+    .question-preview-price {
+        margin: 0;
+        min-width: 50px;
+        padding: 10px;
+        padding-left: 13px;
+        padding-right: 13px;
+        font-size: 13px;
+    }
+
+    .question-preview-button {
+        font-size: 13px;
+    }
+
+    .element-box {
+        width: 100%;
+        height: 220px;
+    }
+
+    .element-content-wrapper {
+        width: 100%;
+        height: 170px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .element-content {
+        height: 120px;
+        overflow: hidden;
+    }
+
+    .question-preview-side {
+        height: 50px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        text-align: center;
+        overflow: hidden;
+        align-items: center;
+    }
+
+}
+
 img.image-preview {
     object-fit: contain;
     border: none;
     border-radius: 20px;
-}
-
-.navigation-center {
-    align-items: center;
-    display: flex;
-    justify-content: flex-end;
-    width: 33%;
-    width: calc(100 / 3);
-}
-
-#search-box {
-    border-radius: 30px;
 }
 
 .add-button,
@@ -816,6 +978,43 @@ p.question-text {
     border: none;
 }
 
+@media only screen and (min-width: 0px) and (max-width: 800px) {
+    .question-top {
+        display: flex;
+        flex-direction: column;
+        row-gap: 15px;
+        flex-direction: column;
+    }
+
+    .question-right {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        column-gap: 20px;
+    }
+
+    p.question-class {
+        font-size: 18px;
+    }
+
+    p.question-info {
+        font-size: 16px;
+    }
+
+    p.question-status {
+        font-size: 13px;
+    }
+
+    .question-price {
+        font-size: 13px;
+    }
+
+    p.question-text {
+        font-size: 16px;
+    }
+}
+
 .comments-bar-container {
     width: 100%;
     display: flex;
@@ -854,6 +1053,30 @@ p.comment-text {
     max-width: calc(100% - 60px);
     font-size: 17px;
     margin: 0;
+}
+
+
+#comment-box {
+    height: 38px;
+    border-radius: 30px;
+    width: 100%;
+}
+
+@media only screen and (min-width: 0px) and (max-width: 800px) {
+    .comment-wrapper {
+        border-radius: 20px;
+        padding: 15px;
+    }
+
+    p.comment-text {
+        max-width: calc(100% - 55px);
+        font-size: 14px;
+    }
+
+    #comment-box {
+        font-size: 0.9rem;
+        height: 38px;
+    }
 }
 
 button.btn-reply,
@@ -897,9 +1120,9 @@ button.btn-reply:hover {
     border-bottom: 2px solid var(--neutral--300);
 }
 
-.offer-label {
+.make-offer-label {
     font-weight: 500;
-    font-size: 18px;
+    font-size: 17px;
     margin: 0;
     padding: 0;
 }
@@ -940,11 +1163,7 @@ button.btn-reply:hover {
 
 .btn-offer {
     margin-top: 10px;
-    height: 40px;
     width: 150px;
-    font-size: 15px;
-    padding-top: auto;
-    padding-bottom: auto;
 }
 
 .btn-offer.disabled,
@@ -962,7 +1181,6 @@ button.btn-reply:hover {
     color: var(--neutral--300) !important;
     border: 2px solid transparent !important;
 }
-
 
 .offer-title {
     font-size: 20px;
@@ -988,6 +1206,58 @@ button.btn-reply:hover {
     font-size: 16px;
     margin: 0;
     padding: 0;
+}
+
+@media only screen and (min-width: 0px) and (max-width: 470px) {
+    .offer-title {
+        font-size: 19px;
+    }
+
+    .offer-body {
+        row-gap: 20px;
+    }
+
+    .offer-pair {
+        justify-content: space-between;
+        flex-wrap: wrap;
+        height: fit-content;
+
+    }
+
+    .offer-comment {
+        margin-top: 10px;
+        width: 100%;
+    }
+
+    .taken-class {
+        margin-right: 2px;
+        margin-top: 12px;
+        margin-left: 2px;
+        margin-bottom: 2px;
+    }
+
+    .btn-offer {
+        margin: 0;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    #offer-fare {
+        margin-top: 10px;
+        min-width: 0;
+        width: calc(100% - 80px);
+    }
+
+    .offer-value {
+        margin-top: 10px;
+        font-size: 16px;
+    }
+
+    .make-offer-label {
+        margin-top: 10px;
+        font-size: 16px;
+    }
+
 }
 
 #notification {
@@ -1172,4 +1442,45 @@ button.btn-view:hover {
     font-size: 15px;
     color: var(--neutral--500);
     margin: 0;
+}
+
+@media only screen and (min-width: 0px) and (max-width: 470px) {
+    .offer-list {
+        row-gap: 30px;
+    }
+
+    .offer {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        row-gap: 10px;
+    }
+
+    .offer-left {
+        width: auto;
+    }
+
+    .offer-middle {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        row-gap: 7px;
+    }
+
+    .offer-right {
+        width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+        justify-content: center;
+    }
+
+    .offer-label {
+        font-size: 16px;
+        margin: 0;
+    }
+
+    .offer-info,
+    .offer-details {
+        font-size: 15px;
+    }
 }
