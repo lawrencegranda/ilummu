@@ -12,7 +12,7 @@ def get_questions():
         "number": "AEM 2200",
         "name": "Business Man and Org",
         "solve-time": 25,
-        "request": "How do I create a SWOT analysis",
+        "request": "How do I create a SWOT analysis?",
         "date": "06.02.2024",
         "time": "5:28pm",
         "time-ago": "2 min ago",
@@ -249,9 +249,12 @@ def fetch_question(id_qstn):
             question = qstn
             break
 
+    if question is None:
+        return "Question not found", 400
+
     comments = get_comments()
 
-    is_author = False
+    is_author = True
     offers = []
     if is_author:
         offers = get_offers()

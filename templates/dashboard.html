@@ -23,6 +23,21 @@
       <button class="btn category">Other</button>
     </div>
   </div>
+  <div class="dashboard-menu-container-small">
+    <div class="dashboard-menu-small">
+      <select name="category-selector" id="category-selector">
+        <option class="select-category" value="all-majors">All Subjects</option>
+        <option class="select-category" value="mathematics">Mathematics</option>
+        <option class="select-category" value="computer-science">Computer Science</option>
+        <option class="select-category" value="engineering">Engineering</option>
+        <option class="select-category" value="biology">Biology</option>
+        <option class="select-category" value="chemistry">Chemistry</option>
+        <option class="select-category" value="aem">AEM</option>
+        <option class="select-category" value="economics">Economics</option>
+        <option class="select-category" value="other">Other</option>
+      </select>
+    </div>
+  </div>
   <div class="grid">
     {% for q in questions %}
       {% if q['solved'] %}
