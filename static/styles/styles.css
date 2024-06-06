@@ -51,6 +51,22 @@ img {
     vertical-align: middle
 }
 
+input[type='text'] {
+    display: block;
+    width: 100%;
+    height: calc(1.5em + .75rem + 2px);
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: .25rem;
+    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}
+
 article,
 aside,
 details,
@@ -147,7 +163,6 @@ h6 {
 }
 
 p {
-    /* color: var(--neutral--600); */
     color: black;
     font-size: 25px;
     margin-bottom: 12px;
@@ -188,7 +203,6 @@ label {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    /* column-gap: 15px; */
 }
 
 .navigation-left {
@@ -263,10 +277,15 @@ label {
     margin-left: 20px;
     font-family: "Lato", sans-serif;
     font-size: 25px;
+    cursor: pointer;
 }
 
 @media only screen and (min-width: 0px) and (max-width: 700px) {
     .navbar {
+        height: 75px;
+    }
+
+    .navbar.logged {
         height: 115px;
     }
 
@@ -301,16 +320,16 @@ label {
     min-width: 90px;
     height: 42px;
     font-weight: 500;
-    font-size: 15px;
+    font-size: 14px;
     transition: 300ms;
     border: none;
 }
 
 @media only screen and (min-width: 0px) and (max-width: 800px) {
     .btn {
-        min-width: 80px;
+        min-width: 85px;
         height: 38px;
-        font-size: 14px;
+        font-size: 13px;
     }
 }
 
@@ -328,8 +347,9 @@ label {
 
 .btn-primary,
 .btn-primary:focus {
+    border: 2px solid white !important;
     background-color: var(--blue--base);
-    color: #fff;
+    color: white;
 }
 
 .btn-primary:visited,
@@ -380,7 +400,6 @@ label {
 .headline {
     color: var(--blue--base);
     margin-bottom: 20px;
-    /* font-size: 30px; */
     font-weight: 600;
 }
 
@@ -468,6 +487,7 @@ label {
     width: 100%;
 }
 
+
 .row-flex {
     align-items: center;
     display: flex;
@@ -477,6 +497,75 @@ label {
 
 .full {
     width: 100%;
+}
+
+
+@media only screen and (min-width: 0px) and (max-width: 500px) {
+    #spacer1 {
+        height: 20px;
+    }
+
+    h1 {
+        font-size: 50px;
+    }
+
+    h2 {
+        font-size: 40px;
+    }
+
+    h3 {
+        font-size: 28px;
+    }
+
+    h4 {
+        font-size: 24px;
+    }
+
+    h5 {
+        font-size: 21px;
+    }
+
+    h6 {
+        font-size: 20px;
+    }
+
+    p {
+        font-size: 19px;
+    }
+
+    .headline {
+        margin-bottom: 10px;
+    }
+
+    .header-content {
+        margin-bottom: 0;
+    }
+
+    .container-regular {
+        grid-row-gap: 20px;
+    }
+
+    #instructions {
+        margin-top: 40px;
+        align-self: auto;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        min-height: 0;
+    }
+
+    #instructions>.third.column {
+        width: 100%;
+        min-height: 200px;
+        border: none;
+    }
+
+    #instructions>.third.column.center-column {
+        border-bottom: 1px solid var(--neutral--200);
+        border-top: 1px solid var(--neutral--200);
+    }
+
 }
 
 .dashboard-container {
@@ -491,7 +580,7 @@ label {
 .dashboard-menu-container {
     position: relative;
     align-self: flex-start;
-    width: min(350px, 33%);
+    width: max(270px, min(325px, 33%));
     height: fit-content;
     background-color: transparent;
     padding: 0;
@@ -501,7 +590,7 @@ label {
     top: 0;
     border-radius: 40px;
     height: fit-content;
-    padding: 40px;
+    padding: 30px;
     background-color: var(--neutral--300);
     align-items: self-start;
     display: flex;
@@ -514,6 +603,8 @@ label {
     display: none;
     width: 100%;
     margin-bottom: 25px;
+    flex-direction: row;
+    column-gap: 5px;
 }
 
 .dashboard-menu-small {
@@ -528,7 +619,23 @@ label {
     margin-right: auto;
 }
 
-#category-selector {
+.method-selector-container {
+    border-radius: 20px;
+    background-color: white;
+    border: none;
+    padding: 10px;
+    padding-left: 12px;
+    padding-right: 12px;
+    width: 100%;
+}
+
+
+.method-selector-container>#method-selector {
+    font-size: 17px;
+}
+
+#category-selector,
+#method-selector {
     border-radius: 0;
     background-color: transparent;
     border: none;
@@ -543,7 +650,7 @@ button.category:focus {
     height: fit-content;
     width: fit-content;
     max-width: none;
-    min-width: none;
+    min-width: 0;
     font-size: 18px;
     font-weight: normal;
     background-color: transparent;
@@ -551,6 +658,17 @@ button.category:focus {
     border: none;
     transition: 300ms;
 
+}
+
+button.category.selected {
+    background-color: transparent;
+    color: black;
+    font-weight: 600;
+}
+
+button.category.selected:before {
+    content: "\2022";
+    margin-right: 5px;
 }
 
 button.category:visited,
@@ -562,17 +680,11 @@ button.category:hover {
     font-weight: 600;
 }
 
-button.category.active {
-    background-color: transparent;
-    color: black;
-    font-weight: 600;
-}
 
 .grid {
     align-self: flex-end;
     padding-left: 20px;
-    min-width: 66%;
-    width: calc(100% - min(350px, 33%));
+    width: calc(100% - max(270px, min(325px, 33%)));
     align-items: center;
     display: flex;
     flex-wrap: wrap;
@@ -603,7 +715,7 @@ button.category.active {
     }
 
     .dashboard-menu-container-small {
-        display: block;
+        display: flex;
     }
 
     .grid {
@@ -656,8 +768,8 @@ button.category.active {
     margin-bottom: 3px;
 }
 
-.question-preview-solve-time {
-    font-size: 15px;
+.question-preview-info {
+    font-size: 14.5px;
     color: var(--neutral--400);
     text-align: left;
     font-weight: 600;
@@ -742,12 +854,39 @@ button.category.active {
     border-left: 10px solid var(--neutral--400)
 }
 
-@media only screen and (min-width: 0px) and (max-width: 800px) {
+@media only screen and (min-width: 0px) and (max-width: 650px) {
     .question-preview-class {
         font-size: 18px;
     }
 
-    .question-preview-solve-time {
+    .question-preview-info {
+        font-size: 14px;
+    }
+
+    .question-preview-description {
+        font-size: 15px;
+    }
+
+    .question-preview-time {
+        font-size: 13px;
+    }
+
+    .question-preview-price {
+        font-size: 13px;
+    }
+
+    .question-preview-button {
+        font-size: 13px;
+    }
+
+}
+
+@media only screen and (min-width: 0px) and (max-width: 550px) {
+    .question-preview-class {
+        font-size: 18px;
+    }
+
+    .question-preview-info {
         font-size: 14px;
     }
 
@@ -800,7 +939,6 @@ button.category.active {
         overflow: hidden;
         align-items: center;
     }
-
 }
 
 img.image-preview {
@@ -817,8 +955,8 @@ img.image-preview {
     bottom: 30px;
     min-width: 50px;
     min-height: 50px;
-    height: max(5vw, 5vh);
-    width: max(5vw, 5vh);
+    height: max(6vw, 6vh);
+    width: max(6vw, 6vh);
     max-width: 70px;
     max-height: 70px;
     background-color: var(--blue--base);
@@ -953,6 +1091,14 @@ p.question-info {
     margin: 0;
 }
 
+p.question-method {
+    font-size: 18px;
+    font-weight: normal;
+    color: var(--neutral--400);
+    margin: 0;
+    margin-top: 7px;
+}
+
 p.question-status {
     width: 100%;
     background-color: var(--neutral--300);
@@ -1027,6 +1173,10 @@ p.question-text {
     }
 
     p.question-info {
+        font-size: 16px;
+    }
+
+    p.question-method {
         font-size: 16px;
     }
 
@@ -1107,6 +1257,41 @@ p.comment-text {
     }
 }
 
+.comment-area {
+    border: 1px solid var(--neutral--300);
+    margin-top: 5px;
+    border-radius: 25px;
+    padding: 10px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px;
+    overflow: hidden;
+}
+
+.comment-textbox,
+textarea.form-control {
+    border: none;
+    font-size: 0.8rem;
+    height: 6rem;
+    min-height: 3rem;
+    max-height: 60vh;
+}
+
+.comment-area-button-container {
+    display: flex;
+    flex-direction: row;
+    column-gap: 5px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.btn-cancel-comment,
+.btn-submit-comment {
+    font-size: 12px;
+}
+
+
 button.btn-reply,
 button.btn-reply:focus {
     color: var(--neutral--400);
@@ -1128,7 +1313,7 @@ button.btn-reply:hover {
 
 .replies-wrapper {
     margin-top: 15px;
-    padding-left: 50px;
+    padding-left: 25px;
     display: flex;
     flex-direction: column;
     border: none;
@@ -1327,7 +1512,7 @@ button.btn-reply:hover {
 @media only screen and (min-width: 0px) and (max-width: 500px) {
     .notification-center-dimensions {
         width: calc(100vw - 100px);
-        height: calc(100vh - 80px);
+        height: calc(100vh - 125px);
         top: 50px;
     }
 }
