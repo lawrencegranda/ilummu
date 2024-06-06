@@ -8,18 +8,18 @@
 				<div class="brand-name" onclick="location.href='/';"> Edify </div>
 			</div>
 			<div class="navigation-center">
-				<input type="text" id="search-box" placeholder="Search for a question..." name="text" class="form-control" autocomplete="off">
+				<input type="text" id="search-box" placeholder="Search for a question..." name="text" autocomplete="off"/>
 			</div>
 			<div class="navigation-right">
 				<div class="navigation-button-wrap">
-					<button type="button" id="notification" onclick="toggleNotificationCenter()">
+					<button type="button" id="notification">
 						<img class="image bell" src="/static/bell.svg" alt="" />
 					</button>
 					<button class="btn btn-dark" type="button">Log Out</button>
 				</div>
 				<div id="notification-wrapper" style="display: none;">
 					<div class="notification-center-dimensions notification-background"></div>
-					<div class="notification-center-dimensions notification-wrapper">
+					<div class="notification-center-dimensions">
 						<div class="notification-center">
 							<p class="notifications-title">Notifcations</p>
 							{% for notification in notifications %}

@@ -12,7 +12,15 @@
 <div class="dashboard-container">
   <div class="dashboard-menu-container">
     <div class="dashboard-menu">
-      <button class="btn category all-majors">All Subjects</button>
+      <div class="method-selector-container">
+        <select name="method-selector" id="method-selector">
+          <option value="any-method">Any Method</option>
+          <option value="text-message">Text Message</option>
+          <option value="voice-call">Voice Call</option>
+          <option value="video-calll-science">Video Call</option>
+        </select>
+      </div>
+      <button class="btn category all-subjects selected">All Subjects</button>
       <button class="btn category">Mathematics</button>
       <button class="btn category">Computer Science</button>
       <button class="btn category">Engineering</button>
@@ -26,15 +34,23 @@
   <div class="dashboard-menu-container-small">
     <div class="dashboard-menu-small">
       <select name="category-selector" id="category-selector">
-        <option class="select-category" value="all-majors">All Subjects</option>
-        <option class="select-category" value="mathematics">Mathematics</option>
-        <option class="select-category" value="computer-science">Computer Science</option>
-        <option class="select-category" value="engineering">Engineering</option>
-        <option class="select-category" value="biology">Biology</option>
-        <option class="select-category" value="chemistry">Chemistry</option>
-        <option class="select-category" value="aem">AEM</option>
-        <option class="select-category" value="economics">Economics</option>
-        <option class="select-category" value="other">Other</option>
+        <option value="all-subjects">All Subjects</option>
+        <option value="mathematics">Mathematics</option>
+        <option value="computer-science">Computer Science</option>
+        <option value="engineering">Engineering</option>
+        <option value="biology">Biology</option>
+        <option value="chemistry">Chemistry</option>
+        <option value="aem">AEM</option>
+        <option value="economics">Economics</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="dashboard-menu-small">
+      <select name="method-selector" id="method-selector">
+        <option value="any-method">Any Method</option>
+        <option value="text-message">Text Message</option>
+        <option value="voice-call">Voice Call</option>
+        <option value="video-calll-science">Video Call</option>
       </select>
     </div>
   </div>
@@ -48,7 +64,7 @@
         <div class="element-content-wrapper" onclick="location.href='/question/{{q['id']}}';">
           <div class="element-content">
             <p class="question-preview-class">{{q['number']}}: {{q['name']}}</p>
-            <p class="question-preview-solve-time">~{{q['solve-time']}} min solve time</p>
+            <p class="question-preview-info">~{{q['solve-time']}} min solve time  &#x2022; {{q['method']}}</p>
             <p class="question-preview-description">{{q['request']}}</p>
           </div>
           <div class="question-preview-side">
