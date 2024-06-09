@@ -1,3 +1,71 @@
-<button class="btn add-button" type="button">
+<button id="add-button" class="btn add-button" type="button">
   <img class="plus-add" src="/static/plus.svg" alt=""/>
 </button>
+
+
+<div class="create-question-wrapper-dimensions create-question-wrapper-background" style="display: none"></div>
+<div class="create-question-wrapper-dimensions create-question-wrapper" style="display: none">
+  <div class="create-question-container">
+    <div class="create-question-body">
+
+      <p class="create-question-title">Ask a question</p>
+
+      <div class="create-question-column-wrapper">
+
+        <div class="create-question-input-background">
+          <p class="create-question-label">Class Code:</p>
+          <input id="create-question-class-code" type="text" placeholder="Ex.: CS 2800 " autocomplete="off"/>
+        </div>
+
+        <div class="create-question-input-background">
+          <p class="create-question-label">Class Name:</p>
+          <input id="create-question-class-name" type="text" placeholder="Ex.: Discrete Math" autocomplete="off"/>
+        </div>
+
+      </div>
+
+      <div class="create-question-textbox-wrapper">
+        <textarea id="create-question-textbox" rows="4"></textarea>
+      </div>
+
+      <div class="create-question-column-wrapper">
+
+        <div class="create-question-input-background">
+          <select id="create-question-category" class="create-question-selector">
+            <option value>Select the School</option>
+            {% for subject in subjects  %}
+            <option value="{{subject['value']}}">{{subject['name']}}</option>
+            {% endfor  %}
+          </select>
+        </div>
+
+        <div class="create-question-input-background">
+          <select id="create-question-method" class="create-question-selector">
+            <option value>Select a method</option>
+            {% for method in methods  %}
+            <option value="{{method['value']}}">{{method['name']}}</option>
+            {% endfor  %}
+          </select>
+        </div>
+
+      </div>
+
+      <div class="create-question-column-wrapper">
+
+        <div class="create-question-input-background">
+          <p class="create-question-label">Time needed:</p>
+
+          <select id="create-question-solve-time" class="create-question-selector">
+            {% for interval in time_intervals.values()|sort(attribute='value') %}
+            <option value="{{interval['value']}}">{{interval['name']}}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <button id="create-question-button" class="btn btn-primary" type="button">Create</button>
+        
+      </div>
+
+    </div>
+  </div>
+</div>
