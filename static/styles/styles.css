@@ -51,7 +51,8 @@ img {
     vertical-align: middle
 }
 
-input[type='text'] {
+input[type='text'],
+input[type='number'] {
     display: block;
     width: 100%;
     height: calc(1.5em + .75rem + 2px);
@@ -1889,6 +1890,10 @@ p.create-question-title {
     font-weight: 500;
 }
 
+#create-question-solve-time {
+    width: fit-content;
+}
+
 .create-question-label {
     min-width: 91px;
     width: fit-content !important;
@@ -1901,8 +1906,13 @@ p.create-question-title {
     height: fit-content;
 }
 
+.create-question-price-label {
+    min-width: 50px;
+}
+
 #create-question-class-code,
-#create-question-class-name {
+#create-question-class-name,
+#create-question-price {
     height: fit-content;
     padding: 0;
     margin: 0;
@@ -1915,10 +1925,6 @@ p.create-question-title {
     border-radius: 0;
     transition: none;
     align-self: center;
-}
-
-#create-question-solve-time {
-    width: fit-content;
 }
 
 @media only screen and (min-width: 0px) and (max-width: 550px) {
