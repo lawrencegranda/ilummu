@@ -4,6 +4,37 @@ import time
 app = Flask(__name__)
 
 
+subjects = [
+    {"value": "cals", "name": "Agriculture and Life Sciences"},
+    {"value": "aap", "name": "Architecture, Art and Planning"},
+    {"value": "as", "name": "Arts and Sciences"},
+    {"value": "dyson", "name": "Dyson"},
+    {"value": "engineering", "name": "Engineering"},
+    {"value": "human-ecology", "name": "Human Ecology"},
+    {"value": "ilr", "name": "Industrial and Labor Relations"},
+    {"value": "public-policy", "name": "Public Policy"},
+]
+
+methods = [
+    {"value": "text-message", "name": "Text Message"},
+    {"value": "voice-call", "name": "Voice Call"},
+    {"value": "video-call", "name": "Video Call"},
+    {"value": "photo-explanation", "name": "Photo Explanation"},
+]
+
+time_intervals = {
+    5: {"value": 5, "name": "less than 5 min", "shortname": "<5 min"},
+    10: {"value": 10, "name": "about 10 min", "shortname": "~10 min"},
+    20: {"value": 20, "name": "about 20 min", "shortname": "~20 min"},
+    30: {"value": 30, "name": "about 30 min", "shortname": "~30 min"},
+    45: {"value": 45, "name": "about 45 min", "shortname": "~45 min"},
+    60: {"value": 60, "name": "about 1 hour", "shortname": "~1 hour"},
+    90: {"value": 90, "name": "about 1h and 30 min", "shortname": "~1.5 hours"},
+    120: {"value": 120, "name": "about 2 hours", "shortname": "~2 hours"},
+    999: {"value": 999, "name": "over 2 hours", "shortname": ">2 hours"},
+}
+
+
 def get_questions():
     question_one = {
         "id": 1,
@@ -16,7 +47,7 @@ def get_questions():
         "date": "06.02.2024",
         "time": "5:28pm",
         "time-ago": "2 min ago",
-        "price": 5,
+        "price": 5.0,
         "method": "Video call",
         "user": "OrangeJuice",
     }
@@ -145,6 +176,7 @@ def get_offers():
         "major": "Computer Science",
         "year": "Junior",
         "comments": "None.",
+        "status": "none",
     }
 
     offer_two = {
@@ -153,9 +185,19 @@ def get_offers():
         "major": "Information Science",
         "year": "Senior",
         "comments": "I prefer Zoom.",
+        "status": "accepted",
     }
 
-    offers = [offer_one, offer_two]
+    offer_three = {
+        "id": 3,
+        "amount": 5.25,
+        "major": "AEP",
+        "year": "Sophomore",
+        "comments": "Google meet",
+        "status": "declined",
+    }
+
+    offers = [offer_one, offer_two, offer_three]
 
     return offers
 
@@ -207,7 +249,12 @@ def dashboard():
     notifications = get_notifications()
 
     return render_template(
-        "dashboard.html", notifications=notifications, questions=questions
+        "dashboard.html",
+        subjects=subjects,
+        methods=methods,
+        time_intervals=time_intervals,
+        notifications=notifications,
+        questions=questions,
     )
 
 
@@ -225,6 +272,9 @@ def view():
 
     return render_template(
         "view.html",
+        subjects=subjects,
+        methods=methods,
+        time_intervals=time_intervals,
         notifications=notifications,
         q=question,
         comments=comments,
@@ -255,12 +305,19 @@ def fetch_question(id_qstn):
     comments = get_comments()
 
     is_author = True
+
+    if question["id"] > 1:
+        is_author = False
+
     offers = []
     if is_author:
         offers = get_offers()
 
     return render_template(
         "view.html",
+        subjects=subjects,
+        methods=methods,
+        time_intervals=time_intervals,
         notifications=notifications,
         q=question,
         comments=comments,

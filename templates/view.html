@@ -1,11 +1,11 @@
 {% extends "bases/layout.html" %}
 
 {% block title %}
-  Question
+Question
 {% endblock %}
 
 {% block navbar %}
-  {% include 'bases/navbar-logged.html' %}
+{% include 'bases/navbar-logged.html' %}
 {% endblock %}
 
 {% block content %}
@@ -31,46 +31,55 @@
     </div>
   </div>
   {% if q['solved'] %}
+
   {% elif is_author %}
-  <p class="offer-title">Your offers:</p>
-  <div class="offer-list">
-    {% for offer in offers  %}
-    <div class="offer">
-      <div class="offer-left">
-        <p class="offer-label">Offer for ${{offer['amount']}}</p>
+  <div class="your-offers-wrapper">
+    <p class="offer-title">Your offers:</p>
+    <div class="offer-list">
+      {% for offer in offers  %}
+      <div class="offer">
+        <div class="offer-left">
+          <p class="offer-label">Offer for ${{offer['amount']}}</p>
+        </div>
+        <div class="offer-middle">
+          <p class="offer-info">
+            <b>Major:</b> {{offer['major']}} &#x2022; <b>Year:</b> {{offer['year']}}
+          </p>
+          <p class="offer-details">
+            <b>Comments:</b> {{offer['comments']}}
+          </p>
+        </div>
+        <div class="offer-right">
+          <button id="btn-accept-offer" class="btn btn-my-offer" type="button">accept</button>
+          <button id="btn-decline-offer" class="btn btn-my-offer" type="button">decline</button>
+        </div>
       </div>
-      <div class="offer-middle">
-        <p class="offer-info">
-          <b>Major:</b> {{offer['major']}} &#x2022; <b>Year:</b> {{offer['year']}}
-        </p>
-        <p class="offer-details">
-          <b>Comments:</b> {{offer['comments']}}
-        </p>
-      </div>
-      <div class="offer-right">
-        <button class="btn btn-my-offer btn-accept-offer" type="button">accept</button>
-        <button class="btn btn-my-offer btn-decline-offer" type="button">decline</button>
-      </div>
+      {% endfor %}
     </div>
-    {% endfor %}
   </div>
+  
   {% else %}
   <p class="offer-title">Make an offer!</p>
-  <div class="offer-body">
-    <div class="offer-pair">
-      <p class="make-offer-label">I have taken this class:</p>
-      <input id="offer-taken-class" class="taken-class" type="checkbox"/>
+  <div class="offer-wrapper">
+    <div class="offer-body">
+      <div class="offer-pair">
+        <p class="make-offer-label">I have taken this class:</p>
+        <input id="offer-taken-class" class="taken-class" type="checkbox"/>
+      </div>
+      <div class="offer-pair">
+        <p class="make-offer-label">Comments: </p>
+        <input id="offer-comment-text" type="text" placeholder="Type a comment..." name="text" autocomplete="off"/>
+      </div>
+      <div class="offer-pair">
+        <p class="make-offer-label">Your fare: </p>
+        <input type="range" class="form-range" id="offer-fare" value="{{q['price']}}" min="{{q['price']}}" max="15.00" step="0.25" oninput="this.nextElementSibling.value = '$'+this.value"/>
+        <output class="offer-value">${{q['price']}}</output>
+      </div>
+      <div class="offer-pair">
+        <button id="button-agree-offer" class="btn btn-primary btn-offer disabled" type="button">Accept for ${{q['price']}}</button>
+        <button id="button-make-offer" class="btn btn-dark btn-offer disabled" type="button">Make New Offer</button>
+      </div>
     </div>
-    <div class="offer-pair">
-      <p class="make-offer-label">Comments: </p>
-      <input id="send-offer-comment" type="text" class="offer-comment" placeholder="Type a comment..." name="text" autocomplete="off"/>
-    </div>
-    <div class="offer-pair">
-      <p class="make-offer-label">Your fare: </p>
-      <input type="range" class="form-range" id="offer-fare" value="{{q['price']}}" min="{{q['price']}}" max="15.00" step="0.25" oninput="this.nextElementSibling.value = '$'+this.value"/>
-      <output class="offer-value">${{q['price']}}</output>
-    </div>
-    <button id="button-send-offer" class="btn btn-primary btn-offer" type="button">Send Offer!</button>
   </div>
   {% endif %}
   <div class="question-comments">
@@ -100,7 +109,7 @@
         </div>
         <div class="replies-wrapper">
           {% if c['children'] %}
-            {{ loop(c['children']) }}
+          {{ loop(c['children']) }}
           {% endif %}
         </div>
       </div>
