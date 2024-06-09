@@ -59,13 +59,17 @@ $(document).ready(function () {
       element.show();
   });
 
-  $('#offer-taken-class').click(function () {
+  $('#offer-taken-class').on("click", function () {
     console.log(this.checked)
     if (this.checked) {
       $('.btn-offer').removeClass('disabled');
     } else {
       $('.btn-offer').removeClass('disabled').addClass('disabled');
     }
+  });
+
+  $('#create-question-price').on("change", function () {
+    $(this).val(parseFloat($(this).val()).toFixed(2));
   });
 
 });
