@@ -59,7 +59,7 @@ def get_questions():
         "number": "MATH 2940",
         "name": "Linear Algebra for Engineers",
         "solve-time": 45,
-        "request": "Explain SVD to me",
+        "request": """Linear Combinations, Homogeneous Systems 3.57. Write v as a linear combination of U1, U2, U3, where U1 = (4,-9,2), U2 = (1,2,-1), U3 = (1,4,2): (a) V = (1,3,2), U = (1,2,1), U2 = (2,6,5), U3 = (1,7,8): (b) V = (1,4,6), U = (2,3,5), U2 = (3,5,8). 3.58 Let U1 = (1,1,2), U2 = (1,3,-2), U3 = (4,-2,-1) in R^3. Show that U1, U2, U3 are orthogonal, and write V as a linear combination of U1, U2, U3, where (a) V = (5,3,9), (b) V = (1,-3,3), (c) V = (1,1,1) (Hint: Use Fourier coefficients). 3.59 Find the dimension and a basis of the general solution W of each of the following homogeneous systems: (a) x + 2y = 0, (b) x + 2y - 3z = 0, (c) x + 2y + 3z + w = 0, (d) 2x + y + 2z = 0, (e) 2x + 4y + 7z + 4w = 0, (f) x + y + 4 = 0, (g) 3x - 4y = 0, (h) 3x + 6y + 10z + 5w = 0. 3.60 Find the dimension and basis of the general solution W of each of the following systems: (a) x + 3y + 2z - w = 0, (b) 2x + 4y + 3z + 2w = 0, (c) 2x + 6y + 5z + x5 = 0, (d) 5x + 10y - 3z + 14w = 0, (e) 11x + 12y + 13z + 14w = 0, (f) 5x + 10y + 3z + 14w = 0. Echelon Matrices, Row Canonical Form 3.61 Reduce each of the following matrices to echelon form and then to row canonical form: 1 2 0 -3 (b) 1 0 0 1 3.62 Reduce each of the following matrices to echelon form and then to row canonical form: 1 9 0 1 (b) 1 0 0 1 3.63 Using only 0's and 1's, list all possible 2 x 2 matrices in row canonical form. 3.64 Using only 0's and 1's, find the number n of possible 3 x 3 matrices in row canonical form.""",
         "date": "05.31.2024",
         "time": "6:00pm",
         "time-ago": "Two days ago",
@@ -100,7 +100,14 @@ def get_questions():
         "user": "OrangeJuice",
     }
 
-    return [question_one, question_two, question_three, question_four]
+    questions = [question_one, question_two, question_three, question_four]
+
+    for q in questions:
+        q["summary"] = (
+            q["request"][0:137] + "..." if len(q["request"]) > 140 else q["request"]
+        )
+
+    return questions
 
 
 def get_comments():
