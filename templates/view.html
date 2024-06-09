@@ -9,138 +9,109 @@ Question
 {% endblock %}
 
 {% block content %}
-<div class="question-wrapper">
-  <div class="question-body">
-    <div class="question-top">
-      <div class="question-left">
-        <p class="question-class">{{q['number']}}: {{q['name']}}</p>
-        <p class="question-info">{{q['date']}}, {{q['time']}} &#x2022; {{q['subject']}}</p>
-        <p class="question-method"><b>Method:</b> {{q['method']}}</p>
-      </div>
-      <div class="question-right">
-        {% if q['solved'] %}
-        <p class="question-status solved">solved</p>
-        {% else %}
-        <p class="question-status unsolved">unsolved</p>
-        {% endif %}
-        <div class="question-price">${{q['price']}}</div>
-      </div>
-    </div>
-    <div class="question-bottom">
-      <p class="question-text">{{q['request']}}</p>
-    </div>
-  </div>
-  {% if q['solved'] %}
-
-  {% elif is_author %}
-  <div class="bid-wrapper">
-    <div class="bid-body">
-      <p class="offer-title">Looking for tutors...</p>
-
-      <div id="bid-progress" onload="move_progress()">
-        <div id="bid-bar"></div>
-      </div>
-
-      <p class="bid-label">Your offer:</p>
-
-      <div class="bid-update-buttons">
-        <button id="btn-bid-lower" class="btn btn-primary btn-bid-update disabled" type="button">-$2</button>
-        <p id="bid-value">${{q['price']}}</p>
-        <button id="btn-bid-raise" class="btn btn-primary btn-bid-update" type="button">+$2</button>
-      </div>
-
-      <button id="btn-bid-cancel" class="btn btn-primary" type="button">Cancel Request</button>
-
-      <p class="bid-tip">Tip: if no one is accepting the offer, then probably current price is not attractive.
-        <br>
-        We recommend raising your price</p>
-
-
-    </div>
-  </div>
-
-  <div class="your-offers-wrapper">
-    <p class="offer-title">Your offers:</p>
-    <div class="offer-list">
-      {% for offer in offers  %}
-      <div class="offer">
-        <div class="offer-left">
-          <p class="offer-label">Offer for ${{offer['amount']}}</p>
+<div class="container main-content">
+  <div class="question-wrapper">
+    <div class="question-body">
+      <div class="question-top">
+        <div class="question-left">
+          <p class="question-class">{{q['number']}}: {{q['name']}}</p>
+          <p class="question-info">{{q['date']}}, {{q['time']}} &#x2022; {{q['subject']}}</p>
+          <p class="question-method"><b>Method:</b> {{q['method']}}</p>
         </div>
-        <div class="offer-middle">
-          <p class="offer-info">
-            <b>Major:</b> {{offer['major']}} &#x2022; <b>Year:</b> {{offer['year']}}
-          </p>
-          <p class="offer-details">
-            <b>Comments:</b> {{offer['comments']}}
-          </p>
-        </div>
-        <div class="offer-right">
-          <button id="btn-accept-offer" class="btn btn-my-offer" type="button">accept</button>
-          <button id="btn-decline-offer" class="btn btn-my-offer" type="button">decline</button>
+        <div class="question-right">
+          {% if q['solved'] %}
+          <p class="question-status solved">solved</p>
+          {% else %}
+          <p class="question-status unsolved">unsolved</p>
+          {% endif %}
+          <div class="question-price">${{'%.2f' % q['price']}}</div>
         </div>
       </div>
-      {% endfor %}
-    </div>
-  </div>
-  
-  {% else %}
-  <p class="offer-title">Make an offer!</p>
-  <div class="offer-wrapper">
-    <div class="offer-body">
-      <div class="offer-pair">
-        <p class="make-offer-label">I have taken this class:</p>
-        <input id="offer-taken-class" class="taken-class" type="checkbox"/>
-      </div>
-      <div class="offer-pair">
-        <p class="make-offer-label">Comments: </p>
-        <input id="offer-comment-text" type="text" placeholder="Type a comment..." name="text" autocomplete="off"/>
-      </div>
-      <div class="offer-pair">
-        <p class="make-offer-label">Your fare: </p>
-        <input type="range" class="form-range" id="offer-fare" value="{{q['price']}}" min="{{q['price']}}" max="15.00" step="0.25" oninput="this.nextElementSibling.value = '$'+this.value"/>
-        <output class="offer-value">${{q['price']}}</output>
-      </div>
-      <div class="offer-pair">
-        <button id="button-agree-offer" class="btn btn-primary btn-offer disabled" type="button">Accept for ${{q['price']}}</button>
-        <button id="button-make-offer" class="btn btn-dark btn-offer disabled" type="button">Make New Offer</button>
+      <div class="question-bottom">
+        <p class="question-text">{{q['request']}}</p>
       </div>
     </div>
-  </div>
-  {% endif %}
-  <div class="question-comments">
-    {% if not q['solved'] %}
-    <div class="comments-bar-container">
-      <input type="text" id="comment-box" placeholder="Type a comment..." name="text" autocomplete="off"/>
-      <button class="btn btn-primary" type="button">Submit</button>
+    {% if q['solved'] %}
+
+    {% elif is_author %}
+    <div class="bid-wrapper">
+      <div class="bid-body">
+        <p class="offer-title">Looking for tutors...</p>
+
+        <div id="bid-progress" onload="move_progress()">
+          <div id="bid-bar"></div>
+        </div>
+
+        <p class="bid-label">Your offer:</p>
+
+        <div class="bid-update-buttons">
+          <button id="btn-bid-lower" class="btn btn-primary btn-bid-update disabled" type="button">-$2</button>
+          <p id="bid-value">${{'%.2f' % q['price']}}</p>
+          <button id="btn-bid-raise" class="btn btn-primary btn-bid-update" type="button">+$2</button>
+        </div>
+
+        <button id="btn-bid-cancel" class="btn btn-primary" type="button">Cancel Request</button>
+
+        <p class="bid-tip">Tip: if no one is accepting the offer, then probably current price is not attractive.
+          <br>
+          We recommend raising your price</p>
+
+
+      </div>
+    </div>
+
+    <div class="your-offers-wrapper">
+      <p class="offer-title">Your offers:</p>
+      <div class="offer-list">
+        {% for offer in offers  %}
+        <div class="offer">
+          <div class="offer-left">
+            <p class="offer-label">Offer for ${{'%.2f' % offer['amount']}}</p>
+          </div>
+          <div class="offer-middle">
+            <p class="offer-info">
+              <b>Major:</b> {{offer['major']}} &#x2022; <b>Year:</b> {{offer['year']}}
+            </p>
+            <p class="offer-details">
+              <b>Comments:</b> {{offer['comments']}}
+            </p>
+          </div>
+          <div class="offer-right">
+            <button id="btn-accept-offer" class="btn btn-my-offer" type="button">accept</button>
+            <button id="btn-decline-offer" class="btn btn-my-offer" type="button">decline</button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    
+    {% else %}
+    <p class="offer-title">Make an offer!</p>
+    <div class="offer-wrapper">
+      <div class="offer-body">
+        {#
+        <div class="offer-pair">
+          <p class="make-offer-label">I have taken this class:</p>
+          <input id="offer-taken-class" class="taken-class" type="checkbox"/>
+        </div>
+        <div class="offer-pair">
+          <p class="make-offer-label">Comments: </p>
+          <input id="offer-comment-text" type="text" placeholder="Type a comment..." name="text" autocomplete="off"/>
+        </div>
+        #}
+        <div class="offer-pair">
+          <p class="make-offer-label">Your fare: </p>
+          <input type="range" class="form-range" id="offer-fare" value="{{q['price']}}" min="{{q['price']}}" max="{{2 * q['price']}}" step="0.25" oninput="this.nextElementSibling.value = '$' + parseFloat(this.value).toFixed(2)"/>
+          <output class="offer-value">${{'%.2f' % q['price']}}</output>
+        </div>
+        <div class="offer-pair">
+          <button id="button-agree-offer" class="btn btn-primary btn-offer" type="button">Accept for ${{'%.2f' % q['price']}}</button>
+          <button id="button-make-offer" class="btn btn-dark btn-offer" type="button">Offer ${{'%.2f' % q['price']}}</button>
+        </div>
+      </div>
     </div>
     {% endif %}
-    <div class="comments-list">
-      {% for c in comments recursive %}
-      <div class="comment-container">
-        <div class="comment-wrapper">
-          <div class="comment-body">
-            <p class="comment-text">
-              <b>{{c['user']}}:</b> {{c['message']}}
-            </p>
-            <button class="btn btn-reply" type="button">reply</button>
-          </div>
-        </div>
-        <div class="comment-area" style="display: none">
-          <textarea class="comment-textbox" rows="5"></textarea>
-          <div class="comment-area-button-container">
-            <button class="btn btn-dark btn-cancel-comment" type="button">Cancel</button>
-            <button class="btn btn-primary btn-submit-comment" type="button">Comment</button>
-          </div>
-        </div>
-        <div class="replies-wrapper">
-          {% if c['children'] %}
-          {{ loop(c['children']) }}
-          {% endif %}
-        </div>
-      </div>
-      {% endfor %}
-    </div>
+    {% include 'bases/comments.html' %}
   </div>
 </div>
 {% endblock %}

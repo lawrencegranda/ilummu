@@ -1,22 +1,20 @@
 $('#bid-bar').ready(function () {
   let elem = $("#bid-bar")
   let width = 1;
-  let id = setInterval(frame, 1000);
-  console.log('going')
+  let id = setInterval(frame, 100);
   function frame() {
-    console.log('going...')
     if (width >= 100) {
       clearInterval(id);
     } else if (width <= 20) {
-      width += 1;
+      width += 0.1;
     } else if (width <= 50) {
-      width += 0.3;
+      width += 0.03;
     } else if (width <= 80) {
-      width += 0.15;
+      width += 0.015;
     } else if (width <= 90) {
-      width += 0.05;
+      width += 0.005;
     } else if (width <= 100) {
-      width += 0.02;
+      width += 0.002;
     }
     elem.css('width', width + '%')
   }
@@ -41,27 +39,27 @@ $(document).ready(function () {
     $(this).toggleClass("selected");
   });
 
-  $(".btn-reply").on("click", function () {
-    let element = $(this).closest('.comment-container').children('.comment-area').first();
+  // $(".btn-reply").on("click", function () {
+  //   let element = $(this).closest('.comment-container').children('.comment-area').first();
 
-    if (element.is(':visible'))
-      element.hide();
-    else {
-      element.show();
-    }
-  });
+  //   if (element.is(':visible'))
+  //     element.hide();
+  //   else {
+  //     element.show();
+  //   }
+  // });
 
-  $(".btn-submit-comment, .btn-cancel-comment").on("click", function () {
-    let element = $(this).closest('.comment-container').children('.comment-area').first();
+  // $(".btn-submit-comment, .btn-cancel-comment").on("click", function () {
+  //   let element = $(this).closest('.comment-container').children('.comment-area').first();
 
-    if (element.is(':visible'))
-      setTimeout(function () {
-        element.hide();
-      }, 200);
-    else {
-      element.show();
-    }
-  });
+  //   if (element.is(':visible'))
+  //     setTimeout(function () {
+  //       element.hide();
+  //     }, 200);
+  //   else {
+  //     element.show();
+  //   }
+  // });
 
   $("#add-button").on("click", function () {
     let element = $(".create-question-wrapper-dimensions");
@@ -70,6 +68,13 @@ $(document).ready(function () {
       element.hide();
     else
       element.show();
+  });
+
+  $(".create-question-wrapper-background").on("click", function () {
+    console.log('kkk')
+    let element = $(".create-question-wrapper-dimensions");
+
+    element.hide();
   });
 
   $("#create-question-button").on("click", function () {
@@ -83,17 +88,27 @@ $(document).ready(function () {
       element.show();
   });
 
-  $('#offer-taken-class').on("click", function () {
-    console.log(this.checked)
-    if (this.checked) {
-      $('.btn-offer').removeClass('disabled');
-    } else {
-      $('.btn-offer').removeClass('disabled').addClass('disabled');
-    }
-  });
+  // $('#offer-taken-class').on("click", function () {
+  //   console.log(this.checked)
+  //   if (this.checked) {
+  //     $('.btn-offer').removeClass('disabled');
+  //   } else {
+  //     $('.btn-offer').removeClass('disabled').addClass('disabled');
+  //   }
+  // });
 
   $('#create-question-price').on("change", function () {
     $(this).val(parseFloat($(this).val()).toFixed(2));
+  });
+
+  $('#btn-bid-raise').on("click", function () {
+    console.log(($('#bid-value').val()))
+    // $('#bid-value').val('$' + (parseFloat($('#bid-value').val()) + 2).toFixed(2));
+  });
+
+  $('#offer-fare').on("input", function () {
+    console.log($('#button-make-offer').val())
+    $('#button-make-offer').text('Offer $' + parseFloat($(this).val()).toFixed(2));
   });
 
 });
