@@ -1,19 +1,43 @@
 {% extends "bases/layout.html" %}
 
 {% block title %}
-  Dashboard
+Dashboard
 {% endblock %}
 
 {% block navbar %}
-  {% include 'bases/navbar-logged.html' %}
-  {% include 'bases/add-button.html'%}
+{% include 'bases/navbar-logged.html' %}
+{% include 'bases/add-button.html'%}
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-container">
-  <div class="dashboard-menu-container">
-    <div class="dashboard-menu">
-      <div class="method-selector-container">
+<div class="container main-content">
+  <div class="dashboard-container">
+    <div class="dashboard-menu-container">
+      <div class="dashboard-menu">
+        <div class="method-selector-container">
+          <select name="method-selector" id="method-selector">
+            <option value="any-method">Any Method</option>
+            {% for method in methods  %}
+            <option value="{{method['value']}}">{{method['name']}}</option>
+            {% endfor  %}
+          </select>
+        </div>
+        <button class="btn category all-subjects selected">All Schools</button>
+        {% for subject in subjects  %}
+        <button class="btn category" value="{{subject['value']}}">{{subject['name']}}</button>
+        {% endfor  %}
+      </div>
+    </div>
+    <div class="dashboard-menu-container-small">
+      <div class="dashboard-menu-small">
+        <select name="category-selector" id="category-selector">
+          <option value="all-subjects">All Schools</option>
+          {% for subject in subjects  %}
+          <option value="{{subject['value']}}">{{subject['name']}}</option>
+          {% endfor  %}
+        </select>
+      </div>
+      <div class="dashboard-menu-small">
         <select name="method-selector" id="method-selector">
           <option value="any-method">Any Method</option>
           {% for method in methods  %}
@@ -21,42 +45,19 @@
           {% endfor  %}
         </select>
       </div>
-      <button class="btn category all-subjects selected">All Schools</button>
-      {% for subject in subjects  %}
-       <button class="btn category" value="{{subject['value']}}">{{subject['name']}}</button>
-      {% endfor  %}
     </div>
-  </div>
-  <div class="dashboard-menu-container-small">
-    <div class="dashboard-menu-small">
-      <select name="category-selector" id="category-selector">
-        <option value="all-subjects">All Schools</option>
-        {% for subject in subjects  %}
-        <option value="{{subject['value']}}">{{subject['name']}}</option>
-        {% endfor  %}
-      </select>
-    </div>
-    <div class="dashboard-menu-small">
-      <select name="method-selector" id="method-selector">
-        <option value="any-method">Any Method</option>
-        {% for method in methods  %}
-        <option value="{{method['value']}}">{{method['name']}}</option>
-        {% endfor  %}
-      </select>
-    </div>
-  </div>
-  <div class="grid">
-    {% for q in questions %}
+    <div class="grid">
+      {% for q in questions %}
       {% if q['solved'] %}
       <div class="element-box solved">
       {% else %}
       <div class="element-box unsolved">
-      {% endif %}
+        {% endif %}
         <div class="element-content-wrapper" onclick="location.href='/question/{{q['id']}}';">
           <div class="element-content">
             <p class="question-preview-class">{{q['number']}}: {{q['name']}}</p>
             <p class="question-preview-info">~{{q['solve-time']}} min solve time  &#x2022; {{q['method']}}</p>
-            <p class="question-preview-description">{{q['request']}}</p>
+            <p class="question-preview-description">{{q['summary']}}</p>
           </div>
           <div class="question-preview-side">
             <p class="question-preview-time">{{q['time-ago']}}</p>
@@ -64,12 +65,13 @@
             {% if q['solved'] %}
             <button class="btn question-preview-button disabled">SOLVED</button>
             {% else %}
-             <button class="btn question-preview-button">ANSWER</button>
+            <button class="btn question-preview-button">ANSWER</button>
             {% endif %}
           </div>
         </div>
       </div>
-    {% endfor %}
+      {% endfor %}
+    </div>
   </div>
 </div>
 {% endblock %}
