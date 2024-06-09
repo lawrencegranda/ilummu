@@ -16,42 +16,32 @@
       <div class="method-selector-container">
         <select name="method-selector" id="method-selector">
           <option value="any-method">Any Method</option>
-          <option value="text-message">Text Message</option>
-          <option value="voice-call">Voice Call</option>
-          <option value="video-calll-science">Video Call</option>
+          {% for method in methods  %}
+          <option value="{{method['value']}}">{{method['name']}}</option>
+          {% endfor  %}
         </select>
       </div>
-      <button class="btn category all-subjects selected">All Subjects</button>
-      <button class="btn category">Mathematics</button>
-      <button class="btn category">Computer Science</button>
-      <button class="btn category">Engineering</button>
-      <button class="btn category">Biology</button>
-      <button class="btn category">Chemistry</button>
-      <button class="btn category">AEM</button>
-      <button class="btn category">Economics</button>
-      <button class="btn category">Other</button>
+      <button class="btn category all-subjects selected">All Schools</button>
+      {% for subject in subjects  %}
+       <button class="btn category" value="{{subject['value']}}">{{subject['name']}}</button>
+      {% endfor  %}
     </div>
   </div>
   <div class="dashboard-menu-container-small">
     <div class="dashboard-menu-small">
       <select name="category-selector" id="category-selector">
-        <option value="all-subjects">All Subjects</option>
-        <option value="mathematics">Mathematics</option>
-        <option value="computer-science">Computer Science</option>
-        <option value="engineering">Engineering</option>
-        <option value="biology">Biology</option>
-        <option value="chemistry">Chemistry</option>
-        <option value="aem">AEM</option>
-        <option value="economics">Economics</option>
-        <option value="other">Other</option>
+        <option value="all-subjects">All Schools</option>
+        {% for subject in subjects  %}
+        <option value="{{subject['value']}}">{{subject['name']}}</option>
+        {% endfor  %}
       </select>
     </div>
     <div class="dashboard-menu-small">
       <select name="method-selector" id="method-selector">
         <option value="any-method">Any Method</option>
-        <option value="text-message">Text Message</option>
-        <option value="voice-call">Voice Call</option>
-        <option value="video-calll-science">Video Call</option>
+        {% for method in methods  %}
+        <option value="{{method['value']}}">{{method['name']}}</option>
+        {% endfor  %}
       </select>
     </div>
   </div>
@@ -70,7 +60,7 @@
           </div>
           <div class="question-preview-side">
             <p class="question-preview-time">{{q['time-ago']}}</p>
-            <div class="question-preview-price">+${{q['price']}}</div>
+            <div class="question-preview-price">${{ '%.2f' % q['price']|float}}</div>
             {% if q['solved'] %}
             <button class="btn question-preview-button disabled">SOLVED</button>
             {% else %}
