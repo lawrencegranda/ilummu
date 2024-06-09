@@ -29,7 +29,7 @@ time_intervals = {
     30: {"value": 30, "name": "about 30 min", "shortname": "~30 min"},
     45: {"value": 45, "name": "about 45 min", "shortname": "~45 min"},
     60: {"value": 60, "name": "about 1 hour", "shortname": "~1 hour"},
-    90: {"value": 90, "name": "about 1h and 30 min", "shortname": "~1.5 hours"},
+    90: {"value": 90, "name": "about 1.5 hours", "shortname": "~1.5 hours"},
     120: {"value": 120, "name": "about 2 hours", "shortname": "~2 hours"},
     999: {"value": 999, "name": "over 2 hours", "shortname": ">2 hours"},
 }
