@@ -1,3 +1,27 @@
+$('#bid-bar').ready(function () {
+  let elem = $("#bid-bar")
+  let width = 1;
+  let id = setInterval(frame, 1000);
+  console.log('going')
+  function frame() {
+    console.log('going...')
+    if (width >= 100) {
+      clearInterval(id);
+    } else if (width <= 20) {
+      width += 1;
+    } else if (width <= 50) {
+      width += 0.3;
+    } else if (width <= 80) {
+      width += 0.15;
+    } else if (width <= 90) {
+      width += 0.05;
+    } else if (width <= 100) {
+      width += 0.02;
+    }
+    elem.css('width', width + '%')
+  }
+})
+
 $(document).ready(function () {
 
   $("#notification").on("click", function () {
@@ -73,3 +97,4 @@ $(document).ready(function () {
   });
 
 });
+

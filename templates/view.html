@@ -23,7 +23,7 @@ Question
         {% else %}
         <p class="question-status unsolved">unsolved</p>
         {% endif %}
-        <div class="question-price">+${{q['price']}}</div>
+        <div class="question-price">${{q['price']}}</div>
       </div>
     </div>
     <div class="question-bottom">
@@ -33,6 +33,32 @@ Question
   {% if q['solved'] %}
 
   {% elif is_author %}
+  <div class="bid-wrapper">
+    <div class="bid-body">
+      <p class="offer-title">Looking for tutors...</p>
+
+      <div id="bid-progress" onload="move_progress()">
+        <div id="bid-bar"></div>
+      </div>
+
+      <p class="bid-label">Your offer:</p>
+
+      <div class="bid-update-buttons">
+        <button id="btn-bid-lower" class="btn btn-primary btn-bid-update disabled" type="button">-$2</button>
+        <p id="bid-value">${{q['price']}}</p>
+        <button id="btn-bid-raise" class="btn btn-primary btn-bid-update" type="button">+$2</button>
+      </div>
+
+      <button id="btn-bid-cancel" class="btn btn-primary" type="button">Cancel Request</button>
+
+      <p class="bid-tip">Tip: if no one is accepting the offer, then probably current price is not attractive.
+        <br>
+        We recommend raising your price</p>
+
+
+    </div>
+  </div>
+
   <div class="your-offers-wrapper">
     <p class="offer-title">Your offers:</p>
     <div class="offer-list">
