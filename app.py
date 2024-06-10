@@ -104,7 +104,7 @@ def get_questions():
 
     for q in questions:
         q["summary"] = (
-            q["request"][0:137] + "..." if len(q["request"]) > 140 else q["request"]
+            q["request"][0:127] + "..." if len(q["request"]) > 130 else q["request"]
         )
 
     return questions
