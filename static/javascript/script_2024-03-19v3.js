@@ -61,7 +61,7 @@ $(document).ready(function () {
   //   }
   // });
 
-  $("#add-button").on("click", function () {
+  $("#add-button, #button-nav-question").on("click", function () {
     let element = $(".create-question-wrapper-dimensions");
 
     if (element.is(':visible'))
@@ -109,6 +109,17 @@ $(document).ready(function () {
   $('#offer-fare').on("input", function () {
     console.log($('#button-make-offer').val())
     $('#button-make-offer').text('Offer $' + parseFloat($(this).val()).toFixed(2));
+  });
+
+  $('#create-question-file').on("change", function () {
+    let file = $(this).prop('files')[0]['name'];
+
+    if (file.length > 33) {
+      file = file.substring(0, 15) + "..." + file.substring(file.length - 15, file.length)
+    }
+
+    $('#file-selected').text(file)
+
   });
 
 });
