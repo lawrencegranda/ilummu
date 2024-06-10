@@ -14,6 +14,8 @@ Dashboard
   <div class="dashboard-container">
     <div class="dashboard-menu-container">
       <div class="dashboard-menu">
+
+        {#
         <div class="method-selector-container">
           <select name="method-selector" id="method-selector">
             <option value="any-method">Any Method</option>
@@ -22,12 +24,15 @@ Dashboard
             {% endfor  %}
           </select>
         </div>
+        #}
+        
         <button class="btn category all-subjects selected">All Schools</button>
         {% for subject in subjects  %}
         <button class="btn category" value="{{subject['value']}}">{{subject['name']}}</button>
         {% endfor  %}
       </div>
     </div>
+
     <div class="dashboard-menu-container-small">
       <div class="dashboard-menu-small">
         <select name="category-selector" id="category-selector">
@@ -37,6 +42,8 @@ Dashboard
           {% endfor  %}
         </select>
       </div>
+
+      {#
       <div class="dashboard-menu-small">
         <select name="method-selector" id="method-selector">
           <option value="any-method">Any Method</option>
@@ -45,6 +52,8 @@ Dashboard
           {% endfor  %}
         </select>
       </div>
+      #}
+
     </div>
     <div class="grid">
       {% for q in questions %}
