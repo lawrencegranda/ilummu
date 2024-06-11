@@ -1125,9 +1125,6 @@ img.image-preview {
     flex-direction: column;
     row-gap: 20px;
     border: none;
-    padding-bottom: 30px;
-    margin-bottom: 30px;
-    border-bottom: 2px solid var(--neutral--300);
 }
 
 .question-top {
@@ -1135,6 +1132,61 @@ img.image-preview {
     flex-direction: row;
     justify-content: space-between;
     column-gap: 15px;
+    margin-bottom: 5px;
+}
+
+.question-left {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    column-gap: 20px;
+    height: fit-content;
+}
+
+#question-author-profile {
+    height: 70px !important;
+    width: 70px !important;
+    vertical-align: middle;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.avatar {
+    height: 100%;
+    width: 100%;
+    vertical-align: middle;
+    border-radius: 50%;
+    background-color: var(--blue--base);
+}
+
+#question-author {
+    max-width: calc(100% - 75px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#question-author-name {
+    font-size: 21px;
+    font-weight: 600;
+    margin: 0;
+    margin-bottom: 5px;
+}
+
+#question-author-info {
+    font-size: 18px;
+    font-weight: normal;
+    color: var(--neutral--400);
+    margin: 0;
+}
+
+#question-date {
+    font-size: 19px;
+    margin: 0;
+    text-align: right;
+    height: fit-content;
+    margin-top: auto;
+    margin-bottom: auto;
 }
 
 .question-right {
@@ -1142,7 +1194,15 @@ img.image-preview {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    row-gap: 5px;
+    row-gap: 10px;
+}
+
+.question-labels {
+    width: fit-content;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    column-gap: 5px;
 }
 
 p.question-class {
@@ -1167,27 +1227,7 @@ p.question-method {
     margin-top: 7px;
 }
 
-p.question-status {
-    width: 100%;
-    background-color: var(--neutral--300);
-    color: black;
-    padding: 25px;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    font-size: 15px;
-    font-weight: 600;
-    border-radius: 500px;
-    border: none;
-    text-align: center;
-    margin: 0;
-}
-
-p.question-status.unsolved {
-    background-color: var(--blue--base);
-    color: white
-}
-
-
+p.question-status,
 .question-price {
     width: 100%;
     background-color: var(--neutral--300);
@@ -1201,6 +1241,14 @@ p.question-status.unsolved {
     text-align: center;
     border: none;
     margin: 0;
+    vertical-align: middle;
+    line-height: normal;
+    height: 38px;
+}
+
+p.question-status.unsolved {
+    background-color: var(--blue--base);
+    color: white
 }
 
 .question-bottom {
@@ -1210,6 +1258,7 @@ p.question-status.unsolved {
 p.question-text {
     font-size: 18px;
     margin: 0;
+    margin-top: 15px;
 }
 
 .question-comments {
@@ -1218,9 +1267,9 @@ p.question-text {
     flex-direction: column;
     row-gap: 20px;
     border: none;
-    padding-top: 30px;
     border-top: 2px solid var(--neutral--300);
     margin-top: 30px;
+    padding-top: 30px;
 }
 
 @media only screen and (min-width: 0px) and (max-width: 800px) {
@@ -1236,7 +1285,7 @@ p.question-text {
         display: flex;
         flex-direction: row;
         justify-content: space-between;
-        column-gap: 20px;
+        column-gap: 15px;
     }
 
     p.question-class {
@@ -1262,6 +1311,32 @@ p.question-text {
     p.question-text {
         font-size: 16px;
     }
+
+    .question-left {
+        column-gap: 15px;
+    }
+
+    #question-author-profile {
+        height: 60px !important;
+        width: 60px !important;
+    }
+
+    #question-author-name {
+        font-size: 19px;
+    }
+
+    #question-author-info {
+        font-size: 16px;
+    }
+
+    #question-date {
+        font-size: 16px;
+    }
+
+    .question-wrapper {
+        padding: 20px;
+    }
+
 }
 
 .comments-bar-container {
@@ -1394,6 +1469,16 @@ button.btn-reply:hover {
 
 .offer-wrapper {
     overflow: hidden;
+    border-top: 2px solid var(--neutral--300);
+    margin-top: 30px;
+    padding-top: 30px;
+}
+
+.your-offers-wrapper {
+    overflow: hidden;
+    border-top: 2px solid var(--neutral--300);
+    margin-top: 30px;
+    padding-top: 30px;
 }
 
 .offer-body {
@@ -2046,9 +2131,9 @@ p.create-question-title {
 
 
 .bid-wrapper {
-    padding-bottom: 30px;
-    margin-bottom: 30px;
-    border-bottom: 2px solid var(--neutral--300);
+    border-top: 2px solid var(--neutral--300);
+    margin-top: 30px;
+    padding-top: 30px;
     overflow: hidden;
 }
 
