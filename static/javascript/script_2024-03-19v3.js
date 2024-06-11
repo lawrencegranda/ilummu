@@ -83,15 +83,31 @@ $(document).ready(function () {
     element.hide();
   });
 
-  $("#create-question-button").on("click", function () {
-    let element = $(".create-question-wrapper-dimensions");
+  $("#create-question-form").on("submit", function (event) {
+    var correct = true
 
-    if (element.is(':visible'))
-      setTimeout(function () {
-        element.hide();
-      }, 300);
-    else
-      element.show();
+    var school = $("#create-question-category").val();
+    if (!school) {
+      event.preventDefault();
+      correct = false
+    }
+
+    var method = $("#create-question-method").val();
+    if (!method) {
+      event.preventDefault();
+      correct = false
+    }
+
+    if (correct) {
+      let element = $(".create-question-wrapper-dimensions");
+
+      if (element.is(':visible'))
+        setTimeout(function () {
+          element.hide();
+        }, 300);
+      else
+        element.show();
+    }
   });
 
   // $('#offer-taken-class').on("click", function () {
@@ -104,7 +120,13 @@ $(document).ready(function () {
   // });
 
   $('#create-question-price').on("change", function () {
-    $(this).val(parseFloat($(this).val()).toFixed(2));
+    let value = parseFloat($(this).val()).toFixed(2);
+    if (isNaN(value)) {
+      console.log()
+      value = "";
+      $(this).attr("placeholder", "Invalid. Try again.");
+    }
+    $(this).val(value);
   });
 
   $('#btn-bid-raise').on("click", function () {
