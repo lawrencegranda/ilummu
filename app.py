@@ -34,28 +34,57 @@ time_intervals = {
     999: {"value": 999, "name": "over 2 hours", "shortname": ">2 hours"},
 }
 
+users = {
+    1: {
+        "id": 1,
+        "name": "OrangeJuice",
+        "major": "Computer Science",
+        "year": "Freshman",
+    },
+    2: {
+        "id": 2,
+        "name": "AppleJuice",
+        "major": "Information Science",
+        "year": "Sophomore",
+    },
+    3: {"id": 3, "name": "GuavaJuice", "major": "Economics", "year": "Junior"},
+    4: {"id": 4, "name": "MangoJuice", "major": "AEM", "year": "Senior"},
+    5: {
+        "id": 5,
+        "name": "PearJuice",
+        "major": "Mechanical Engineering",
+        "year": "Master's",
+    },
+    6: {
+        "id": 6,
+        "name": "BerryJuice",
+        "major": "Engineering Physics",
+        "year": "Senior",
+    },
+}
+
 
 def get_questions():
     question_one = {
         "id": 1,
         "solved": False,
-        "subject": "Business",
+        "subject": "Dyson",
         "number": "AEM 2200",
         "name": "Business Man and Org",
-        "solve-time": 25,
+        "solve-time": 20,
         "request": "How do I create a SWOT analysis?",
         "date": "06.02.2024",
         "time": "5:28pm",
         "time-ago": "2 min ago",
         "price": 5.0,
         "method": "Video call",
-        "user": "OrangeJuice",
+        "user_id": 2,
     }
 
     question_two = {
         "id": 2,
         "solved": False,
-        "subject": "Mathematics",
+        "subject": "Engineering",
         "number": "MATH 2940",
         "name": "Linear Algebra for Engineers",
         "solve-time": 45,
@@ -65,13 +94,13 @@ def get_questions():
         "time-ago": "Two days ago",
         "price": 4.25,
         "method": "Voice call",
-        "user": "OrangeJuice",
+        "user_id": 5,
     }
 
     question_three = {
         "id": 3,
         "solved": True,
-        "subject": "Computer Science",
+        "subject": "Engineering",
         "number": "CS 2800",
         "name": "Discrete Math",
         "solve-time": 10,
@@ -81,23 +110,23 @@ def get_questions():
         "time-ago": "Yesterday",
         "price": 2.5,
         "method": "Text message",
-        "user": "OrangeJuice",
+        "user_id": 1,
     }
 
     question_four = {
         "id": 4,
         "solved": True,
-        "subject": "Computer Science",
+        "subject": "Engineering",
         "number": "CS 3110",
         "name": "Functional Programming",
-        "solve-time": 7,
+        "solve-time": 5,
         "request": "How do I curry a function?",
         "date": "05.26.2024",
         "time": "7:47am",
         "time-ago": "A week ago",
         "price": 2,
         "method": "Text message",
-        "user": "OrangeJuice",
+        "user_id": 4,
     }
 
     questions = [question_one, question_two, question_three, question_four]
@@ -106,6 +135,10 @@ def get_questions():
         q["summary"] = (
             q["request"][0:127] + "..." if len(q["request"]) > 130 else q["request"]
         )
+        q["solve-time"] = time_intervals[q["solve-time"]]["shortname"]
+        q["user"] = users[q["user_id"]]["name"]
+        q["major"] = users[q["user_id"]]["major"]
+        q["year"] = users[q["user_id"]]["year"]
 
     return questions
 
