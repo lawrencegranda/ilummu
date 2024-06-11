@@ -40,13 +40,13 @@ Question
     {% elif is_author %}
     <div class="bid-wrapper">
       <div class="bid-body">
-        <p class="offer-title">Looking for tutors...</p>
+        <p class="offer-title">Looking For Tutors...</p>
 
         <div id="bid-progress" onload="move_progress()">
           <div id="bid-bar"></div>
         </div>
 
-        <p class="bid-label">Your offer:</p>
+        <p class="bid-label">Your Offer:</p>
 
         <div class="bid-update-buttons">
           <button id="btn-bid-lower" class="btn btn-primary btn-bid-update disabled" type="button">-$2</button>
@@ -54,18 +54,19 @@ Question
           <button id="btn-bid-raise" class="btn btn-primary btn-bid-update" type="button">+$2</button>
         </div>
 
-        <button id="btn-bid-cancel" class="btn btn-primary" type="button">Cancel Request</button>
+        <button id="btn-update-price" class="btn btn-primary" type="button">Update Price</button>
+        <button id="btn-bid-cancel" class="btn btn-dark" type="button">Cancel Request</button>
 
-        <p class="bid-tip">Tip: if no one is accepting the offer, then probably current price is not attractive.
+        <p class="bid-tip">
+          Tip: if no one is accepting the offer, then probably current price is not attractive.
           <br>
-          We recommend raising your price</p>
-
-
+          We recommend raising your price
+        </p>
       </div>
     </div>
 
     <div class="your-offers-wrapper">
-      <p class="offer-title">Your offers:</p>
+      <p class="offer-title">Offers Made:</p>
       <div class="offer-list">
         {% for offer in offers  %}
         <div class="offer">
@@ -90,7 +91,7 @@ Question
     </div>
     
     {% else %}
-    <p class="offer-title">Make an offer!</p>
+    <p class="offer-title">Make an Offer!</p>
     <div class="offer-wrapper">
       <div class="offer-body">
         {#

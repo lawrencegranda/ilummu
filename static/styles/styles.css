@@ -2111,16 +2111,21 @@ p.create-question-title {
 
 .btn-bid-update:disabled,
 .btn-bid-update.disabled {
-    background-color: white !important;
-    border-color: white !important;
+    background-color: var(--neutral--300) !important;
+    border-color: var(--neutral--300) !important;
     color: black !important;
 }
 
-#btn-bid-cancel {
+#btn-bid-cancel,
+#btn-update-price {
     align-self: center;
     max-width: 300px;
     min-width: 200px;
     width: 40%;
+}
+
+#btn-bid-cancel {
+    color: red !important;
 }
 
 .bid-tip {
