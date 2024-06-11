@@ -18,20 +18,30 @@ Question
     <div class="question-body">
       <div class="question-top">
         <div class="question-left">
-          <p class="question-class">{{q['number']}}: {{q['name']}}</p>
-          <p class="question-info">{{q['date']}}, {{q['time']}} &#x2022; {{q['subject']}}</p>
-          <p class="question-method"><b>Method:</b> {{q['method']}}</p>
+          <div id="question-author-profile">
+            <img src="https://robohash.org/{{q['user']}}" alt="Avatar" class="avatar"/>
+          </div>
+          <div id="question-author">
+            <p id="question-author-name">{{q['user']}}</p>
+            <p id="question-author-info">{{q['major']}} &#x2022; {{q['year']}}</p>
+          </div>
         </div>
         <div class="question-right">
-          {% if q['solved'] %}
-          <p class="question-status solved">solved</p>
-          {% else %}
-          <p class="question-status unsolved">unsolved</p>
-          {% endif %}
-          <div class="question-price">${{'%.2f' % q['price']}}</div>
+          <p id="question-date">{{q['date']}}, {{q['time']}}</p>
+
+          <div class="question-labels">
+            <div class="question-price">${{'%.2f' % q['price']}}</div>
+            {% if q['solved'] %}
+            <p class="question-status solved">solved</p>
+            {% else %}
+            <p class="question-status unsolved">unsolved</p>
+            {% endif %}
+          </div>
         </div>
       </div>
       <div class="question-bottom">
+        <p class="question-class">{{q['number']}}: {{q['name']}}</p>
+        <p class="question-info">{{q['solve-time']}} solve time &#x2022; {{q['method']}}</p>
         <p class="question-text">{{q['request']}}</p>
       </div>
     </div>
@@ -91,8 +101,8 @@ Question
     </div>
     
     {% else %}
-    <p class="offer-title">Make an Offer!</p>
     <div class="offer-wrapper">
+      <p class="offer-title">Make an Offer!</p>
       <div class="offer-body">
         {#
         <div class="offer-pair">
