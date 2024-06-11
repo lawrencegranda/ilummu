@@ -204,7 +204,6 @@ def get_comments():
 
     comments = sorted(comments, key=lambda d: d["id"])
 
-    print(comments)
     return comments
 
 
