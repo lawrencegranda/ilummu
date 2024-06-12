@@ -39,27 +39,43 @@ users = {
         "id": 1,
         "name": "OrangeJuice",
         "major": "Computer Science",
-        "year": "Class of '28",
+        "year": "Freshman",
+        "rating": 3.7,
     },
     2: {
         "id": 2,
         "name": "AppleJuice",
         "major": "Information Science",
-        "year": "Class of '27",
+        "year": "Sophomore",
+        "rating": 4.5,
     },
-    3: {"id": 3, "name": "GuavaJuice", "major": "Economics", "year": "Class of '26"},
-    4: {"id": 4, "name": "MangoJuice", "major": "AEM", "year": "Class of '24"},
+    3: {
+        "id": 3,
+        "name": "GuavaJuice",
+        "major": "Economics",
+        "year": "Junior",
+        "rating": 5,
+    },
+    4: {
+        "id": 4,
+        "name": "MangoJuice",
+        "major": "AEM",
+        "year": "Senior",
+        "rating": 2,
+    },
     5: {
         "id": 5,
         "name": "PearJuice",
         "major": "Mechanical Engineering",
-        "year": "Class of '24",
+        "year": "Senior",
+        "rating": None,
     },
     6: {
         "id": 6,
         "name": "BerryJuice",
         "major": "Engineering Physics",
-        "year": "Class of '24",
+        "year": "Junior",
+        "rating": 4.3,
     },
 }
 
@@ -245,6 +261,7 @@ def get_offers():
         of["user"] = users[of["user_id"]]["name"]
         of["major"] = users[of["user_id"]]["major"]
         of["year"] = users[of["user_id"]]["year"]
+        of["rating"] = users[of["user_id"]]["rating"]
 
     return offers
 
@@ -351,14 +368,23 @@ def fetch_question(id_qstn):
 
     comments = get_comments()
 
+    made_offer = True
+    accepted_offer = True
     is_author = False
 
-    if question["id"] > 1:
+    if question["id"] % 2 == 0:
         is_author = True
 
     offers = []
     if is_author:
         offers = get_offers()
+
+    if made_offer:
+        offer_made = get_offers()[0]
+
+    offer_accepted = None
+    if question["solved"]:
+        accepted_offer = get_offers()[0]
 
     return render_template(
         "view.html",
@@ -369,6 +395,9 @@ def fetch_question(id_qstn):
         q=question,
         comments=comments,
         is_author=is_author,
+        made_offer=made_offer,
+        accepted_offer=accepted_offer,
+        offer_made=offer_made,
         offers=offers,
     )
 
