@@ -4,11 +4,24 @@
     {% for offer in offers  %}
     <div class="offer">
       <div class="offer-left">
-        <div id="offer-user-profile">
+        <div class="offer-user-profile">
           <img src="https://robohash.org/{{offer['user']}}" alt="Avatar" class="avatar"/>
         </div>
         <div class="question-user">
-          <p class="question-user-name">{{offer['user']}}</p>
+          <p class="question-user-name">
+            {{offer['user']}} 
+            &nbsp;
+            <span class="rating">
+              {% if offer['rating'] is not number %}
+              {% elif offer['rating'] >= 3 %}
+              {{'%.1f' % offer['rating']}}
+              <span class="glyphicon glyphicon-star"></span>
+              {% else %}
+              {{'%.1f' % offer['rating']}}
+              <span class="glyphicon glyphicon-star-empty"></span>
+              {% endif %}
+            </span>
+          </p>
           <p class="question-user-info">{{offer['major']}} &#x2022; {{offer['year']}}</p>
         </div>
       </div>

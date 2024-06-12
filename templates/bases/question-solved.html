@@ -1,4 +1,60 @@
 {% if is_author %}
-  {% include "bases/question-author-offer-list.html" %}
+
+  <div class="separator"></div>
+
+  <div class="accepted-offer-wrapper">
+    <div class="accepted-offer">
+      <div class="offer-left">
+        <div class="offer-user-profile">
+          <img src="https://robohash.org/{{accepted_offer['user']}}" alt="Avatar" class="avatar"/>
+        </div>
+        <div class="question-user">
+          <p class="question-user-name">
+            {{accepted_offer['user']}} 
+            &nbsp;
+            <span class="rating">
+              {% if not accepted_offer['rating'] %}
+              {% elif accepted_offer['rating'] >= 3 %}
+              {{'%.1f' % accepted_offer['rating']}}
+              <span class="glyphicon glyphicon-star"></span>
+              {% else %}
+              {{'%.1f' % accepted_offer['rating']}}
+              <span class="glyphicon glyphicon-star-empty"></span>
+              {% endif %}
+            </span>
+          </p>
+          <p class="question-user-info">{{accepted_offer['major']}} &#x2022; {{accepted_offer['year']}}</p>
+        </div>
+      </div>
+      <div class="accepted-offer-price">Pay ${{'%.2f' % accepted_offer['amount']}}</div>
+    </div>
+    <p class="accepted-offer-statement">Please contact the tutor through this phone number:</p>
+    <p class="accepted-offer-phone">+1 (123) 456-7890</p>
+    <p class="accepted-offer-message">** Arrange payment on your own. **</p>
+  </div>
+
+{% elif made_offer and accepted_offer %}
+
+  <div class="separator"></div>
+
+  <div class="accepted-offer-wrapper">
+    <div class="accepted-offer">
+      <div class="offer-left">
+        <div class="offer-user-profile">
+          <img src="https://robohash.org/{{q['user']}}" alt="Avatar" class="avatar"/>
+        </div>
+        <div class="question-user">
+          <p class="question-user-name">{{q['user']}}</p>
+          <p class="question-user-info">{{q['major']}} &#x2022; {{q['year']}}</p>
+        </div>
+      </div>
+      <div class="accepted-offer-price">Earn ${{'%.2f' % offer_made['amount']}}</div>
+    </div>
+    <p class="accepted-offer-statement">Please contact the student through this phone number:</p>
+    <p class="accepted-offer-phone">+1 (123) 456-7890</p>
+    <p class="accepted-offer-message">** Arrange payment on your own. **</p>
+  </div>
+
+{% elif made_offer %}
 {% else %}
 {% endif %}
