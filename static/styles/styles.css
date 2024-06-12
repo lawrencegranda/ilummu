@@ -1244,6 +1244,7 @@ p.question-status,
     vertical-align: middle;
     line-height: normal;
     height: 38px;
+    max-width: 100px;
 }
 
 p.question-status.unsolved {
@@ -1813,7 +1814,7 @@ button.btn-view:hover {
     min-width: 400px;
 }
 
-#offer-user-profile {
+.offer-user-profile {
     height: 60px !important;
     width: 60px !important;
     vertical-align: middle;
@@ -1910,6 +1911,11 @@ button.btn-view:hover {
 
     .offer .question-user-info {
         font-size: 15px;
+    }
+
+    .offer .question-price {
+        font-size: 13px;
+        max-width: 300px;
     }
 
     .offer-list {
@@ -2315,4 +2321,111 @@ p.create-question-title {
     .bid-tip {
         font-size: 14px;
     }
+}
+
+.separator {
+    width: 100%;
+    height: 30px;
+    margin-top: 30px;
+    border-top: 2px solid var(--neutral--300);
+}
+
+.accepted-offer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    column-gap: 15px;
+    align-self: center;
+    width: 100%;
+}
+
+.accepted-offer-price {
+    align-self: flex-end;
+    text-align: right;
+    font-size: 21px;
+    font-weight: 600;
+    color: black;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.accepted-offer-wrapper .avatar {
+    background-color: var(--neutral--200);
+}
+
+.accepted-offer-wrapper .question-user-info {
+    color: var(--neutral--200);
+}
+
+.accepted-offer-wrapper {
+    border-radius: 60px;
+    padding: 40px;
+    background-color: var(--blue--base);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    row-gap: 20px;
+}
+
+.accepted-offer-statement {
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    font-weight: 500;
+    font-size: 19px;
+}
+
+.accepted-offer-message {
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    font-weight: 500;
+    font-size: 17px;
+    color: red;
+}
+
+.accepted-offer-phone {
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    color: var(--neutral--200);
+    font-weight: bold;
+    font-size: 25px;
+}
+
+@media only screen and (min-width: 0px) and (max-width: 550px) {
+    .accepted-offer-wrapper {
+        border-radius: 30px;
+        padding: 20px;
+    }
+
+    .accepted-offer-price {
+        font-size: 18px;
+    }
+
+    .accepted-offer-statement {
+        font-size: 17px;
+    }
+
+    .accepted-offer-phone {
+        font-size: 22px;
+    }
+
+    .accepted-offer-wrapper .question-user-name {
+        font-size: 19px;
+    }
+
+    .accepted-offer-wrapper .question-user-info {
+        font-size: 16px;
+    }
+
+    .accepted-offer-message {
+        font-size: 14px;
+    }
+
+}
+
+.rating {
+    color: rgb(242, 218, 0);
+    font-size: 80%;
 }
