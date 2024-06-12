@@ -6,27 +6,27 @@
     <div class="accepted-offer">
       <div class="offer-left">
         <div class="offer-user-profile">
-          <img src="https://robohash.org/{{accepted_offer['user']}}" alt="Avatar" class="avatar"/>
+          <img src="https://robohash.org/{{offer_accepted['user']}}" alt="Avatar" class="avatar"/>
         </div>
         <div class="question-user">
           <p class="question-user-name">
-            {{accepted_offer['user']}} 
+            {{offer_accepted['user']}} 
             &nbsp;
             <span class="rating">
-              {% if not accepted_offer['rating'] %}
-              {% elif accepted_offer['rating'] >= 3 %}
-              {{'%.1f' % accepted_offer['rating']}}
+              {% if not offer_accepted['rating'] %}
+              {% elif offer_accepted['rating'] >= 3 %}
+              {{'%.1f' % offer_accepted['rating']}}
               <span class="glyphicon glyphicon-star"></span>
               {% else %}
-              {{'%.1f' % accepted_offer['rating']}}
+              {{'%.1f' % offer_accepted['rating']}}
               <span class="glyphicon glyphicon-star-empty"></span>
               {% endif %}
             </span>
           </p>
-          <p class="question-user-info">{{accepted_offer['major']}} &#x2022; {{accepted_offer['year']}}</p>
+          <p class="question-user-info">{{offer_accepted['major']}} &#x2022; {{offer_accepted['year']}}</p>
         </div>
       </div>
-      <div class="accepted-offer-price">Pay ${{'%.2f' % accepted_offer['amount']}}</div>
+      <div class="accepted-offer-price">Pay ${{'%.2f' % offer_accepted['amount']}}</div>
     </div>
     <p class="accepted-offer-statement">Please contact the tutor through this phone number:</p>
     <p class="accepted-offer-phone">+1 (123) 456-7890</p>
@@ -56,5 +56,7 @@
   </div>
 
 {% elif made_offer %}
+{% import 'macros/offer-declined-macro.html' as macro %}
+{{ macro.declined_offer('You can find another question.') }}
 {% else %}
 {% endif %}

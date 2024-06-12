@@ -22,7 +22,7 @@
     <p class="bid-tip">
       Tip: if no one is accepting the offer, then probably current price is not attractive.
       <br>
-      We recommend raising your price
+      We recommend raising your price.
     </p>
   </div>
 </div>
@@ -31,6 +31,12 @@
 
 
 {% else %}
+
+{% if made_offer and not accepted_offer %}
+{% import 'macros/offer-declined-macro.html' as macro %}
+{{ macro.declined_offer('You can make another offer or find another question.') }}
+{% else %}
+{% endif %}
 
 <div class="offer-wrapper">
   <div class="offer-body">
@@ -57,5 +63,6 @@
     </div>
   </div>
 </div>
+
 
 {% endif %}
