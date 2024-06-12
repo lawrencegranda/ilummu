@@ -1232,7 +1232,7 @@ p.question-status,
     width: 100%;
     background-color: var(--neutral--300);
     color: black;
-    padding: 25px;
+    padding: 20px;
     padding-top: 10px;
     padding-bottom: 10px;
     font-size: 15px;
@@ -1243,8 +1243,7 @@ p.question-status,
     margin: 0;
     vertical-align: middle;
     line-height: normal;
-    height: 38px;
-    max-width: 100px;
+    min-height: 38px;
 }
 
 p.question-status.unsolved {
@@ -2428,4 +2427,63 @@ p.create-question-title {
 .rating {
     color: rgb(242, 218, 0);
     font-size: 80%;
+}
+
+.declined-offer-wrapper {
+    border-radius: 60px;
+    padding: 40px;
+    background-color: white;
+    border: 2px solid var(--neutral--300);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    row-gap: 30px;
+    min-height: 175px;
+}
+
+.declined-offer-statement {
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    font-weight: 500;
+    font-size: 22px;
+    color: var(--blue--base);
+}
+
+.declined-offer-message {
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    font-weight: 500;
+    font-size: 18px;
+    color: black;
+}
+
+@media only screen and (min-width: 0px) and (max-width: 550px) {
+    .declined-offer-wrapper {
+        border-radius: 30px;
+        padding: 20px;
+    }
+
+    .declined-offer-statement {
+        font-size: 19px;
+    }
+
+    .declined-offer-message {
+        font-size: 16px;
+    }
+
+}
+
+#declined-offer-browser {
+    display: block;
+    margin-top: 20px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    height: auto;
+    border-radius: 25px;
+    font-size: 19px;
 }

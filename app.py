@@ -84,6 +84,38 @@ def get_questions():
     question_one = {
         "id": 1,
         "solved": False,
+        "subject": "Engineering",
+        "number": "CS 2800",
+        "name": "Discrete Math",
+        "solve-time": 10,
+        "request": "How to I transition from a NFA to a DFA?",
+        "date": "06.01.2024",
+        "time": "11:17pm",
+        "time-ago": "Yesterday",
+        "price": 2.5,
+        "method": "Text message",
+        "user_id": 1,
+    }
+
+    question_two = {
+        "id": 2,
+        "solved": False,
+        "subject": "Engineering",
+        "number": "CS 3110",
+        "name": "Functional Programming",
+        "solve-time": 5,
+        "request": "How do I curry a function?",
+        "date": "05.26.2024",
+        "time": "7:47am",
+        "time-ago": "A week ago",
+        "price": 2,
+        "method": "Text message",
+        "user_id": 4,
+    }
+
+    question_three = {
+        "id": 3,
+        "solved": False,
         "subject": "Dyson",
         "number": "AEM 2200",
         "name": "Business Man and Org",
@@ -97,8 +129,8 @@ def get_questions():
         "user_id": 2,
     }
 
-    question_two = {
-        "id": 2,
+    question_four = {
+        "id": 4,
         "solved": False,
         "subject": "Engineering",
         "number": "MATH 2940",
@@ -113,8 +145,8 @@ def get_questions():
         "user_id": 5,
     }
 
-    question_three = {
-        "id": 3,
+    question_five = {
+        "id": 5,
         "solved": True,
         "subject": "Engineering",
         "number": "CS 2800",
@@ -129,8 +161,8 @@ def get_questions():
         "user_id": 1,
     }
 
-    question_four = {
-        "id": 4,
+    question_six = {
+        "id": 6,
         "solved": True,
         "subject": "Engineering",
         "number": "CS 3110",
@@ -145,7 +177,65 @@ def get_questions():
         "user_id": 4,
     }
 
-    questions = [question_one, question_two, question_three, question_four]
+    question_seven = {
+        "id": 7,
+        "solved": True,
+        "subject": "Dyson",
+        "number": "AEM 2200",
+        "name": "Business Man and Org",
+        "solve-time": 20,
+        "request": "How do I create a SWOT analysis?",
+        "date": "06.02.2024",
+        "time": "5:28pm",
+        "time-ago": "2 min ago",
+        "price": 5.0,
+        "method": "Video call",
+        "user_id": 2,
+    }
+
+    question_eight = {
+        "id": 8,
+        "solved": True,
+        "subject": "Engineering",
+        "number": "MATH 2940",
+        "name": "Linear Algebra for Engineers",
+        "solve-time": 45,
+        "request": """Linear Combinations, Homogeneous Systems 3.57. Write v as a linear combination of U1, U2, U3, where U1 = (4,-9,2), U2 = (1,2,-1), U3 = (1,4,2): (a) V = (1,3,2), U = (1,2,1), U2 = (2,6,5), U3 = (1,7,8): (b) V = (1,4,6), U = (2,3,5), U2 = (3,5,8). 3.58 Let U1 = (1,1,2), U2 = (1,3,-2), U3 = (4,-2,-1) in R^3. Show that U1, U2, U3 are orthogonal, and write V as a linear combination of U1, U2, U3, where (a) V = (5,3,9), (b) V = (1,-3,3), (c) V = (1,1,1) (Hint: Use Fourier coefficients). 3.59 Find the dimension and a basis of the general solution W of each of the following homogeneous systems: (a) x + 2y = 0, (b) x + 2y - 3z = 0, (c) x + 2y + 3z + w = 0, (d) 2x + y + 2z = 0, (e) 2x + 4y + 7z + 4w = 0, (f) x + y + 4 = 0, (g) 3x - 4y = 0, (h) 3x + 6y + 10z + 5w = 0. 3.60 Find the dimension and basis of the general solution W of each of the following systems: (a) x + 3y + 2z - w = 0, (b) 2x + 4y + 3z + 2w = 0, (c) 2x + 6y + 5z + x5 = 0, (d) 5x + 10y - 3z + 14w = 0, (e) 11x + 12y + 13z + 14w = 0, (f) 5x + 10y + 3z + 14w = 0. Echelon Matrices, Row Canonical Form 3.61 Reduce each of the following matrices to echelon form and then to row canonical form: 1 2 0 -3 (b) 1 0 0 1 3.62 Reduce each of the following matrices to echelon form and then to row canonical form: 1 9 0 1 (b) 1 0 0 1 3.63 Using only 0's and 1's, list all possible 2 x 2 matrices in row canonical form. 3.64 Using only 0's and 1's, find the number n of possible 3 x 3 matrices in row canonical form.""",
+        "date": "05.31.2024",
+        "time": "6:00pm",
+        "time-ago": "Two days ago",
+        "price": 4.25,
+        "method": "Voice call",
+        "user_id": 5,
+    }
+
+    question_nine = {
+        "id": 9,
+        "solved": True,
+        "subject": "Engineering",
+        "number": "CS 2800",
+        "name": "Discrete Math",
+        "solve-time": 10,
+        "request": "How to I transition from a NFA to a DFA?",
+        "date": "06.01.2024",
+        "time": "11:17pm",
+        "time-ago": "Yesterday",
+        "price": 2.5,
+        "method": "Text message",
+        "user_id": 1,
+    }
+
+    questions = [
+        question_one,
+        question_two,
+        question_three,
+        question_four,
+        question_five,
+        question_six,
+        question_seven,
+        question_eight,
+        question_nine,
+    ]
 
     for q in questions:
         q["summary"] = (
@@ -369,9 +459,12 @@ def fetch_question(id_qstn):
     comments = get_comments()
 
     made_offer = True
-    accepted_offer = True
-    is_author = False
 
+    accepted_offer = True
+    if question["id"] % 3 == 0:
+        accepted_offer = False
+
+    is_author = False
     if question["id"] % 2 == 0:
         is_author = True
 
@@ -379,12 +472,13 @@ def fetch_question(id_qstn):
     if is_author:
         offers = get_offers()
 
+    offer_made = None
     if made_offer:
         offer_made = get_offers()[0]
 
     offer_accepted = None
     if question["solved"]:
-        accepted_offer = get_offers()[0]
+        offer_accepted = get_offers()[0]
 
     return render_template(
         "view.html",
@@ -396,8 +490,9 @@ def fetch_question(id_qstn):
         comments=comments,
         is_author=is_author,
         made_offer=made_offer,
-        accepted_offer=accepted_offer,
         offer_made=offer_made,
+        accepted_offer=accepted_offer,
+        offer_accepted=offer_accepted,
         offers=offers,
     )
 
