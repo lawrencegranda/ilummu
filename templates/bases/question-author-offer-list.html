@@ -1,0 +1,25 @@
+<div class="your-offers-wrapper">
+  <p class="offer-title">Offers Made:</p>
+  <div class="offer-list">
+    {% for offer in offers  %}
+    <div class="offer">
+      <div class="offer-left">
+        <div id="offer-user-profile">
+          <img src="https://robohash.org/{{offer['user']}}" alt="Avatar" class="avatar"/>
+        </div>
+        <div class="question-user">
+          <p class="question-user-name">{{offer['user']}}</p>
+          <p class="question-user-info">{{offer['major']}} &#x2022; {{offer['year']}}</p>
+        </div>
+      </div>
+      <div class="offer-right">
+        <div class="question-price">${{'%.2f' % offer['amount']}}</div>
+        <div class="offer-buttons">
+          <button id="btn-accept-offer" class="btn btn-my-offer" type="button">accept</button>
+          <button id="btn-decline-offer" class="btn btn-my-offer" type="button">decline</button>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
