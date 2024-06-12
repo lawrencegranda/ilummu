@@ -39,27 +39,27 @@ users = {
         "id": 1,
         "name": "OrangeJuice",
         "major": "Computer Science",
-        "year": "Freshman",
+        "year": "Class of '28",
     },
     2: {
         "id": 2,
         "name": "AppleJuice",
         "major": "Information Science",
-        "year": "Sophomore",
+        "year": "Class of '27",
     },
-    3: {"id": 3, "name": "GuavaJuice", "major": "Economics", "year": "Junior"},
-    4: {"id": 4, "name": "MangoJuice", "major": "AEM", "year": "Senior"},
+    3: {"id": 3, "name": "GuavaJuice", "major": "Economics", "year": "Class of '26"},
+    4: {"id": 4, "name": "MangoJuice", "major": "AEM", "year": "Class of '24"},
     5: {
         "id": 5,
         "name": "PearJuice",
         "major": "Mechanical Engineering",
-        "year": "Master's",
+        "year": "Class of '24",
     },
     6: {
         "id": 6,
         "name": "BerryJuice",
         "major": "Engineering Physics",
-        "year": "Senior",
+        "year": "Class of '24",
     },
 }
 
@@ -216,6 +216,7 @@ def get_offers():
         "year": "Junior",
         "comments": "None.",
         "status": "none",
+        "user_id": 3,
     }
 
     offer_two = {
@@ -225,6 +226,7 @@ def get_offers():
         "year": "Senior",
         "comments": "I prefer Zoom.",
         "status": "accepted",
+        "user_id": 4,
     }
 
     offer_three = {
@@ -234,9 +236,15 @@ def get_offers():
         "year": "Sophomore",
         "comments": "Google meet",
         "status": "declined",
+        "user_id": 5,
     }
 
     offers = [offer_one, offer_two, offer_three]
+
+    for of in offers:
+        of["user"] = users[of["user_id"]]["name"]
+        of["major"] = users[of["user_id"]]["major"]
+        of["year"] = users[of["user_id"]]["year"]
 
     return offers
 
