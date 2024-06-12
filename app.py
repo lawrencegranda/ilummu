@@ -351,10 +351,10 @@ def fetch_question(id_qstn):
 
     comments = get_comments()
 
-    is_author = True
+    is_author = False
 
     if question["id"] > 1:
-        is_author = False
+        is_author = True
 
     offers = []
     if is_author:
