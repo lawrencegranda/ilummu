@@ -2033,7 +2033,7 @@ button.btn-view:hover {
 
 #create-question-textbox {
     border: none;
-    font-size: 0.9rem;
+    font-size: 13px;
     height: 8rem;
     min-height: 6rem;
 }
@@ -2174,7 +2174,7 @@ p.create-question-title {
     #create-question-textbox {
         height: 75px;
         min-height: 50px;
-        font-size: 0.85rem;
+        font-size: 12px;
     }
 }
 
