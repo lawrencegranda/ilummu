@@ -1,7 +1,10 @@
 $('#bid-bar').ready(function () {
-  let elem = $("#bid-bar")
+  let elem = $("#bid-bar");
+  let changed = -1;
+  let option = false;
   let width = 1;
   let id = setInterval(frame, 100);
+
   function frame() {
     if (width >= 100) {
       clearInterval(id);
@@ -17,6 +20,17 @@ $('#bid-bar').ready(function () {
       width += 0.002;
     }
     elem.css('width', width + '%')
+
+    if ((width - changed) > 15) {
+      if (option) {
+        $('#question-wait-header').text('Looking For Tutors...');
+        option = false;
+      } else {
+        $('#question-wait-header').text('Waiting For Replies...')
+        option = true;
+      }
+      changed = width
+    }
   }
 })
 
