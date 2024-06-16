@@ -1,0 +1,171 @@
+{% extends "bases/layout.html" %}
+
+{% if login == true %}
+{% set login = true %}
+{% else %}
+{% set login = false %}
+{% endif %}
+
+
+{% block title %}
+{% if login == true %}
+Log In
+{% else %}
+Sign Up
+{% endif %}
+{% endblock %}
+
+{% block javascript %}
+  {{ super() }}
+  
+  <script>
+    $(document).ready(() => {
+      const phoneInputField = document.querySelector("#signup-phone");
+      const phoneInput = window.intlTelInput(phoneInputField, {
+        onlyCountries: ["us"],
+        initialCountry: "us",
+        nationalMode: true,
+        separateDialCode: true,
+        hiddenInput: () => ({ phone: "full_phone", country: "country_code" }),
+        utilsScript:
+          "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+      });
+    
+      $('#signup-phone').on('change', () => {
+        console.log(phoneInput.getNumber())
+      })
+    });
+
+  const errorMap = ["Invalid number", "Invalid country code", "Too short", "Too long", "Invalid number"];
+
+  const errorMsg = document.querySelector("#error-msg");
+
+  const reset = () => {
+    errorMsg.innerHTML = "";
+    errorMsg.classList.add("hide");
+  };
+
+  const showError = (msg) => {
+    input.classList.add("error");
+    errorMsg.innerHTML = msg;
+    errorMsg.classList.remove("hide");
+  };
+
+  // on click button: validate
+  button.addEventListener('click', () => {
+    reset();
+    if (!input.value.trim()) {
+      showError("Required");
+    } else if (!iti.isValidNumber()) {
+      const errorCode = iti.getValidationError();
+      const msg = errorMap[errorCode] || "Invalid number";
+      showError(msg);
+      return
+    }
+  });
+
+  </script>
+{% endblock %}
+
+
+{% block head %}
+  {{ super() }}
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+
+
+  <style>
+    .footer {display: none;}
+  </style>
+{% endblock head %}
+
+
+{% block content %}
+<div class="signup-wrapper">
+  <div class="signup-container">
+    <form class="signup-body" id="signup-form" method="post">
+      <div class="signup-top">
+        <div class="logo-wrapper">
+          <div class="signup-logo">
+            <a class="brand" href="/">
+              <img class="image brand-image" src="/static/logo.svg" alt=""/>
+            </a>
+            <div class="brand-name" onclick="location.href='/';"> Edify </div>
+          </div>
+          <p class="made-students">Made by Cornell Students</p>
+        </div>
+        <p class="signup-title">
+          {% if login == true %}
+          Welcome Back!
+          {% else %}
+          Create Account
+          {% endif %}
+        </p>
+      </div>
+      <div class="signup-middle">
+
+        <div class="signup-email-box">
+          <input id="signup-email" type="text" placeholder="netid" autocomplete="off" required/>
+          <span class="signup-email-cornell">@cornell.edu</span>
+        </div>
+
+        <input id="signup-password" type="password" autocomplete="off" minlength="8" placeholder="Password" required/>
+
+        {% if login == false %}
+        <input id="signup-phone" type="tel" name="phone" required/>
+
+        <input id="signup-major" list="majors-list" placeholder="Major" autocomplete="off" required/>
+        <datalist id="majors-list">
+          <option value="Computer Science">
+        </datalist>
+        
+        <input id="signup-grade" type="number" min="1900" max="2099" step="1" placeholder="Graduation Year (ex.: 2024)" autocomplete="off" required/>
+        {% endif %}
+      </div>
+      <div class="signup-bottom">
+        <div class="signup-pair">
+          <div class="signup-remember">
+            <input type="checkbox" id="signup-remember-box"/>
+            <p class="signup-remember-text">
+              Remember Me
+            </p>
+          </div>
+
+          {% if login == true %}
+          <p class="signup-forgot">
+            <a href="/forgot">Forgot Password?</a>
+          </p>
+          {% endif %}
+
+        </div>
+        {% if login == false %}
+        <div class="signup-terms">
+          <input type="checkbox" id="signup-terms-box" required/>
+          <p class="signup-terms-text">
+            I accept to display my contact information to tutors when I accept their offers. I also agree to receiving emails and text messages from Edify.
+          </p>
+        </div>
+        {% endif %}
+
+        <button id="signup-button" form="signup-form" type="submit" class="btn btn-primary" type="button">
+          {% if login == false %}
+          Sign Up
+          {% else %}
+          Log In
+          {% endif %}
+        </button>
+
+        <p class="signup-login">
+          {% if login == false %}
+          Already have an account? <a href="/login">Log In</a>
+          {% else %}
+          Do not have an account? <a href="/signup">Sign Up</a>
+          {% endif %}
+        </p>
+      </div>
+    </form>
+  </div>
+<div>
+{% endblock %}

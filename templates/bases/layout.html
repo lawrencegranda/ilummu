@@ -2,12 +2,18 @@
 <html lang="en">
 
 <head>
+	{% block head %}
+
 	<meta charset="utf-8" />
 	<title>Edify: {% block title %}{% endblock %}</title>
-	
+
+
+	{% endblock head %}
+		
 	<!-- Styles -->
 	{% include 'bases/headers.html' %}
 	
+	{% block javascript %}{% endblock %}
 </head>
 
 

@@ -396,6 +396,16 @@ def index():
     return render_template("landing.html")
 
 
+@app.route("/login")
+def login():
+    return render_template("signup.html", login=True)
+
+
+@app.route("/signup")
+def signup():
+    return render_template("signup.html", login=False)
+
+
 @app.route("/dashboard", methods=["POST", "GET"])
 def dashboard():
     questions = get_questions()
@@ -409,31 +419,6 @@ def dashboard():
         time_intervals=time_intervals,
         notifications=notifications,
         questions=questions,
-    )
-
-
-@app.route("/view", methods=["POST", "GET"])
-def view():
-    notifications = get_notifications()
-
-    question = get_questions()[1]
-    comments = get_comments()
-
-    is_author = False
-    offers = []
-    if is_author:
-        offers = get_offers()
-
-    return render_template(
-        "view.html",
-        subjects=subjects,
-        methods=methods,
-        time_intervals=time_intervals,
-        notifications=notifications,
-        q=question,
-        comments=comments,
-        is_author=is_author,
-        offers=offers,
     )
 
 
