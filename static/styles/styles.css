@@ -1534,7 +1534,7 @@ button.btn-reply:hover {
     transform: scale(1.5);
 }
 
-.taken-class:checked {
+:checked {
     accent-color: var(--blue--base);
 }
 
@@ -2486,4 +2486,210 @@ p.create-question-title {
     height: auto;
     border-radius: 25px;
     font-size: 19px;
+}
+
+.signup-wrapper {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--blue--base);
+    display: flex;
+    flex-direction: column;
+}
+
+.signup-container {
+    margin-top: auto;
+    margin-bottom: auto;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 500px;
+    min-width: 450px;
+    background-color: white;
+    border-radius: 40px;
+    padding: 50px;
+}
+
+.signup-body {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    row-gap: 35px;
+}
+
+.signup-body p {
+    margin: 0;
+}
+
+.signup-top {
+    display: flex;
+    flex-direction: column;
+    row-gap: 15px;
+}
+
+p.signup-title {
+    font-size: 25px;
+    font-weight: 600;
+    text-align: center;
+}
+
+p.signup-description {
+    font-size: 18px;
+    text-align: center;
+}
+
+.signup-middle {
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px;
+}
+
+.signup-body input {
+    font-size: 17px;
+    font-weight: 500;
+    border: none;
+    color: black;
+    height: auto;
+    line-height: 1;
+}
+
+.signup-body input:not(#signup-email) {
+    font-size: 17px;
+    font-weight: 500;
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-bottom: 3px solid var(--blue--base);
+    color: black;
+    height: auto;
+}
+
+.signup-email-box {
+    align-items: center;
+    display: flex;
+    justify-content: flex-start;
+    font-size: 17px;
+    font-weight: 500;
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-bottom: 3px solid var(--blue--base);
+    color: black;
+    height: auto;
+}
+
+input#signup-email {
+    width: 55px;
+    padding: 0;
+}
+
+.signup-email-cornell {
+    color: var(--neutral--400);
+}
+
+.signup-body input::placeholder {
+    color: var(--neutral--400);
+    opacity: 1;
+}
+
+.iti__flag-container,
+.iti__selected-flag {
+    background-color: transparent !important;
+}
+
+.signup-bottom {
+    display: flex;
+    flex-direction: column;
+    row-gap: 20px;
+}
+
+#signup-button {
+    width: 100%;
+    font-size: 19px;
+    height: auto;
+    padding: 7px 0;
+}
+
+.signup-pair {
+    display: flex;
+    flex-direction: row;
+    column-gap: 20px;
+    justify-content: space-between;
+}
+
+.signup-pair p {
+    font-size: 15px;
+    color: var(--blue--base);
+}
+
+.signup-login {
+    font-size: 15px;
+    text-align: center;
+}
+
+.signup-remember,
+.signup-terms {
+    display: flex;
+    flex-direction: row;
+    column-gap: 15px;
+    width: 100%;
+}
+
+p.signup-remember-text {
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+p.signup-forgot {
+    width: 100%;
+    align-self: flex-end;
+    text-align: right;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+input#signup-remember-box,
+input#signup-terms-box {
+    align-self: flex-start;
+    height: 19px !important;
+    max-width: 19px !important;
+    width: 100% !important;
+    margin: 0;
+}
+
+.signup-terms-text {
+    font-size: 14px;
+}
+
+.signup-logo {
+    align-items: center;
+    display: flex;
+    justify-content: flex-start;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.signup-logo .brand-image {
+    height: 60px;
+    width: 85px;
+}
+
+.signup-logo .brand-name {
+    font-size: 47px;
+    margin-left: 15px;
+}
+
+.logo-wrapper {
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px;
+    margin-bottom: 10px;
+}
+
+.made-students {
+    margin: 0;
+    font-size: 15.5px;
+    text-align: center;
+    font-weight: normal;
 }
