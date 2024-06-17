@@ -398,7 +398,7 @@ def get_notifications():
 
 @app.route("/")
 def index():
-    return render_template("landing.html")
+    return render_template("home.html")
 
 
 @app.route("/login")
