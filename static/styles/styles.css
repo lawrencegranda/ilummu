@@ -112,7 +112,7 @@ img {
 }
 
 h1 {
-    font-size: 65px;
+    font-size: 55px;
     font-weight: 700;
     letter-spacing: -.02em;
     line-height: 1.2;
@@ -166,7 +166,7 @@ h6 {
 p {
     color: black;
     font-size: 25px;
-    margin-bottom: 12px;
+    margin: 0;
 }
 
 label {
@@ -213,6 +213,25 @@ label {
     min-width: max(125px, 30%);
 }
 
+#home-start-now {
+    margin-top: 30px;
+    font-size: 20px;
+    min-width: 100px;
+    width: auto;
+    max-width: none;
+    padding: 8px 65px;
+    height: auto;
+    border-radius: 200px;
+}
+
+strong {
+    transition: 150ms;
+}
+
+strong:hover {
+    color: var(--blue--base);
+}
+
 .navigation-center {
     align-items: center;
     display: flex;
@@ -247,17 +266,25 @@ label {
     font-family: "Archivo", sans-serif;
     font-weight: 700;
     letter-spacing: -.02em;
-    line-height: 1.2;
+    line-height: 1.3;
     margin-bottom: 0;
     margin-top: 0;
     transition: 200ms;
     text-align: left;
+    width: fit-content;
     align-self: flex-start;
-    width: 100%;
 }
 
 .heading:hover {
     color: var(--blue--base);
+}
+
+.blue {
+    color: var(--blue--base);
+}
+
+.blue:hover {
+    scale: 1.1;
 }
 
 .brand {
@@ -425,7 +452,6 @@ label {
 }
 
 .header-content {
-    max-width: 725px;
     margin-bottom: 40px;
 }
 
@@ -434,6 +460,7 @@ label {
     margin-bottom: 20px;
     font-weight: 600;
 }
+
 
 .container-regular {
     display: grid;
@@ -482,6 +509,10 @@ label {
 
 .third {
     width: 33.33%;
+}
+
+.paragraph {
+    line-height: 2;
 }
 
 .left {
