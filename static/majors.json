@@ -1,0 +1,332 @@
+{
+  "majors": [
+    {
+      "major": "Africana Studies",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Agricultural Sciences",
+      "college": "Agriculture and Life Sciences"
+    },
+    {
+      "major": "American Studies",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Animal Science",
+      "college": "Agriculture and Life Sciences"
+    },
+    {
+      "major": "Anthropology",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Applied Economics and Management",
+      "college": "Dyson"
+    },
+    {
+      "major": "Archaeology",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Architecture",
+      "college": "Architecture, Art and Planning"
+    },
+    {
+      "major": "Asian Studies",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Astronomy",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Atmospheric Science",
+      "college": "Agriculture and Life Sciences"
+    },
+    {
+      "major": "Biological Engineering",
+      "college": "Engineering"
+    },
+    {
+      "major": "Biological Sciences",
+      "college": "Agriculture and Life Sciences"
+    },
+    {
+      "major": "Biology & Society",
+      "college": "Agriculture and Life Sciences"
+    },
+    {
+      "major": "Biomedical Engineering",
+      "college": "Engineering"
+    },
+    {
+      "major": "Biometry and Statistics",
+      "college": "Agriculture and Life Sciences"
+    },
+    {
+      "major": "Chemical Engineering",
+      "college": "Engineering"
+    },
+    {
+      "major": "Chemistry",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "China and Asia-Pacific Studies",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Civil Engineering",
+      "college": "Engineering"
+    },
+    {
+      "major": "Classics (Classics, Classical Civ., Greek, Latin)",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Cognitive Science",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "College Scholar",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Communication",
+      "college": "Agriculture and Life Sciences"
+    },
+    {
+      "major": "Comparative Literature",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Computer Science",
+      "college": "Engineering"
+    },
+    {
+      "major": "Design and Environmental Analysis",
+      "college": "Human Ecology"
+    },
+    {
+      "major": "Earth and Atmospheric Sciences",
+      "college": "Engineering"
+    },
+    {
+      "major": "Economics",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Electrical and Computer Engineering",
+      "college": "Engineering"
+    },
+    {
+      "major": "Engineering Physics",
+      "college": "Engineering"
+    },
+    {
+      "major": "English",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Entomology",
+      "college": "Agriculture and Life Sciences"
+    },
+    {
+      "major": "Environment & Sustainability",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Environmental Engineering",
+      "college": "Engineering"
+    },
+    {
+      "major": "Fashion Design and Management",
+      "college": "Human Ecology"
+    },
+    {
+      "major": "Feminist, Gender & Sexuality Studies",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Fiber Science",
+      "college": "Human Ecology"
+    },
+    {
+      "major": "Fine Arts",
+      "college": "Architecture, Art and Planning"
+    },
+    {
+      "major": "Food Science",
+      "college": "Agriculture and Life Sciences"
+    },
+    {
+      "major": "French",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "German Studies",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Global & Public Health Sciences",
+      "college": "Human Ecology"
+    },
+    {
+      "major": "Global Development",
+      "college": "Agriculture and Life Sciences"
+    },
+    {
+      "major": "Government",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Health Care Policy",
+      "college": "Cornell Jeb E. Brooks School of Public Policy"
+    },
+    {
+      "major": "History",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "History of Architecture (transfer students only)",
+      "college": "Architecture, Art and Planning"
+    },
+    {
+      "major": "History of Art",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Hotel Administration",
+      "college": "Cornell Peter and Stephanie Nolan School of Hotel Administration"
+    },
+    {
+      "major": "Human Biology, Health and Society",
+      "college": "Human Ecology"
+    },
+    {
+      "major": "Human Development",
+      "college": "Human Ecology"
+    },
+    {
+      "major": "Independent Major—Arts and Sciences",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Independent Major—Engineering",
+      "college": "Engineering"
+    },
+    {
+      "major": "Industrial and Labor Relations",
+      "college": "School of Industrial and Labor Relations"
+    },
+    {
+      "major": "Information Science",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Information Science, Systems, and Technology",
+      "college": "Engineering"
+    },
+    {
+      "major": "Interdisciplinary Studies",
+      "college": "Agriculture and Life Sciences"
+    },
+    {
+      "major": "Italian",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Jewish Studies",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Landscape Architecture",
+      "college": "Agriculture and Life Sciences"
+    },
+    {
+      "major": "Linguistics",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Materials Science and Engineering",
+      "college": "Engineering"
+    },
+    {
+      "major": "Mathematics",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Mechanical Engineering",
+      "college": "Engineering"
+    },
+    {
+      "major": "Music",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Near Eastern Studies",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Nutritional Sciences",
+      "college": "Agriculture and Life Sciences"
+    },
+    {
+      "major": "Operations Research and Engineering",
+      "college": "Engineering"
+    },
+    {
+      "major": "Performing and Media Arts",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Philosophy",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Physics",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Plant Sciences",
+      "college": "Agriculture and Life Sciences"
+    },
+    {
+      "major": "Public Policy",
+      "college": "Cornell Jeb E. Brooks School of Public Policy"
+    },
+    {
+      "major": "Psychology",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Religious Studies",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Science and Technology Studies",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Sociology",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Spanish",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Statistical Science",
+      "college": "Arts and Sciences"
+    },
+    {
+      "major": "Urban and Regional Studies",
+      "college": "Architecture, Art and Planning"
+    },
+    {
+      "major": "Viticulture and Enology",
+      "college": "Agriculture and Life Sciences"
+    }
+  ]
+}
