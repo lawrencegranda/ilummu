@@ -273,6 +273,7 @@ label {
 
 .brand-image {
     width: 67px;
+    height: 67px;
 }
 
 .brand-name {
@@ -305,6 +306,7 @@ label {
 
     .brand-image {
         width: 50px;
+        height: 50px;
     }
 
     .brand-name {
@@ -2505,6 +2507,7 @@ p.create-question-title {
     background-color: var(--blue--base);
     display: flex;
     flex-direction: column;
+    padding: 20px;
 }
 
 .signup-container {
@@ -2514,6 +2517,7 @@ p.create-question-title {
     margin-right: auto;
     max-width: 500px;
     min-width: 450px;
+    width: 100%;
     background-color: white;
     border-radius: 40px;
     padding: 50px;
@@ -2528,6 +2532,7 @@ p.create-question-title {
 
 .signup-body p {
     margin: 0;
+    font-size: 15px;
 }
 
 .signup-top {
@@ -2560,17 +2565,12 @@ p.signup-description {
     color: black;
     height: auto;
     line-height: 1;
+    width: 100%;
 }
 
 .signup-body input:not(#signup-email) {
-    font-size: 17px;
-    font-weight: 500;
-    width: 100%;
     padding: 10px;
-    border: none;
     border-bottom: 3px solid var(--blue--base);
-    color: black;
-    height: auto;
 }
 
 .signup-email-box {
@@ -2622,12 +2622,11 @@ input#signup-email {
 .signup-pair {
     display: flex;
     flex-direction: row;
-    column-gap: 20px;
+    column-gap: 0px;
     justify-content: space-between;
 }
 
 .signup-pair p {
-    font-size: 15px;
     color: var(--blue--base);
 }
 
@@ -2666,7 +2665,7 @@ input#signup-terms-box {
     margin: 0;
 }
 
-.signup-terms-text {
+p.signup-terms-text {
     font-size: 14px;
 }
 
@@ -2695,9 +2694,68 @@ input#signup-terms-box {
     margin-bottom: 10px;
 }
 
-.made-students {
+p.made-students {
     margin: 0;
     font-size: 15.5px;
     text-align: center;
     font-weight: normal;
+}
+
+@media only screen and (min-width: 0px) and (max-width: 480px) {
+    .signup-container {
+        min-width: 0px;
+        width: max-content;
+        border-radius: 40px;
+        padding: 30px;
+        width: 100%;
+    }
+
+    .signup-body p {
+        font-size: 12.5px;
+    }
+
+    p.signup-title {
+        font-size: 23px;
+    }
+
+    #signup-button {
+        font-size: 16px;
+    }
+
+    .signup-logo .brand-image {
+        height: 50px;
+        width: 75px;
+    }
+
+    .signup-logo .brand-name {
+        font-size: 40px;
+        margin-left: 12px;
+    }
+
+    input#signup-remember-box,
+    input#signup-terms-box {
+        height: 17px !important;
+        max-width: 17px !important;
+    }
+
+    .signup-remember,
+    .signup-terms {
+        column-gap: 11px;
+    }
+
+    p.signup-terms-text {
+        font-size: 12px;
+    }
+
+    .signup-body input {
+        font-size: 15px;
+    }
+
+    .signup-email-box {
+        font-size: 15px;
+    }
+
+    .signup-body {
+        row-gap: 20px;
+    }
 }
