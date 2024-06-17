@@ -2759,3 +2759,9 @@ p.made-students {
         row-gap: 20px;
     }
 }
+
+#error-msg {
+    margin-top: 15px;
+    text-align: center;
+    color: red;
+}

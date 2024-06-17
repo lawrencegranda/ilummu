@@ -79,6 +79,11 @@ users = {
     },
 }
 
+import json
+
+with open("static/majors.json") as f:
+    majors = json.load(f)["majors"]
+
 
 def get_questions():
     question_one = {
@@ -403,7 +408,7 @@ def login():
 
 @app.route("/signup")
 def signup():
-    return render_template("signup.html", login=False)
+    return render_template("signup.html", login=False, majors=majors)
 
 
 @app.route("/dashboard", methods=["POST", "GET"])

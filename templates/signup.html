@@ -19,6 +19,27 @@ Sign Up
   {{ super() }}
   
   <script>
+    var errorMsg
+
+    const reset = () => {
+      errorMsg.text("");
+      errorMsg.hide();
+    };
+  
+    const showError = (msg) => {
+      errorMsg.text(msg);
+      errorMsg.show();
+    };
+
+    $(document).ready(() => {
+      errorMsg = $("#error-msg");
+      reset();
+    });
+
+    {% if login == false %}
+
+    
+
     $(document).ready(() => {
       const phoneInputField = document.querySelector("#signup-phone");
       const phoneInput = window.intlTelInput(phoneInputField, {
@@ -30,40 +51,86 @@ Sign Up
         utilsScript:
           "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
       });
+
+      const errorMap = ["invalid", "invalid country code", "too short", "too long", "invalid"];
+      errorMsg = $("#error-msg");
     
-      $('#signup-phone').on('change', () => {
-        console.log(phoneInput.getNumber())
-      })
+      $("#signup-form").on("submit", function (event) {
+        reset();
+
+        var netid = $("#signup-email").val().trim();
+        if (!netid) {
+          showError("NetID is required for email.");
+          event.preventDefault();
+          return;
+        } else if (netid.length >= 7) {
+          showError("NetID is too long.");
+          event.preventDefault();
+          return;
+        } else if (netid.length < 3) {
+          showError("NetID is too short.");
+          event.preventDefault();
+          return;
+        }
+
+        var phone = $("#signup-phone").val().trim();
+        if (!phone) {
+          showError("Phone number is required.");
+          event.preventDefault();
+          return;
+        } else if (!phoneInput.isValidNumber()) {
+          const errorCode = phoneInput.getValidationError();
+          const msg = errorMap[errorCode] || "Invalid";
+          showError("Phone number is " + msg);
+          event.preventDefault();
+          return;
+        }
+    
+        var gradyear = parseInt($("#signup-grade").val().trim());
+        if (!gradyear) {
+          showError("Graduation year is required.");
+          event.preventDefault();
+          return;
+        } else if (gradyear < 1900 | gradyear > 2050) {
+          showError("Invalid graduation year.");
+          event.preventDefault();
+          return;
+        }
+
+        var major = $('#signup-major').val();
+        if ($('option[value="' + major + '""]').length == 0) {
+          showError("Invalid major, select from the list.");
+          event.preventDefault();
+          return;
+        }
+      });
     });
 
-  const errorMap = ["Invalid number", "Invalid country code", "Too short", "Too long", "Invalid number"];
+    {% else %}
 
-  const errorMsg = document.querySelector("#error-msg");
+    $(document).ready(() => {
+      errorMsg = $("#error-msg");
 
-  const reset = () => {
-    errorMsg.innerHTML = "";
-    errorMsg.classList.add("hide");
-  };
+      $("#login-form").on("submit", function (event) {
+        reset();
 
-  const showError = (msg) => {
-    input.classList.add("error");
-    errorMsg.innerHTML = msg;
-    errorMsg.classList.remove("hide");
-  };
-
-  // on click button: validate
-  button.addEventListener('click', () => {
-    reset();
-    if (!input.value.trim()) {
-      showError("Required");
-    } else if (!iti.isValidNumber()) {
-      const errorCode = iti.getValidationError();
-      const msg = errorMap[errorCode] || "Invalid number";
-      showError(msg);
-      return
-    }
-  });
-
+        var netid = $("#signup-email").val().trim();
+        if (!netid) {
+          showError("NetID is required for email.");
+          event.preventDefault();
+          return;
+        } else if (netid.length >= 7) {
+          showError("NetID is too long.");
+          event.preventDefault();
+          return;
+        } else if (netid.length < 3) {
+          showError("NetID is too short.");
+          event.preventDefault();
+          return;
+        }
+      });
+    });
+    {% endif %}
   </script>
 {% endblock %}
 
@@ -85,7 +152,11 @@ Sign Up
 {% block content %}
 <div class="signup-wrapper">
   <div class="signup-container">
+    {% if login == false %}
     <form class="signup-body" id="signup-form" method="post">
+    {% else %}
+    <form class="signup-body" id="login-form" method="post">
+    {% endif %}
       <div class="signup-top">
         <div class="logo-wrapper">
           <div class="signup-logo">
@@ -111,19 +182,24 @@ Sign Up
           <span class="signup-email-cornell">@cornell.edu</span>
         </div>
 
-        <input id="signup-password" type="password" autocomplete="off" minlength="8" placeholder="Password" required/>
-
         {% if login == false %}
         <input id="signup-phone" type="tel" name="phone" required/>
 
         <input id="signup-major" list="majors-list" placeholder="Major" autocomplete="off" required/>
         <datalist id="majors-list">
-          <option value="Computer Science">
+          {% for major in  majors %}
+          <option value="{{major['major']}}"/>
+          {% endfor %}
         </datalist>
         
         <input id="signup-grade" type="number" min="1900" max="2099" step="1" placeholder="Graduation Year (ex.: 2024)" autocomplete="off" required/>
         {% endif %}
+
+        <input id="signup-password" type="password" autocomplete="off" minlength="8" placeholder="Password" required/>
+
+        <p id="error-msg"></p>
       </div>
+
       <div class="signup-bottom">
         <div class="signup-pair">
           <div class="signup-remember">
@@ -149,13 +225,15 @@ Sign Up
         </div>
         {% endif %}
 
+        {% if login == false %}
         <button id="signup-button" form="signup-form" type="submit" class="btn btn-primary" type="button">
-          {% if login == false %}
           Sign Up
-          {% else %}
-          Log In
-          {% endif %}
         </button>
+        {% else %}
+        <button id="signup-button" form="login-form" type="submit" class="btn btn-primary" type="button">
+          Log In
+        </button> 
+        {% endif %}
 
         <p class="signup-login">
           {% if login == false %}
