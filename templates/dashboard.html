@@ -30,7 +30,7 @@ Dashboard
         </div>
         #}
         
-        <button class="btn category all-subjects selected">All Schools</button>
+        <button class="btn category all-subjects selected">All Questions</button>
         {% for subject in subjects  %}
         <button class="btn category" value="{{subject['value']}}">{{subject['name']}}</button>
         {% endfor  %}
@@ -40,7 +40,7 @@ Dashboard
     <div class="dashboard-menu-container-small">
       <div class="dashboard-menu-small">
         <select name="category-selector" id="category-selector">
-          <option value="all-subjects">All Schools</option>
+          <option value="all-subjects">All Questions</option>
           {% for subject in subjects  %}
           <option value="{{subject['value']}}">{{subject['name']}}</option>
           {% endfor  %}
