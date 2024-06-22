@@ -398,7 +398,12 @@ def get_notifications():
 
 @app.route("/")
 def index():
-    return render_template("home.html")
+    return render_template(
+        "home.html",
+        subjects=subjects,
+        methods=methods,
+        time_intervals=time_intervals,
+    )
 
 
 @app.route("/login")
