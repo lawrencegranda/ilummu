@@ -1,0 +1,78 @@
+<div class="create-question-container">
+  <form id="create-question-form" method="post" enctype="multipart/form-data">
+
+    <div class="create-question-body">
+
+      <p class="create-question-title">Ask a question</p>
+
+      <div class="create-question-column-wrapper">
+
+        <div class="create-question-input-background">
+          <p class="create-question-label">Class Code:</p>
+          <input id="create-question-class-code" type="text" placeholder="Ex.: CS 2800 " autocomplete="off" required/>
+        </div>
+
+        <div class="create-question-input-background">
+          <p class="create-question-label">Class Name:</p>
+          <input id="create-question-class-name" type="text" placeholder="Ex.: Discrete Math" autocomplete="off" required/>
+        </div>
+
+      </div>
+
+      <div class="create-question-textbox-wrapper">
+        <textarea id="create-question-textbox" rows="4" placeholder="Wrtie your question here. Keep it simple and clear to get the best answer (remember that you can always give more details once you find a tutor)."></textarea>
+        <label for="create-question-file" class="create-question-file-label">
+          <span class="glyphicon glyphicon-paperclip"></span> - <span id="file-selected">No file selected</span>
+        </label>
+        <input id="create-question-file" type="file" style="display: none;" accept="image/*, .pdf, .docx, .doc"/>
+      </div>
+
+      <div class="create-question-column-wrapper">
+
+        <div class="create-question-input-background">
+          <select id="create-question-category" class="create-question-selector" required>
+            <option value>Select the class's school</option>
+            {% for subject in subjects  %}
+            <option value="{{subject['value']}}">{{subject['name']}}</option>
+            {% endfor  %}
+          </select>
+        </div>
+
+        <div class="create-question-input-background">
+          <select id="create-question-method" class="create-question-selector" required>
+            <option value>Select a method</option>
+            {% for method in methods  %}
+            <option value="{{method['value']}}">{{method['name']}}</option>
+            {% endfor  %}
+          </select>
+        </div>
+
+      </div>
+
+      <div class="create-question-column-wrapper">
+
+        <div class="create-question-input-background">
+          <p class="create-question-label">Time needed:</p>
+
+          <select id="create-question-solve-time" class="create-question-selector" required>
+            {% for interval in time_intervals.values()|sort(attribute='value') %}
+            <option value="{{interval['value']}}">{{interval['name']}}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="create-question-input-background">
+          <p class="create-question-label create-question-price-label">
+            Price ($):
+          </p>
+          <input id="create-question-price" type="number" placeholder="$2.00 minimum" min="2" step="0.5" autocomplete="off" required/>
+        </div>
+        
+      </div>
+
+    <button id="create-question-button" form="create-question-form" type="submit" class="btn btn-primary" type="button">Create</button>
+
+    </div>
+
+  </form>
+</div>
