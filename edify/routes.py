@@ -1,7 +1,10 @@
-from flask import Flask, render_template, request, Blueprint
-import time
+from flask import Flask, render_template, request, Blueprint, jsonify, current_app
+from http import HTTPStatus
+from edify import db, bcrypt
+from typing import Any
+from flask_jwt_extended import jwt_required, current_user, exceptions
 
-app = Flask(__name__)
+import time
 
 
 subjects = [
@@ -81,7 +84,7 @@ users = {
 
 import json
 
-with open("static/majors.json") as f:
+with open("edify/static/majors.json") as f:
     majors = json.load(f)["majors"]
 
 
@@ -396,27 +399,30 @@ def get_notifications():
     return notifications
 
 
-@app.route("/")
+frontend = Blueprint("frontend", __name__, url_prefix="/")
+
+
+@frontend.route("/")
 def index():
     return render_template(
-        "home.html",
+        "/home.html",
         subjects=subjects,
         methods=methods,
         time_intervals=time_intervals,
     )
 
 
-@app.route("/login")
+@frontend.route("/login")
 def login():
     return render_template("signup.html", login=True)
 
 
-@app.route("/signup")
+@frontend.route("/signup")
 def signup():
     return render_template("signup.html", login=False, majors=majors)
 
 
-@app.route("/dashboard", methods=["POST", "GET"])
+@frontend.route("/dashboard", methods=["POST", "GET"])
 def dashboard():
     questions = get_questions()
 
@@ -490,6 +496,3 @@ def fetch_question(id_qstn):
         offer_accepted=offer_accepted,
         offers=offers,
     )
-
-
-app.register_blueprint(question)
