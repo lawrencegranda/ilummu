@@ -23,15 +23,10 @@ def create_app(config_class):
     bcrypt.init_app(app)
     jwt.init_app(app)
 
-    from youshift.manager.routes import manager
-    from youshift.shared.routes import shared
-    from youshift.user.routes import user_bp
-    from youshift.admin.routes import admin_bp
+    from edify.routes import frontend, question
 
-    app.register_blueprint(manager)
-    app.register_blueprint(shared)
-    app.register_blueprint(user_bp)
-    app.register_blueprint(admin_bp)
+    app.register_blueprint(frontend)
+    app.register_blueprint(question)
 
     # Return validation errors as JSON
     @app.errorhandler(422)
