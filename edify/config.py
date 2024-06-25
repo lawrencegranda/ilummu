@@ -3,6 +3,8 @@ from edify.constants import EdifyEnvironments
 
 
 class Config:
+    MAINTENANCE_MODE = False
+
     SECRET_KEY = os.environ["SECRET_KEY"]
 
     if not any(member.name == os.environ["ENV"] for member in EdifyEnvironments):
