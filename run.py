@@ -23,6 +23,7 @@ from edify.populate import (
     populate_courses,
 )
 from edify import db
+from edify.fake_data import populate_database
 
 
 # Populate data and commit changes to the database session
@@ -61,5 +62,8 @@ if __name__ == "__main__":
         populate_courses()
 
         db.session.commit()
+
+        populate_database()
+        db.session.commit()  # Temporary
 
     app.run(debug=True)
