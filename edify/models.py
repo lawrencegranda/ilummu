@@ -1,65 +1,18 @@
 from edify import db, jwt
+from edify.constants import (
+    AuthLevel,
+    SupportedLanguages,
+)
 from flask_login import UserMixin
-from flask_jwt_extended import current_user
+from flask_jwt_extended import current_user, create_access_token, decode_token
 from datetime import datetime, timedelta
 from flask import current_app, jsonify
 from collections import OrderedDict, defaultdict
 from functools import wraps
 from http import HTTPStatus
+from typing import Optional, Dict, Any
 
-
-def manager_required(
-    minimum_manager_level, admin_minimum_impersonnation_level=AuthLevel.SUPER_ADMIN
-):
-    """
-    Decorator for managing access to endpoints based on manager level.
-    1) Checks that the user is of the desired manager level.
-    2) If it is an impersonating-admin, check that it is of the correct leve.
-    """
-
-    def decorator(function):
-        @wraps(function)
-        def wrapper(*args, **kwargs):
-            if current_user.is_manager < minimum_manager_level.value:
-                return jsonify({"error": "Forbidden"}), HTTPStatus.FORBIDDEN
-
-            # If the user is an admin impersonating a manager.
-            if current_user.is_manager >= AuthLevel.OVERSEER_ADMIN.value:
-                if current_user.is_manager < admin_minimum_impersonnation_level.value:
-                    return jsonify({"error": "Forbidden"}), HTTPStatus.FORBIDDEN
-
-            return function(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
-
-
-# Decorator to enable/disable routes based on Maintenance Mode.
-def maintenance_mode(function):
-    @wraps(function)
-    def wrapper(*args, **kwargs):
-        if current_app.config["MAINTENANCE_MODE"]:
-            return (
-                jsonify(
-                    {"error": "App in maintenance mode", "type": "MAINTENANCE_MODE"}
-                ),
-                HTTPStatus.FORBIDDEN,
-            )
-
-        return function(*args, **kwargs)
-
-    return wrapper
-
-
-# Register a callback function that loads a user from your database whenever
-# a protected route is accessed. This should return any python object on a
-# successful lookup, or None if the lookup failed for any reason (for example
-# if the user has been deleted from the database).
-@jwt.user_lookup_loader
-def user_lookup_callback(_jwt_header, jwt_data) -> "User":
-    identity = jwt_data["sub"]
-    return User.query.get(int(identity))
+# from itsdangerous.url_safe import URLSafeSerializer as Serializer
 
 
 # The login_manager extension requires the User Model
@@ -78,9 +31,14 @@ class User(db.Model, UserMixin):
     Entries are updated in the account editing route
     """
 
+    __table_args__ = Index("ix_username", "username")
+
     # Primary key that identifies the user
     # (MUST be called `id` for login_manager)
     id = db.Column(db.Integer, primary_key=True)
+
+    # User's username
+    username = db.Column(db.String(30), unique=True, nullable=False)
 
     # User's first name
     firstname = db.Column(db.String(20), nullable=False)
@@ -110,7 +68,10 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(90), nullable=False)
 
     # Entry creation date (to keep track)
-    created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    # Entry updated date (to keep track)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     # API authentication token, token is given to user upon login to authenticate future requests
     # This is part of the API token-based authentication schema
@@ -118,8 +79,8 @@ class User(db.Model, UserMixin):
 
     token_last_refresh = db.Column(db.DateTime, nullable=True)
 
-    # Field that indicates the level of permissions form 0 to 4, 1 is for the normal user
-    is_manager = db.Column(db.Integer, nullable=False)
+    # Field that indicates the level of permissions form 0 to 5, 0 is for the normal user
+    auth_level = db.Column(db.Integer, nullable=False)
 
     # Whether or not the user verified it's email. NOT IMPLEMENTED
     mail_is_verified = db.Column(db.Boolean, nullable=False, default=False)
@@ -138,15 +99,24 @@ class User(db.Model, UserMixin):
     # Profile picture
     image_file = db.Column(db.String(20), nullable=False, default="default.jpg")
 
+    # One-to-Many relationship with Question model
+    questions = db.relationship("Question", backref="user", lazy=True)
+
+    # One-to-Many relationship with Offer model
+    offers = db.relationship("Offer", backref="user", lazy=True)
+
+    # One-to-Many relationship with Notification model
+    notifications = db.relationship("Notification", backref="user", lazy=True)
+
     def get_reset_token(self, expires_sec=18000):
-        s = Serializer(current_app.config["SECRET_KEY"], expires_sec)
-        return s.dumps({"user_id": self.id}).decode("utf8")
+        return create_access_token(
+            identity=self.id, expires_delta=timedelta(seconds=expires_sec)
+        )
 
     @staticmethod
     def verify_reset_token(token):
-        s = Serializer(current_app.config["SECRET_KEY"])
         try:
-            user_id = s.loads(token)["id"]
+            user_id = decode_token(token)["sub"]
         except Exception:
             return None
         return User.query.get(user_id)
@@ -166,14 +136,15 @@ class User(db.Model, UserMixin):
         return user
 
     def __repr__(self):
-        return f"({self.id}, {self.firstname} {self.lastname}, {self.email}\n"
+        return f"({self.id}, {self.username}, {self.email}\n"
 
     def to_dict(
         self,
         simplified=False,
-    ):
+    ) -> Dict[str, Any]:
         return_dict = {
             "id": self.id,
+            "username": self.username,
             "firstname": self.firstname,
             "lastname": self.lastname,
             "email": self.email,
@@ -185,9 +156,360 @@ class User(db.Model, UserMixin):
 
         # Add all extra information
         if not simplified:
-            return_dict["is_manager"] = self.is_manager
+            return_dict["auth_level"] = self.auth_level
             return_dict["mail_is_verified"] = self.mail_is_verified
             return_dict["phone_is_verified"] = self.phone_is_verified
             return_dict["is_mock"] = self.is_mock
 
         return return_dict
+
+
+class Question(db.Model):
+    """
+    Table that contains question information
+
+    Entries are created when a user posts a question.
+    Entries are updated when the question status changes or details are edited.
+    """
+
+    __table_args__ = (
+        Index("ix_question_user_id", "user_id"),
+        Index("ix_question_course_id", "course_id"),
+    )
+
+    # Primary key that identifies the question
+    id = db.Column(db.Integer, primary_key=True)
+
+    # User who posted the question
+    # Many-to-One relationship with User model
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    user = db.relationship("User", backref="questions", lazy=True)
+
+    # Subject of the question
+    course_id = db.Column(db.Integer, db.ForeignKey("course.id"), nullable=False)
+
+    # Detailed request for help
+    request = db.Column(db.Text, nullable=False)
+
+    # Time required to solve the question
+    solve_time = db.Column(
+        db.Integer, db.ForeignKey("time_interval.id"), nullable=False
+    )
+
+    # Price offered for solving the question
+    price = db.Column(db.Float, nullable=False)
+
+    # Preferred method of communication
+    method_id = db.Column(db.Integer, db.ForeignKey("method.id"), nullable=False)
+
+    # Indicates if the question has been solved
+    solved = db.Column(db.Boolean, default=False)
+
+    # Entry creation date (to keep track)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    # Entry updated date (to keep track)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"Question({self.id}, {self.user_id}, {self.course_id}, {self.solved})"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "course_id": self.course_id,
+            "request": self.request,
+            "solve_time": self.solve_time,
+            "price": self.price,
+            "method_id": self.method_id,
+            "solved": self.solved,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+        }
+
+
+class Offer(db.Model):
+    """
+    Table that contains offer information
+
+    Entries are created when a user offers to help solve a question.
+    Entries are updated when the offer status changes.
+    """
+
+    __table_args__ = (
+        Index("ix_offer_question_id", "question_id"),
+        Index("ix_offer_user_id", "user_id"),
+    )
+
+    # Primary key that identifies the offer
+    id = db.Column(db.Integer, primary_key=True)
+
+    # User who made the offer
+    # Many-to-One relationship with User model
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    user = db.relationship("User", backref="offers", lazy=True)
+
+    # Question associated with the offer
+    # Many-to-One relationship with Question model
+    question_id = db.Column(db.Integer, db.ForeignKey("question.id"), nullable=False)
+    question = db.relationship("Question", backref="offers", lazy=True)
+
+    # Amount offered
+    amount = db.Column(db.Float, nullable=False)
+
+    # Status of the offer
+    status = db.Column(
+        db.Enum("SENT", "ACCEPTED", "DECLINED", name="offer_status"), default="SENT"
+    )
+
+    # Entry creation date (to keep track)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    # Entry updated date (to keep track)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"Offer({self.id}, {self.question_id}, {self.amount}, {self.status})"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "question_id": self.question_id,
+            "user_id": self.user_id,
+            "amount": self.amount,
+            "status": self.status,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+        }
+
+
+class Notification(db.Model):
+    """
+    Table that contains notification information
+
+    Entries are created when a user needs to be notified.
+    """
+
+    __table_args__ = (
+        Index("ix_notification_user_id", "user_id"),
+        Index("ix_notification_type_id", "type_id"),
+    )
+
+    # Primary key that identifies the notification
+    id = db.Column(db.Integer, primary_key=True)
+
+    # User associated with the notification
+    # Many-to-One relationship with User model
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    user = db.relationship("User", backref="notifications", lazy=True)
+
+    # Notification message
+    message = db.Column(db.String(200), nullable=False)
+
+    # Type of notification
+    type_id = db.Column(
+        db.Integer, db.ForeignKey("notification_type.id"), nullable=False
+    )
+
+    # Link to further details
+    link = db.Column(db.String(300), nullable=True)
+
+    # Entry creation date (to keep track)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"Notification({self.id}, {self.user_id}, {self.message})"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "message": self.message,
+            "link": self.link,
+            "kind": self.type_id,
+            "created_at": self.created_at,
+        }
+
+
+class Subject(db.Model):
+    """
+    Table that contains subject information
+
+    Entries are created to list available subjects.
+    """
+
+    __table_args__ = Index("ix_subject_school_id", "school_id")
+
+    # Primary key that identifies the subject
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Subject value (e.g., subject code)
+    value = db.Column(db.String(10), unique=True, nullable=False)
+
+    # Subject name
+    name = db.Column(db.String(100), nullable=False)
+
+    # Subject school
+    school_id = db.Column(db.Integer, db.ForeignKey("school.id"), nullable=False)
+
+    def __repr__(self):
+        return f"Subject({self.id}, {self.name}, {self.school_id})"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "value": self.value,
+            "name": self.name,
+            "school_id": self.school_id,
+        }
+
+
+class Method(db.Model):
+    """
+    Table that contains method information
+
+    Entries are created to list available communication methods.
+    """
+
+    __table_args__ = Index("ix_method_value", "value")
+
+    # Primary key that identifies the method
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Method value (e.g., method code)
+    value = db.Column(db.String(10), unique=True, nullable=False)
+
+    # Method name
+    name = db.Column(db.String(100), nullable=False)
+
+    def __repr__(self):
+        return f"Method({self.id}, {self.name})"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "value": self.value,
+            "name": self.name,
+        }
+
+
+class TimeInterval(db.Model):
+    """
+    Table that contains time interval information
+
+    Entries are created to list available time intervals.
+    """
+
+    # Time interval value (in minutes)
+    value = db.Column(db.Integer, unique=True, nullable=False, primary_key=True)
+
+    # Time interval name
+    name = db.Column(db.String(100), nullable=False)
+
+    # Short name for the time interval
+    shortname = db.Column(db.String(20), nullable=False)
+
+    def __repr__(self):
+        return f"TimeInterval({self.value})"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "value": self.value,
+            "name": self.name,
+            "shortname": self.shortname,
+        }
+
+
+class Course(db.Model):
+    """
+    Table that contains course information
+
+    Entries are created to list available courses.
+    """
+
+    __table_args__ = (
+        Index("ix_course_code", "code"),
+        Index("ix_course_subject_id", "subject_id"),
+    )
+
+    # Primary key that identifies the course
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Course value (e.g., course code)
+    code = db.Column(db.String(10), nullable=False)
+
+    # Course name
+    name = db.Column(db.String(100), nullable=False)
+
+    # Subject associated with the course
+    subject_id = db.Column(db.Integer, db.ForeignKey("subject.id"), nullable=False)
+
+    def __repr__(self):
+        return f"Course({self.id}, {self.code}, {self.name}, {self.subject_id})"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "code": self.code,
+            "name": self.name,
+            "subject_id": self.subject_id,
+        }
+
+
+class School(db.Model):
+    """
+    Table that contains school information
+
+    Entries are created to list available schools.
+    """
+
+    __table_args__ = Index("ix_school_name", "name")
+
+    # Primary key that identifies the school
+    id = db.Column(db.Integer, primary_key=True)
+
+    # School name
+    name = db.Column(db.String(100), nullable=False, unique=True)
+
+    # School country
+    country = db.Column(db.String(100), nullable=True)
+
+    # School state
+    state = db.Column(db.String(100), nullable=True)
+
+    def __repr__(self):
+        return f"School({self.id}, {self.name})"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "country": self.country,
+            "state": self.state,
+        }
+
+
+class NotificationType(db.Model):
+    """
+    Table that contains notification type information
+
+    Entries are created to list available notification types.
+    """
+
+    __table_args__ = Index("ix_notification_name", "name")
+
+    # Primary key that identifies the notification type
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Notification type name
+    name = db.Column(db.String(100), nullable=False, unique=True)
+
+    def __repr__(self):
+        return f"NotificationType({self.id}, {self.name})"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "name": self.name,
+        }
