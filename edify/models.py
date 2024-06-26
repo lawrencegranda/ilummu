@@ -3,6 +3,7 @@ from edify.constants import (
     AuthLevel,
     SupportedLanguages,
 )
+from sqlalchemy import Index
 from flask_login import UserMixin
 from flask_jwt_extended import current_user, create_access_token, decode_token
 from datetime import datetime, timedelta
@@ -30,7 +31,7 @@ class User(db.Model, UserMixin):
     Entries are updated in the account editing route
     """
 
-    __table_args__ = Index("ix_username", "username")
+    __table_args__ = (Index("ix_username", "username"),)
 
     # Primary key that identifies the user
     # (MUST be called `id` for login_manager)
@@ -96,16 +97,7 @@ class User(db.Model, UserMixin):
     )
 
     # Profile picture
-    image_file = db.Column(db.String(20), nullable=False, default="default.jpg")
-
-    # One-to-Many relationship with Question model
-    questions = db.relationship("Question", backref="user", lazy=True)
-
-    # One-to-Many relationship with Offer model
-    offers = db.relationship("Offer", backref="user", lazy=True)
-
-    # One-to-Many relationship with Notification model
-    notifications = db.relationship("Notification", backref="user", lazy=True)
+    image_file = db.Column(db.String(40), nullable=False, default="default.jpg")
 
     def get_reset_token(self, expires_sec=18000):
         return create_access_token(
@@ -192,7 +184,7 @@ class Question(db.Model):
 
     # Time required to solve the question
     solve_time = db.Column(
-        db.Integer, db.ForeignKey("time_interval.id"), nullable=False
+        db.Integer, db.ForeignKey("time_interval.value"), nullable=False
     )
 
     # Price offered for solving the question
@@ -331,6 +323,43 @@ class Notification(db.Model):
         }
 
 
+class Major(db.Model):
+    """
+    Table that contains major information
+
+    Entries are created to list available majors.
+    """
+
+    __table_args__ = (Index("ix_major_subject_id", "subject_id"),)
+
+    # Primary key that identifies the major
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Major name
+    name = db.Column(db.String(100), nullable=False)
+
+    # Subject associated with the major
+    # Many-to-One relationship with Subject model
+    subject_id = db.Column(db.Integer, db.ForeignKey("subject.id"), nullable=False)
+    subject = db.relationship("Subject", backref="majors", lazy=True)
+
+    # University associated with the major
+    # Many-to-One relationship with Subject model
+    school_id = db.Column(db.Integer, db.ForeignKey("school.id"), nullable=False)
+    school = db.relationship("School", backref="majors", lazy=True)
+
+    def __repr__(self):
+        return f"Major({self.id}, {self.name})"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "subject_id": self.subject_id,
+            "school_id": self.school_id,
+        }
+
+
 class Subject(db.Model):
     """
     Table that contains subject information
@@ -338,13 +367,13 @@ class Subject(db.Model):
     Entries are created to list available subjects.
     """
 
-    __table_args__ = Index("ix_subject_school_id", "school_id")
+    __table_args__ = (Index("ix_subject_school_id", "school_id"),)
 
     # Primary key that identifies the subject
     id = db.Column(db.Integer, primary_key=True)
 
     # Subject value (e.g., subject code)
-    value = db.Column(db.String(10), unique=True, nullable=False)
+    value = db.Column(db.String(20), unique=True, nullable=False)
 
     # Subject name
     name = db.Column(db.String(100), nullable=False)
@@ -371,13 +400,13 @@ class Method(db.Model):
     Entries are created to list available communication methods.
     """
 
-    __table_args__ = Index("ix_method_value", "value")
+    __table_args__ = (Index("ix_method_value", "value"),)
 
     # Primary key that identifies the method
     id = db.Column(db.Integer, primary_key=True)
 
     # Method value (e.g., method code)
-    value = db.Column(db.String(10), unique=True, nullable=False)
+    value = db.Column(db.String(20), unique=True, nullable=False)
 
     # Method name
     name = db.Column(db.String(100), nullable=False)
@@ -444,6 +473,9 @@ class Course(db.Model):
     # Subject associated with the course
     subject_id = db.Column(db.Integer, db.ForeignKey("subject.id"), nullable=False)
 
+    # School associated with the course
+    school_id = db.Column(db.Integer, db.ForeignKey("school.id"), nullable=False)
+
     def __repr__(self):
         return f"Course({self.id}, {self.code}, {self.name}, {self.subject_id})"
 
@@ -453,6 +485,7 @@ class Course(db.Model):
             "code": self.code,
             "name": self.name,
             "subject_id": self.subject_id,
+            "school_id": self.school_id,
         }
 
 
@@ -463,7 +496,7 @@ class School(db.Model):
     Entries are created to list available schools.
     """
 
-    __table_args__ = Index("ix_school_name", "name")
+    __table_args__ = (Index("ix_school_name", "name"),)
 
     # Primary key that identifies the school
     id = db.Column(db.Integer, primary_key=True)
@@ -496,7 +529,7 @@ class NotificationType(db.Model):
     Entries are created to list available notification types.
     """
 
-    __table_args__ = Index("ix_notification_name", "name")
+    __table_args__ = (Index("ix_notification_name", "name"),)
 
     # Primary key that identifies the notification type
     id = db.Column(db.Integer, primary_key=True)
