@@ -15,17 +15,16 @@ from typing import Optional, Dict, Any
 # from itsdangerous.url_safe import URLSafeSerializer as Serializer
 
 
-# The login_manager extension requires the User Model
-# to have certain attributes and methods:
-# - is_authenticated: returns True if user has provided valid credentials
-# - is_active:
-# - is_anonymus:
-# - get_id():
-# Instead of creating these directly in the User model,
-# we inherit from the class UserMixin which adds them
 class User(db.Model, UserMixin):
     """
     Table that contains user information
+
+    Inherits from `UserMixin` to provide default implementations for
+    the required attributes and methods by Flask-Login extension:
+    - is_authenticated: Returns True if the user has provided valid credentials.
+    - is_active: Returns True if the user account is active.
+    - is_anonymous: Returns True if the current user is an anonymous guest.
+    - get_id(): Returns a unique identifier for the user.
 
     Entries are created in the sign up route
     Entries are updated in the account editing route
