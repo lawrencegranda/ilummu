@@ -3,7 +3,7 @@ from edify.constants import EdifyEnvironments
 
 
 class Config:
-    MAINTENANCE_MODE = False
+    MAINTENANCE_MODE = os.environ["MAINTENANCE_MODE"] == 1
 
     SECRET_KEY = os.environ["SECRET_KEY"]
 
