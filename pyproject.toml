@@ -28,6 +28,7 @@ flask-jwt-extended = "4.4.4"
 flask = "2.2.3"
 werkzeug = "2.2.2"
 flask-migrate = "^4.0.7"
+faker = "^25.9.2"
 
 
 [build-system]
