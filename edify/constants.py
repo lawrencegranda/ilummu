@@ -36,3 +36,13 @@ class SupportedLanguages(Enum):
 
     # English language support
     ENGLISH = "en"
+
+
+class OfferStatus(Enum):
+    """List of status for a question."""
+
+    SENT = "SENT"
+    ACCEPTED = "ACCEPTED"
+    DECLINED = "DECLINED"
+    EDITED = "EDITED"
+    REMOVED = "REMOVED"
