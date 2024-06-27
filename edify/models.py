@@ -2,8 +2,9 @@ from edify import db, jwt
 from edify.constants import (
     AuthLevel,
     SupportedLanguages,
+    OfferStatus,
 )
-from sqlalchemy import Index
+from sqlalchemy import Index, Enum, event
 from flask_login import UserMixin
 from flask_jwt_extended import current_user, create_access_token, decode_token
 from datetime import datetime, timedelta
@@ -12,6 +13,7 @@ from collections import OrderedDict, defaultdict
 from functools import wraps
 from http import HTTPStatus
 from typing import Optional, Dict, Any
+import re
 
 # from itsdangerous.url_safe import URLSafeSerializer as Serializer
 
@@ -34,7 +36,6 @@ class User(db.Model, UserMixin):
     __table_args__ = (Index("ix_username", "username"),)
 
     # Primary key that identifies the user
-    # (MUST be called `id` for login_manager)
     id = db.Column(db.Integer, primary_key=True)
 
     # User's username
@@ -47,13 +48,13 @@ class User(db.Model, UserMixin):
     lastname = db.Column(db.String(30), nullable=False)
 
     # User's school/university
-    school = db.Column(db.String(30), unique=False, nullable=False)
+    school_id = db.Column(db.Integer, db.ForeignKey("school.id"), nullable=False)
 
     # User's major
-    major = db.Column(db.String(30), unique=False, nullable=False)
+    major_id = db.Column(db.Integer, db.ForeignKey("major.id"), nullable=False)
 
     # User's graduation year
-    graduation = db.Column(db.DateTime, unique=False, nullable=False)
+    graduation = db.Column(db.DateTime, nullable=False)
 
     # User's email
     # Must be unique
@@ -79,8 +80,8 @@ class User(db.Model, UserMixin):
 
     token_last_refresh = db.Column(db.DateTime, nullable=True)
 
-    # Field that indicates the level of permissions form 0 to 5, 0 is for the normal user
-    auth_level = db.Column(db.Integer, nullable=False)
+    # Field that indicates the level of permissions.
+    auth_level = db.Column(Enum(AuthLevel), nullable=False, default=AuthLevel.STUDENT)
 
     # Whether or not the user verified it's email. NOT IMPLEMENTED
     mail_is_verified = db.Column(db.Boolean, nullable=False, default=False)
@@ -93,7 +94,7 @@ class User(db.Model, UserMixin):
 
     # Preferred language by the user for display.
     language = db.Column(
-        db.String(10), nullable=False, default=SupportedLanguages.ENGLISH.value
+        Enum(SupportedLanguages), nullable=False, default=SupportedLanguages.ENGLISH
     )
 
     # Profile picture
@@ -154,6 +155,25 @@ class User(db.Model, UserMixin):
 
         return return_dict
 
+    @staticmethod
+    def validator(mapper, connection, target):
+        phone_regex = re.compile(r"^(\+\d{1,2}\s)?\d{9,15}$")
+        if not phone_regex.match(target.phone):
+            raise ValueError(
+                f'USER MODEL: Invalid phone number format ("{target.phone}")'
+            )
+
+        email_regex = re.compile(r"^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$")
+        if not email_regex.match(target.email):
+            raise ValueError(f'USER MODEL: Invalid email format ("{target.email}")')
+
+        return
+
+
+# Attach event listeners
+event.listen(User, "before_insert", User.validator)
+event.listen(User, "before_update", User.validator)
+
 
 class Question(db.Model):
     """
@@ -194,7 +214,7 @@ class Question(db.Model):
     method_id = db.Column(db.Integer, db.ForeignKey("method.id"), nullable=False)
 
     # Indicates if the question has been solved
-    solved = db.Column(db.Boolean, default=False)
+    solved = db.Column(db.Boolean, nullable=False, default=False)
 
     # Entry creation date (to keep track)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -250,9 +270,7 @@ class Offer(db.Model):
     amount = db.Column(db.Float, nullable=False)
 
     # Status of the offer
-    status = db.Column(
-        db.Enum("SENT", "ACCEPTED", "DECLINED", name="offer_status"), default="SENT"
-    )
+    status = db.Column(db.Enum(OfferStatus), default=OfferStatus.SENT)
 
     # Entry creation date (to keep track)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
