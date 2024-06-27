@@ -1,5 +1,5 @@
 from faker import Faker
-from random import choice, randint
+from random import choice, randint, choices
 from datetime import datetime, timedelta
 from edify import db
 from edify.models import (
@@ -13,54 +13,55 @@ from edify.models import (
     Course,
     School,
     NotificationType,
+    Major,
 )
-from edify.constants import SupportedLanguages, AuthLevel
+from edify.constants import SupportedLanguages, AuthLevel, OfferStatus
+import string
 
 fake = Faker()
 
 
 def generate_fake_users(num_users):
+    school = db.session.query(School).filter_by(name="Cornell University").first()
+    majors = db.session.query(Major).all()
+
     users = []
     for _ in range(num_users):
         user = User(
             username=fake.user_name(),
             firstname=fake.first_name(),
             lastname=fake.last_name(),
-            school=fake.company(),
-            major=fake.job(),
+            school_id=school.id,
+            major_id=choice(majors).id,
             graduation=fake.future_date(end_date="+4y"),
             email=fake.email(),
-            phone=fake.phone_number(),
+            phone=f"+1 {''.join(choices(string.digits, k=9))}",
             password=fake.password(length=12),
-            created_at=fake.date_time_between(start_date="-1y", end_date="now"),
-            updated_at=fake.date_time_between(start_date="-1y", end_date="now"),
             token=fake.sha256(),
             token_last_refresh=fake.date_time_between(start_date="-1y", end_date="now"),
-            auth_level=randint(0, 5),
             mail_is_verified=fake.boolean(),
             phone_is_verified=fake.boolean(),
             is_mock=True,
-            language=choice(list(SupportedLanguages)),
-            image_file=fake.file_name(category="image"),
         )
         users.append(user)
     return users
 
 
-def generate_fake_questions(num_questions, users):
+def generate_fake_questions(num_questions):
+    intervals = db.session.query(TimeInterval).all()
+    users = db.session.query(User).all()
+    methods = db.session.query(Method).all()
+    courses = db.session.query(Course).all()
+
     questions = []
     for _ in range(num_questions):
         question = Question(
             user_id=choice(users).id,
-            course_id=randint(
-                1, 10
-            ),  # Replace with actual course IDs from your database
+            course_id=choice(courses).id,
             request=fake.text(max_nb_chars=200),
-            solve_time=randint(5, 120),
+            solve_time=choice(intervals).value,
             price=randint(5, 100),
-            method_id=randint(
-                1, 3
-            ),  # Replace with actual method IDs from your database
+            method_id=choice(methods).id,
             solved=fake.boolean(),
             created_at=fake.date_time_between(start_date="-1y", end_date="now"),
             updated_at=fake.date_time_between(start_date="-1y", end_date="now"),
@@ -69,14 +70,17 @@ def generate_fake_questions(num_questions, users):
     return questions
 
 
-def generate_fake_offers(num_offers, users, questions):
+def generate_fake_offers(num_offers):
+    users = db.session.query(User).all()
+    questions = db.session.query(Question).all()
+
     offers = []
     for _ in range(num_offers):
         offer = Offer(
             user_id=choice(users).id,
             question_id=choice(questions).id,
             amount=randint(5, 100),
-            status=choice(["SENT", "ACCEPTED", "DECLINED"]),
+            status=choice(list(OfferStatus)),
             created_at=fake.date_time_between(start_date="-1y", end_date="now"),
             updated_at=fake.date_time_between(start_date="-1y", end_date="now"),
         )
@@ -84,15 +88,16 @@ def generate_fake_offers(num_offers, users, questions):
     return offers
 
 
-def generate_fake_notifications(num_notifications, users):
+def generate_fake_notifications(num_notifications):
+    users = db.session.query(User).all()
+    types = db.session.query(NotificationType).all()
+
     notifications = []
     for _ in range(num_notifications):
         notification = Notification(
             user_id=choice(users).id,
             message=fake.text(max_nb_chars=200),
-            type_id=randint(
-                1, 5
-            ),  # Replace with actual notification type IDs from your database
+            type_id=choice(types).id,
             link=fake.url(),
             created_at=fake.date_time_between(start_date="-1y", end_date="now"),
         )
@@ -110,16 +115,18 @@ def populate_database():
     num_notifications = 15
 
     # Generate mock data
-    users = generate_fake_users(num_users)
-    questions = generate_fake_questions(num_questions, users)
-    offers = generate_fake_offers(num_offers, users, questions)
-    notifications = generate_fake_notifications(num_notifications, users)
-
     # Add mock data to the database
     with db.session.begin():
+        users = generate_fake_users(num_users)
         db.session.add_all(users)
+
+        questions = generate_fake_questions(num_questions)
         db.session.add_all(questions)
+
+        offers = generate_fake_offers(num_offers)
         db.session.add_all(offers)
+
+        notifications = generate_fake_notifications(num_notifications)
         db.session.add_all(notifications)
 
     print("Database populated with mock data.")
