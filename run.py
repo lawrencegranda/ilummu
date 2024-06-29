@@ -6,7 +6,7 @@ from edify.models import (
     Offer,
     Notification,
     Major,
-    Subject,
+    AcademicField,
     Method,
     TimeInterval,
     Course,
@@ -15,7 +15,7 @@ from edify.models import (
 )
 from edify.populate import (
     populate_universities,
-    populate_subjects,
+    populate_academic_fields,
     populate_methods,
     populate_time_intervals,
     populate_notification_types,
@@ -29,7 +29,7 @@ from edify.fake_data import populate_database
 # Populate data and commit changes to the database session
 def populate_data():
     populate_universities()
-    populate_subjects()
+    populate_academic_fields()
     populate_methods()
     populate_time_intervals()
     populate_notification_types()
@@ -54,7 +54,7 @@ if __name__ == "__main__":
         print("Created database models.")
 
         populate_universities()
-        populate_subjects()
+        populate_academic_fields()
         populate_methods()
         populate_time_intervals()
         populate_notification_types()
