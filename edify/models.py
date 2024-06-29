@@ -15,8 +15,6 @@ from http import HTTPStatus
 from typing import Optional, Dict, Any
 import re
 
-# from itsdangerous.url_safe import URLSafeSerializer as Serializer
-
 
 class User(db.Model, UserMixin):
     """
@@ -157,15 +155,24 @@ class User(db.Model, UserMixin):
 
     @staticmethod
     def validator(mapper, connection, target):
-        phone_regex = re.compile(r"^(\+\d{1,2}\s)?\d{9,15}$")
+        phone_regex = re.compile(r"^\+\d{1,2}\s\d{9,15}$")
         if not phone_regex.match(target.phone):
             raise ValueError(
-                f'USER MODEL: Invalid phone number format ("{target.phone}")'
+                f'USER MODEL: Invalid phone number format ("{target.phone}").'
             )
 
         email_regex = re.compile(r"^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$")
         if not email_regex.match(target.email):
-            raise ValueError(f'USER MODEL: Invalid email format ("{target.email}")')
+            raise ValueError(
+                f'USER MODEL: Invalid email format \
+                ("{target.email}").'
+            )
+
+        if target.updated_at < target.created_at:
+            raise ValueError(
+                f'USER MODEL: Creation ("{target.created_at}") must be before \
+                    update ("{target.updated_at}").'
+            )
 
         return
 
@@ -210,11 +217,19 @@ class Question(db.Model):
     # Price offered for solving the question
     price = db.Column(db.Float, nullable=False)
 
+    # Original price offered for solving the question (might change)
+    original_price = db.Column(
+        db.Float, nullable=False, default=lambda c: c.get_current_parameters()["price"]
+    )
+
     # Preferred method of communication
     method_id = db.Column(db.Integer, db.ForeignKey("method.id"), nullable=False)
 
     # Indicates if the question has been solved
     solved = db.Column(db.Boolean, nullable=False, default=False)
+
+    # Indicates if the question is visible or hidden
+    visible = db.Column(db.Boolean, nullable=False, default=True)
 
     # Entry creation date (to keep track)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -238,6 +253,39 @@ class Question(db.Model):
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }
+
+    @staticmethod
+    def validator(mapper, connection, target):
+        if target.price < 0:
+            raise ValueError(
+                f'QUESTION MODEL: Price must be a non-negative value \
+                    ("{target.price}").'
+            )
+
+        if target.price < target.original_price:
+            raise ValueError(
+                f'QUESTION MODEL: Price ("{target.price}") must greater than \
+                    the original price ("{target.original_price}").'
+            )
+
+        if target.updated_at < target.created_at:
+            raise ValueError(
+                f'QUESTION MODEL: Creation ("{target.created_at}") must be \
+                    before update ("{target.updated_at}").'
+            )
+
+        if target.solve_time <= 0:
+            raise ValueError(
+                f'QUESTION MODEL: Solve time must be a positive integer \
+                    ("{target.solve_time}").'
+            )
+
+        return
+
+
+# Attach event listeners
+event.listen(Question, "before_insert", Question.validator)
+event.listen(Question, "before_update", Question.validator)
 
 
 class Offer(db.Model):
