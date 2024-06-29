@@ -1,0 +1,71 @@
+## The Edify Database model 
+
+The database model is defined under `models.py` using SQLAlchemy package.
+
+For more information about the relationship between tables and other flows in the app, check out the following link <INSERT>
+
+### Setting Up Database Migrations
+
+#### 1. Initialize Flask-Migrate
+
+To set up Flask-Migrate for managing database migrations, follow these steps:
+
+```bash
+flask db init
+```
+
+This command initializes a migrations directory in your project.
+
+#### 2. Create Migrations
+
+After making changes to your models (e.g., adding new tables or modifying existing ones), generate a migration script:
+
+```bash
+flask db migrate -m "Brief description of your changes"
+```
+
+This command compares the current state of your models with the state of the database and generates a migration script.
+
+#### 3. Apply Migrations
+
+Apply the generated migration script to the database:
+
+```bash
+flask db upgrade
+```
+
+This command applies the migration script to the database, making the necessary changes to match your updated models.
+
+#### Additional Commands
+
+- **Downgrade**: Roll back the last applied migration.
+  ```bash
+  flask db downgrade
+  ```
+
+- **Show Current Revision**: Display the current revision of the database.
+  ```bash
+  flask db current
+  ```
+
+- **Show History**: Show the revision history.
+  ```bash
+  flask db history
+  ```
+
+#### Notes
+
+- Ensure your `models.py` (or equivalent file) reflects the changes you want to make to your database schema before running `flask db migrate`.
+- Always review the generated migration script (`versions/*.py`) to verify it accurately reflects the intended changes.
+- Use caution with `flask db downgrade` as it can lead to data loss if not used carefully.
+
+#### Example Workflow
+
+Here’s an example workflow to illustrate how to use Flask-Migrate:
+
+1. Modify your SQLAlchemy models in `models.py`.
+2. Run `flask db migrate -m "Added User table"`.
+3. Review the generated migration script in `migrations/versions/`.
+4. Apply the migration to your database with `flask db upgrade`.
+
+---
