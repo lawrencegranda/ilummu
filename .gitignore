@@ -1,6 +1,5 @@
 .DS_store
-__pycache__/*
 env.local.sh
 requirements.txt
-edify/__pycache__/*
+**/__pycache__/
 env.test.sh
