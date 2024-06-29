@@ -43,7 +43,7 @@ class User(db.Model, UserMixin):
     firstname = db.Column(db.String(20), nullable=False)
 
     # User's last name
-    lastname = db.Column(db.String(30), nullable=False)
+    lastname = db.Column(db.String(35), nullable=False)
 
     # User's school/university
     # Many-to-One relationship with School model
