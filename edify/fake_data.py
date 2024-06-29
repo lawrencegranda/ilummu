@@ -1,13 +1,12 @@
 from faker import Faker
 from random import choice, randint, choices
-from datetime import datetime, timedelta
 from edify import db
 from edify.models import (
     User,
     Question,
     Offer,
     Notification,
-    Subject,
+    AcademicField,
     Method,
     TimeInterval,
     Course,
@@ -63,8 +62,6 @@ def generate_fake_questions(num_questions):
             price=randint(5, 100),
             method_id=choice(methods).id,
             solved=fake.boolean(),
-            created_at=fake.date_time_between(start_date="-1y", end_date="now"),
-            updated_at=fake.date_time_between(start_date="-1y", end_date="now"),
         )
         questions.append(question)
     return questions
@@ -81,8 +78,6 @@ def generate_fake_offers(num_offers):
             question_id=choice(questions).id,
             amount=randint(5, 100),
             status=choice(list(OfferStatus)),
-            created_at=fake.date_time_between(start_date="-1y", end_date="now"),
-            updated_at=fake.date_time_between(start_date="-1y", end_date="now"),
         )
         offers.append(offer)
     return offers
@@ -91,21 +86,28 @@ def generate_fake_offers(num_offers):
 def generate_fake_notifications(num_notifications):
     users = db.session.query(User).all()
     types = db.session.query(NotificationType).all()
+    questions = db.session.query(Question).all()
 
     notifications = []
     for _ in range(num_notifications):
+        notification_type = choice(types)
+
+        question_id = None
+        if notification_type.question_required:
+            question_id = choice(questions).id
+
         notification = Notification(
             user_id=choice(users).id,
             message=fake.text(max_nb_chars=200),
-            type_id=choice(types).id,
+            type_id=notification_type.id,
+            question_id=question_id,
             link=fake.url(),
-            created_at=fake.date_time_between(start_date="-1y", end_date="now"),
         )
         notifications.append(notification)
     return notifications
 
 
-# Add more functions for other models (Subject, Method, TimeInterval, Course, School, NotificationType) if needed
+# Add more functions for other models (AcademicField, Method, TimeInterval, Course, School, NotificationType) if needed
 
 
 def populate_database():
