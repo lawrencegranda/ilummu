@@ -2,12 +2,14 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
+from flask_migrate import Migrate
 
 
 # Initialize extensions
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 jwt = JWTManager()
+migrate = Migrate()
 
 
 def create_app(config_class):
@@ -22,6 +24,7 @@ def create_app(config_class):
     db.init_app(app)
     bcrypt.init_app(app)
     jwt.init_app(app)
+    migrate.init_app(app, db)
 
     from edify.routes import frontend, question
 
@@ -38,6 +41,6 @@ def create_app(config_class):
         else:
             return jsonify({"errors": messages}), err.code
 
-    print(app.url_map)
+    print("\n------ URL MAP: ------\n", app.url_map, "\n----------------------\n")
 
     return app
