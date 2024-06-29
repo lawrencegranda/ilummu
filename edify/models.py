@@ -46,10 +46,14 @@ class User(db.Model, UserMixin):
     lastname = db.Column(db.String(30), nullable=False)
 
     # User's school/university
+    # Many-to-One relationship with School model
     school_id = db.Column(db.Integer, db.ForeignKey("school.id"), nullable=False)
+    school = db.relationship("School", backref="users", lazy=True)
 
     # User's major
+    # Many-to-One relationship with School model
     major_id = db.Column(db.Integer, db.ForeignKey("major.id"), nullable=False)
+    major = db.relationship("Major", backref="users", lazy=True)
 
     # User's graduation year
     graduation = db.Column(db.DateTime, nullable=False)
@@ -163,15 +167,11 @@ class User(db.Model, UserMixin):
 
         email_regex = re.compile(r"^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$")
         if not email_regex.match(target.email):
-            raise ValueError(
-                f'USER MODEL: Invalid email format \
-                ("{target.email}").'
-            )
+            raise ValueError(f'USER MODEL: Invalid email format ("{target.email}").')
 
-        if target.updated_at < target.created_at:
+        if target.updated_at and target.updated_at < target.created_at:
             raise ValueError(
-                f'USER MODEL: Creation ("{target.created_at}") must be before \
-                    update ("{target.updated_at}").'
+                f'USER MODEL: Creation ("{target.created_at}") must be before update ("{target.updated_at}").'
             )
 
         return
@@ -203,8 +203,10 @@ class Question(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     user = db.relationship("User", backref="questions", lazy=True)
 
-    # Subject of the question
+    # Course of the question
+    # Many-to-One relationship with Course model
     course_id = db.Column(db.Integer, db.ForeignKey("course.id"), nullable=False)
+    course = db.relationship("Course", backref="questions", lazy=True)
 
     # Detailed request for help
     request = db.Column(db.Text, nullable=False)
@@ -258,26 +260,22 @@ class Question(db.Model):
     def validator(mapper, connection, target):
         if target.price < 0:
             raise ValueError(
-                f'QUESTION MODEL: Price must be a non-negative value \
-                    ("{target.price}").'
+                f'QUESTION MODEL: Price must be a non-negative value ("{target.price}").'
             )
 
-        if target.price < target.original_price:
+        if target.original_price and target.price < target.original_price:
             raise ValueError(
-                f'QUESTION MODEL: Price ("{target.price}") must greater than \
-                    the original price ("{target.original_price}").'
+                f'QUESTION MODEL: Price ("{target.price}") must greater than the original price ("{target.original_price}").'
             )
 
-        if target.updated_at < target.created_at:
+        if target.updated_at and target.updated_at < target.created_at:
             raise ValueError(
-                f'QUESTION MODEL: Creation ("{target.created_at}") must be \
-                    before update ("{target.updated_at}").'
+                f'QUESTION MODEL: Creation ("{target.created_at}") must be before update ("{target.updated_at}").'
             )
 
         if target.solve_time <= 0:
             raise ValueError(
-                f'QUESTION MODEL: Solve time must be a positive integer \
-                    ("{target.solve_time}").'
+                f'QUESTION MODEL: Solve time must be a positive integer ("{target.solve_time}").'
             )
 
         return
@@ -318,7 +316,7 @@ class Offer(db.Model):
     amount = db.Column(db.Float, nullable=False)
 
     # Status of the offer
-    status = db.Column(db.Enum(OfferStatus), default=OfferStatus.SENT)
+    status = db.Column(db.Enum(OfferStatus), nullable=False, default=OfferStatus.SENT)
 
     # Entry creation date (to keep track)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -339,6 +337,25 @@ class Offer(db.Model):
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }
+
+    @staticmethod
+    def validator(mapper, connection, target):
+        if target.amount <= 0:
+            raise ValueError(
+                f'OFFER MODEL: Amount must be a positive value ("{target.amount}").'
+            )
+
+        if target.updated_at and target.updated_at < target.created_at:
+            raise ValueError(
+                f'OFFER MODEL: Creation ("{target.created_at}") must be before update ("{target.updated_at}").'
+            )
+
+        return
+
+
+# Attach event listeners
+event.listen(Offer, "before_insert", Offer.validator)
+event.listen(Offer, "before_update", Offer.validator)
 
 
 class Notification(db.Model):
@@ -372,6 +389,9 @@ class Notification(db.Model):
     # Link to further details
     link = db.Column(db.String(300), nullable=True)
 
+    # Question it relates to, if it does
+    question_id = db.Column(db.Integer, db.ForeignKey("question.id"), nullable=True)
+
     # Entry creation date (to keep track)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
@@ -388,6 +408,24 @@ class Notification(db.Model):
             "created_at": self.created_at,
         }
 
+    @staticmethod
+    def validator(mapper, connection, target):
+        notification_type = connection.execute(
+            db.select(NotificationType).filter_by(id=target.type_id)
+        ).fetchone()
+
+        if notification_type.question_required and target.question_id is None:
+            raise ValueError(
+                f'NOTIFICATION MODEL: Notification type requires a question ("{target.type_id}").'
+            )
+
+        return
+
+
+# Attach event listeners
+event.listen(Notification, "before_insert", Notification.validator)
+event.listen(Notification, "before_update", Notification.validator)
+
 
 class Major(db.Model):
     """
@@ -396,7 +434,7 @@ class Major(db.Model):
     Entries are created to list available majors.
     """
 
-    __table_args__ = (Index("ix_major_subject_id", "subject_id"),)
+    __table_args__ = (Index("ix_major_academic_field_id", "academic_field_id"),)
 
     # Primary key that identifies the major
     id = db.Column(db.Integer, primary_key=True)
@@ -404,13 +442,15 @@ class Major(db.Model):
     # Major name
     name = db.Column(db.String(100), nullable=False)
 
-    # Subject associated with the major
-    # Many-to-One relationship with Subject model
-    subject_id = db.Column(db.Integer, db.ForeignKey("subject.id"), nullable=False)
-    subject = db.relationship("Subject", backref="majors", lazy=True)
+    # AcademicField associated with the major
+    # Many-to-One relationship with AcademicField model
+    academic_field_id = db.Column(
+        db.Integer, db.ForeignKey("academic_field.id"), nullable=False
+    )
+    academic_field = db.relationship("AcademicField", backref="majors", lazy=True)
 
-    # University associated with the major
-    # Many-to-One relationship with Subject model
+    # School associated with the major
+    # Many-to-One relationship with School model
     school_id = db.Column(db.Integer, db.ForeignKey("school.id"), nullable=False)
     school = db.relationship("School", backref="majors", lazy=True)
 
@@ -421,34 +461,54 @@ class Major(db.Model):
         return {
             "id": self.id,
             "name": self.name,
-            "subject_id": self.subject_id,
+            "academic_field_id": self.academic_field_id,
             "school_id": self.school_id,
         }
 
+    @staticmethod
+    def validator(mapper, connection, target):
+        academic_field = connection.execute(
+            db.select(AcademicField).filter_by(id=target.academic_field_id)
+        ).fetchone()
 
-class Subject(db.Model):
+        if academic_field.school_id != target.school_id:
+            raise ValueError(
+                f'MAJOR MODEL: School ("{target.school_id}") is inconsistent with the academic field\'s school ("{target.academic_field.school_id}").'
+            )
+
+        return
+
+
+# Attach event listeners
+event.listen(Major, "before_insert", Major.validator)
+event.listen(Major, "before_update", Major.validator)
+
+
+class AcademicField(db.Model):
     """
-    Table that contains subject information
+    Table that contains academic_field information
 
-    Entries are created to list available subjects.
+    Entries are created to list available academic_fields.
     """
 
-    __table_args__ = (Index("ix_subject_school_id", "school_id"),)
+    __table_args__ = (Index("ix_academic_field_school_id", "school_id"),)
 
-    # Primary key that identifies the subject
+    # Primary key that identifies the academic_field
     id = db.Column(db.Integer, primary_key=True)
 
-    # Subject value (e.g., subject code)
+    # AcademicField's value (e.g., academic_field code)
     value = db.Column(db.String(20), unique=True, nullable=False)
 
-    # Subject name
+    # AcademicField's name
     name = db.Column(db.String(100), nullable=False)
 
-    # Subject school
+    # AcademicField's school
+    # Many-to-One relationship with School model
     school_id = db.Column(db.Integer, db.ForeignKey("school.id"), nullable=False)
+    school = db.relationship("School", backref="academic_fields", lazy=True)
 
     def __repr__(self):
-        return f"Subject({self.id}, {self.name}, {self.school_id})"
+        return f"AcademicField({self.id}, {self.name}, {self.school_id})"
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -524,7 +584,7 @@ class Course(db.Model):
 
     __table_args__ = (
         Index("ix_course_code", "code"),
-        Index("ix_course_subject_id", "subject_id"),
+        Index("ix_course_academic_field_id", "academic_field_id"),
     )
 
     # Primary key that identifies the course
@@ -536,23 +596,47 @@ class Course(db.Model):
     # Course name
     name = db.Column(db.String(100), nullable=False)
 
-    # Subject associated with the course
-    subject_id = db.Column(db.Integer, db.ForeignKey("subject.id"), nullable=False)
+    # AcademicField associated with the course
+    # Many-to-One relationship with AcademicField model
+    academic_field_id = db.Column(
+        db.Integer, db.ForeignKey("academic_field.id"), nullable=False
+    )
+    academic_field = db.relationship("AcademicField", backref="courses", lazy=True)
 
-    # School associated with the course
+    # University associated with the course
+    # Many-to-One relationship with AcademicField model
     school_id = db.Column(db.Integer, db.ForeignKey("school.id"), nullable=False)
+    school = db.relationship("School", backref="courses", lazy=True)
 
     def __repr__(self):
-        return f"Course({self.id}, {self.code}, {self.name}, {self.subject_id})"
+        return f"Course({self.id}, {self.code}, {self.name}, {self.academic_field_id})"
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "id": self.id,
             "code": self.code,
             "name": self.name,
-            "subject_id": self.subject_id,
+            "academic_field_id": self.academic_field_id,
             "school_id": self.school_id,
         }
+
+    @staticmethod
+    def validator(mapper, connection, target):
+        academic_field = connection.execute(
+            db.select(AcademicField).filter_by(id=target.academic_field_id)
+        ).fetchone()
+
+        if academic_field.school_id != target.school_id:
+            raise ValueError(
+                f'COURSE MODEL: School ("{target.school_id}") is inconsistent with the academic field\'s school ("{target.academic_field.school_id}").'
+            )
+
+        return
+
+
+# Attach event listeners
+event.listen(Course, "before_insert", Course.validator)
+event.listen(Course, "before_update", Course.validator)
 
 
 class School(db.Model):
@@ -603,6 +687,9 @@ class NotificationType(db.Model):
     # Notification type name
     name = db.Column(db.String(100), nullable=False, unique=True)
 
+    # Whether the type requires a link to a question.
+    question_required = db.Column(db.Boolean, nullable=False, default=False)
+
     def __repr__(self):
         return f"NotificationType({self.id}, {self.name})"
 
@@ -610,4 +697,5 @@ class NotificationType(db.Model):
         return {
             "id": self.id,
             "name": self.name,
+            "question_required": self.question_required,
         }
