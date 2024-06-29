@@ -39,7 +39,7 @@ class SupportedLanguages(Enum):
 
 
 class OfferStatus(Enum):
-    """List of status for a question."""
+    """List of status for a offer question."""
 
     SENT = "SENT"
     ACCEPTED = "ACCEPTED"
