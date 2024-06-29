@@ -1,7 +1,7 @@
 import json
 from edify import db
 from edify.models import (
-    Subject,
+    AcademicField,
     Method,
     TimeInterval,
     School,
@@ -35,8 +35,8 @@ def populate_universities():
     print("Universities (Schools) populated.")
 
 
-def populate_subjects():
-    subjects = [
+def populate_academic_fields():
+    academic_fields = [
         {"value": "cals", "name": "Agriculture and Life Sciences"},
         {"value": "aap", "name": "Architecture, Art and Planning"},
         {"value": "as", "name": "Arts and Sciences"},
@@ -48,21 +48,21 @@ def populate_subjects():
     ]
 
     with db.session.begin():
-        for subject_data in subjects:
-            # Check if the subject already exists
-            existing_subject = Subject.query.filter_by(
-                value=subject_data["value"]
+        for academic_field_data in academic_fields:
+            # Check if the academic_field already exists
+            existing_academic_field = AcademicField.query.filter_by(
+                value=academic_field_data["value"]
             ).first()
-            if not existing_subject:
+            if not existing_academic_field:
                 school = School.query.filter_by(name="Cornell University").first()
-                subject = Subject(
-                    value=subject_data["value"],
-                    name=subject_data["name"],
+                academic_field = AcademicField(
+                    value=academic_field_data["value"],
+                    name=academic_field_data["name"],
                     school_id=school.id if school else None,
                 )
-                db.session.add(subject)
+                db.session.add(academic_field)
 
-    print("Subjects populated.")
+    print("AcademicFields populated.")
 
 
 def populate_methods():
@@ -116,14 +116,14 @@ def populate_time_intervals():
 
 def populate_notification_types():
     notification_types = [
-        {"name": "General"},
-        {"name": "Offer Accepted"},
-        {"name": "Offer Declined"},
-        {"name": "New Offer"},
-        {"name": "Price Change"},
-        {"name": "Question Solved"},
-        {"name": "Account Verified"},
-        {"name": "Password Reset"},
+        {"name": "General", "question_required": False},
+        {"name": "Offer Accepted", "question_required": True},
+        {"name": "Offer Declined", "question_required": True},
+        {"name": "New Offer", "question_required": True},
+        {"name": "Price Change", "question_required": True},
+        {"name": "Question Solved", "question_required": True},
+        {"name": "Account Verified", "question_required": False},
+        {"name": "Password Reset", "question_required": False},
     ]
 
     with db.session.begin():
@@ -133,7 +133,10 @@ def populate_notification_types():
                 name=type_data["name"]
             ).first()
             if not existing_type:
-                notification_type = NotificationType(name=type_data["name"])
+                notification_type = NotificationType(
+                    name=type_data["name"],
+                    question_required=type_data["question_required"],
+                )
                 db.session.add(notification_type)
 
     print("Notification Types populated.")
@@ -154,12 +157,14 @@ def populate_majors():
             # Check if the major already exists
             existing_major = Major.query.filter_by(name=major_data["major"]).first()
             if not existing_major and school:
-                subject = Subject.query.filter_by(name=major_data["college"]).first()
+                academic_field = AcademicField.query.filter_by(
+                    name=major_data["college"]
+                ).first()
 
-                if subject:
+                if academic_field:
                     major = Major(
                         name=major_data["major"],
-                        subject_id=subject.id,
+                        academic_field_id=academic_field.id,
                         school_id=school.id,
                     )
                     db.session.add(major)
@@ -176,17 +181,17 @@ def populate_courses():
         {
             "code": "ENG101",
             "name": "Introduction to Engineering",
-            "subject": "engineering",  # Engineering subject
+            "academic_field": "engineering",  # Engineering academic_field
         },
         {
             "code": "ART203",
             "name": "Modern Art History",
-            "subject": "as",  # Arts and Sciences subject
+            "academic_field": "as",  # Arts and Sciences academic_field
         },
         {
             "code": "AGRI202",
             "name": "Agricultural Economics",
-            "subject": "cals",  # Agriculture and Life Sciences subject
+            "academic_field": "cals",  # Agriculture and Life Sciences academic_field
         },
     ]
 
@@ -195,20 +200,22 @@ def populate_courses():
             # Check if the course already exists
             existing_course = Course.query.filter_by(code=course_data["code"]).first()
             if not existing_course:
-                # Fetch subject based on its value
-                subject = Subject.query.filter_by(value=course_data["subject"]).first()
+                # Fetch academic_field based on its value
+                academic_field = AcademicField.query.filter_by(
+                    value=course_data["academic_field"]
+                ).first()
 
-                if subject:
+                if academic_field:
                     course = Course(
                         code=course_data["code"],
                         name=course_data["name"],
-                        subject_id=subject.id,
-                        school_id=subject.school_id,
+                        academic_field_id=academic_field.id,
+                        school_id=academic_field.school_id,
                     )
                     db.session.add(course)
                 else:
                     print(
-                        f"Subject '{course_data['subject']}' not found for course '{course_data['name']}'. Skipping."
+                        f"AcademicField '{course_data['academic_field']}' not found for course '{course_data['name']}'. Skipping."
                     )
 
     print("Courses populated.")
@@ -216,7 +223,7 @@ def populate_courses():
 
 if __name__ == "__main__":
     populate_universities()
-    populate_subjects()
+    populate_academic_fields()
     populate_methods()
     populate_time_intervals()
     populate_notification_types()
