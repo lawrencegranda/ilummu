@@ -13,9 +13,9 @@ from edify.models import (
     School,
     NotificationType,
 )
-from edify.populate import populate_constants
+from edify.database.populate import populate_constants
+from edify.database.fake_data import populate_fake
 from edify import db
-from edify.fake_data import populate_fake
 from app import app
 
 

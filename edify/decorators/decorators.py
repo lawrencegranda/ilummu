@@ -5,7 +5,8 @@ from typing import Callable, List, Union
 from flask_login import UserMixin
 from flask_jwt_extended import jwt
 from edify.models import User
-from edify.constants import AuthLevel
+from edify.utils.constants import AuthLevel
+from edify.utils.utils import error_response
 
 
 @jwt.user_lookup_loader
@@ -23,13 +24,6 @@ def user_lookup_callback(_jwt_header, jwt_data) -> "User":
     return User.query.get(int(identity))
 
 
-def error_response(message: str, status_code: int) -> tuple:
-    """
-    Helper function to create a standard error JSON response.
-    """
-    return jsonify({"error": message, "status_code": status_code}), status_code
-
-
 def manager_required(minimum_manager_level: AuthLevel) -> Callable:
     """
     Decorator for managing access to endpoints based on manager level.
@@ -39,9 +33,13 @@ def manager_required(minimum_manager_level: AuthLevel) -> Callable:
         @wraps(function)
         def wrapper(*args: tuple, **kwargs: dict) -> Union[tuple, UserMixin]:
             if not isinstance(current_user, UserMixin):
-                return error_response("User not authenticated", HTTPStatus.UNAUTHORIZED)
+                return error_response(
+                    "User not authenticated",
+                    "USER_NOT_AUTHENTICATED",
+                    HTTPStatus.UNAUTHORIZED,
+                )
             if current_user.auth_level < minimum_manager_level.value:
-                return error_response("Access forbidden", HTTPStatus.FORBIDDEN)
+                return error_response("Not ", HTTPStatus.FORBIDDEN)
             return function(*args, **kwargs)
 
         return wrapper
