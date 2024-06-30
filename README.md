@@ -44,13 +44,16 @@ To run the API, run the following steps:
     * Run `poetry shell`
 5) Add environment variables
     * Run `source env.sh` (or whatever the environment filed is named)
-6) Run API:
-    * Run `python run.py`
+6) Set up the local database (OPTIONAL):
+    * Run `flask db upgrade` to get the latest models.
+    * Run `python setup.py` to populate constants.
+7) Run web:
+    * Run `python app.py`
 
 
-Steps 1-2-3 only need to be done the first time. 
+Steps 1-2-3-6 only need to be done the first time. 
 
-Steps 4-5-6 must be run every time,
+Steps 4-5-7 must be run every time.
 
 ---
 
