@@ -221,7 +221,7 @@ def populate_courses():
     print("Courses populated.")
 
 
-if __name__ == "__main__":
+def populate_constants():
     populate_universities()
     populate_academic_fields()
     populate_methods()

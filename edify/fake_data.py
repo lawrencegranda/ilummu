@@ -110,7 +110,7 @@ def generate_fake_notifications(num_notifications):
 # Add more functions for other models (AcademicField, Method, TimeInterval, Course, School, NotificationType) if needed
 
 
-def populate_database():
+def populate_fake():
     num_users = 10
     num_questions = 20
     num_offers = 30
