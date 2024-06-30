@@ -45,6 +45,18 @@ class User(db.Model, UserMixin):
     # User's last name
     lastname = db.Column(db.String(35), nullable=False)
 
+    # User's email
+    # Must be unique
+    email = db.Column(db.String(120), unique=True, nullable=False)
+
+    # User's phone number
+    # Must be unique
+    phone = db.Column(db.String(50), unique=True, nullable=False)
+
+    # Account password
+    # Must be hashed
+    password = db.Column(db.String(90), nullable=False)
+
     # User's school/university
     # Many-to-One relationship with School model
     school_id = db.Column(db.Integer, db.ForeignKey("school.id"), nullable=False)
@@ -57,18 +69,6 @@ class User(db.Model, UserMixin):
 
     # User's graduation year
     graduation = db.Column(db.DateTime, nullable=False)
-
-    # User's email
-    # Must be unique
-    email = db.Column(db.String(120), unique=True, nullable=False)
-
-    # User's phone number
-    # Must be unique
-    phone = db.Column(db.String(50), unique=True, nullable=False)
-
-    # Account password
-    # Must be hashed
-    password = db.Column(db.String(90), nullable=False)
 
     # Entry creation date (to keep track)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -143,8 +143,8 @@ class User(db.Model, UserMixin):
             "lastname": self.lastname,
             "email": self.email,
             "phone": self.phone,
-            "school": self.school,
-            "major": self.major,
+            "school_id": self.school_id,
+            "major_id": self.major_id,
             "language": self.language,
         }
 
