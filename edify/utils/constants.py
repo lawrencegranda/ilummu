@@ -1,6 +1,14 @@
 from enum import Enum
 
 
+class ErrorType(Enum):
+    """Different Error Types"""
+
+    USER_NOT_AUTHENTICATED = "USER_NOT_AUTHENTICATED"
+    USER_NOT_VERIFIED = "USER_NOT_VERIFIED"
+    INCORRECT_CREDENTIALS = "INCORRECT_CREDENTIALS"
+
+
 class AuthLevel(Enum):
     """Authorization levels"""
 
