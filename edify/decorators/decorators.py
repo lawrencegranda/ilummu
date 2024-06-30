@@ -5,7 +5,7 @@ from typing import Callable, List, Union
 from flask_login import UserMixin
 from flask_jwt_extended import jwt
 from edify.models import User
-from edify.utils.constants import AuthLevel
+from edify.utils.constants import AuthLevel, ErrorType
 from edify.utils.utils import error_response
 
 
@@ -34,9 +34,7 @@ def manager_required(minimum_manager_level: AuthLevel) -> Callable:
         def wrapper(*args: tuple, **kwargs: dict) -> Union[tuple, UserMixin]:
             if not isinstance(current_user, UserMixin):
                 return error_response(
-                    "User not authenticated",
-                    "USER_NOT_AUTHENTICATED",
-                    HTTPStatus.UNAUTHORIZED,
+                    "User not authenticated", ErrorType.USER_NOT_AUTHENTICATED
                 )
             if current_user.auth_level < minimum_manager_level.value:
                 return error_response("Not ", HTTPStatus.FORBIDDEN)
@@ -56,9 +54,15 @@ def role_required(roles: List[AuthLevel]) -> Callable:
         @wraps(function)
         def wrapper(*args: tuple, **kwargs: dict) -> Union[tuple, UserMixin]:
             if not isinstance(current_user, UserMixin):
-                return error_response("User not authenticated", HTTPStatus.UNAUTHORIZED)
+                return error_response(
+                    "User not authenticated", ErrorType.USER_NOT_AUTHENTICATED
+                )
             if current_user.auth_level not in roles:
-                return error_response("Access forbidden", HTTPStatus.FORBIDDEN)
+                return error_response(
+                    "User is not allowed to access",
+                    ErrorType.ACCESS_FORBIDDEN,
+                    HTTPStatus.FORBIDDEN,
+                )
             return function(*args, **kwargs)
 
         return wrapper
@@ -74,7 +78,7 @@ def maintenance_mode(function: Callable) -> Callable:
     @wraps(function)
     def decorator(*args: tuple, **kwargs: dict) -> Union[tuple, UserMixin]:
         if current_app.config.get("MAINTENANCE_MODE", False):
-            return error_response("App in maintenance mode", HTTPStatus.FORBIDDEN)
+            return error_response("App in maintenance mode", ErrorType.MAINTENANCE)
         return function(*args, **kwargs)
 
     return decorator
