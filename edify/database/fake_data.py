@@ -14,7 +14,7 @@ from edify.models import (
     NotificationType,
     Major,
 )
-from edify.constants import SupportedLanguages, AuthLevel, OfferStatus
+from edify.utils.constants import SupportedLanguages, AuthLevel, OfferStatus
 import string
 
 fake = Faker()
