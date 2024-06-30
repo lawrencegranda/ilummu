@@ -1,5 +1,5 @@
 from edify import db, jwt
-from edify.constants import (
+from edify.utils.constants import (
     AuthLevel,
     SupportedLanguages,
     OfferStatus,

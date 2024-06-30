@@ -1,5 +1,5 @@
 import os
-from edify.constants import EdifyEnvironments
+from edify.utils.constants import EdifyEnvironments
 
 
 class Config:
