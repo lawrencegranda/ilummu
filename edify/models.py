@@ -4,6 +4,7 @@ from edify.utils.constants import (
     SupportedLanguages,
     OfferStatus,
 )
+from edify.utils.utils import validate_email, validate_phone
 from sqlalchemy import Index, Enum, event
 from flask_login import UserMixin
 from flask_jwt_extended import current_user, create_access_token, decode_token
@@ -159,14 +160,12 @@ class User(db.Model, UserMixin):
 
     @staticmethod
     def validator(mapper, connection, target):
-        phone_regex = re.compile(r"^\+\d{1,2}\s\d{9,15}$")
-        if not phone_regex.match(target.phone):
+        if not validate_phone(target.phone):
             raise ValueError(
                 f'USER MODEL: Invalid phone number format ("{target.phone}").'
             )
 
-        email_regex = re.compile(r"^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$")
-        if not email_regex.match(target.email):
+        if not validate_email(target.email):
             raise ValueError(f'USER MODEL: Invalid email format ("{target.email}").')
 
         if target.updated_at and target.updated_at < target.created_at:
@@ -660,8 +659,11 @@ class School(db.Model):
     # School state
     state = db.Column(db.String(100), nullable=True)
 
+    # Email
+    email_postfix = db.Column(db.String(100), nullable=False)
+
     def __repr__(self):
-        return f"School({self.id}, {self.name})"
+        return f"School({self.id}, {self.name}, {self.email_postfix})"
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -669,6 +671,7 @@ class School(db.Model):
             "name": self.name,
             "country": self.country,
             "state": self.state,
+            "email_postfix": self.email_postfix,
         }
 
 

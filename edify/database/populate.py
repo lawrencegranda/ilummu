@@ -13,9 +13,24 @@ from edify.models import (
 
 def populate_universities():
     universities = [
-        {"name": "Cornell University", "country": "USA", "state": "New York"},
-        {"name": "Harvard University", "country": "USA", "state": "Massachusetts"},
-        {"name": "Stanford University", "country": "USA", "state": "California"},
+        {
+            "name": "Cornell University",
+            "country": "USA",
+            "state": "New York",
+            "email_postfix": "cornell.edu",
+        },
+        {
+            "name": "Harvard University",
+            "country": "USA",
+            "state": "Massachusetts",
+            "email_postfix": "harvard.edu",
+        },
+        {
+            "name": "Stanford University",
+            "country": "USA",
+            "state": "California",
+            "email_postfix": "stanford.edu",
+        },
     ]
 
     with db.session.begin():
@@ -29,6 +44,7 @@ def populate_universities():
                     name=university_data["name"],
                     country=university_data.get("country"),
                     state=university_data.get("state"),
+                    email_postfix=university_data.get("email_postfix"),
                 )
                 db.session.add(university)
 
