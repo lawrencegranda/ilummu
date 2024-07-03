@@ -1,13 +1,10 @@
 import json
 from edify import db
-from edify.models import (
-    AcademicField,
-    Method,
-    TimeInterval,
-    School,
-    NotificationType,
-    Major,
-    Course,
+from edify.models import *
+from edify.utils.constants import (
+    AuthLevelEnum,
+    SupportedLanguagesEnum,
+    OfferStatusEnum,
 )
 
 
@@ -237,7 +234,31 @@ def populate_courses():
     print("Courses populated.")
 
 
+def populate_enums():
+    with db.session.begin():
+        # Populate AuthLevel table
+        for level in AuthLevelEnum.values():
+            if not AuthLevel.query.filter_by(value=level).first():
+                db.session.add(AuthLevel(value=level))
+
+        # Populate SupportedLanguage table
+        for lang in SupportedLanguagesEnum.values():
+            if not SupportedLanguage.query.filter_by(value=lang).first():
+                db.session.add(SupportedLanguage(value=lang))
+
+        # Populate OfferStatus table
+        for status in OfferStatusEnum.values():
+            if not OfferStatus.query.filter_by(value=status).first():
+                db.session.add(OfferStatus(value=status))
+
+        # Commit the changes to the database
+        db.session.commit()
+
+    print("Enums populated.")
+
+
 def populate_constants():
+    populate_enums()
     populate_universities()
     populate_academic_fields()
     populate_methods()

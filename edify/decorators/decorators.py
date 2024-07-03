@@ -5,7 +5,7 @@ from typing import Callable, List, Union
 from flask_login import UserMixin
 from flask_jwt_extended import jwt
 from edify.models import User
-from edify.utils.constants import AuthLevel, ErrorType
+from edify.utils.constants import AuthLevelEnum, ErrorType
 from edify.utils.utils import error_response
 
 
@@ -24,7 +24,7 @@ def user_lookup_callback(_jwt_header, jwt_data) -> "User":
     return User.query.get(int(identity))
 
 
-def manager_required(minimum_manager_level: AuthLevel) -> Callable:
+def manager_required(minimum_manager_level: AuthLevelEnum) -> Callable:
     """
     Decorator for managing access to endpoints based on manager level.
     """
@@ -45,7 +45,7 @@ def manager_required(minimum_manager_level: AuthLevel) -> Callable:
     return decorator
 
 
-def role_required(roles: List[AuthLevel]) -> Callable:
+def role_required(roles: List[AuthLevelEnum]) -> Callable:
     """
     Decorator for managing access to endpoints based on user roles.
     """
