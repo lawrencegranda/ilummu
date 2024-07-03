@@ -4,7 +4,7 @@ from edify.utils.constants import (
     SupportedLanguagesEnum,
     OfferStatusEnum,
 )
-from edify.utils.utils import validate_email, validate_phone
+from edify.utils.utils import validate_email, validate_phone, format_phone
 from sqlalchemy import Index, event
 from flask_login import UserMixin
 from flask_jwt_extended import current_user, create_access_token, decode_token
@@ -186,6 +186,18 @@ class User(db.Model, UserMixin):
             )
 
         return
+
+
+# Event listener to format phone number before insert/update
+@event.listens_for(User.phone, "set", retval=True)
+def format_phone_number(target, value, oldvalue, initiator):
+    return format_phone(value)
+
+
+# Event listener to trim email before insert/update
+@event.listens_for(User.email, "set", retval=True)
+def trim_email(target, value, oldvalue, initiator):
+    return value.strip().lower()
 
 
 # Attach event listeners
