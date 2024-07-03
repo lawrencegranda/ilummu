@@ -34,6 +34,7 @@ from edify.models import (
     Major,
 )
 from edify import db, bcrypt
+from http import HTTPStatus
 
 user = Blueprint("user", __name__, url_prefix="/user")
 
@@ -106,11 +107,14 @@ def login(args):
 )
 def new_user(args):
     """Endpoint to create a new user."""
-    print(args)
+    # Trim all string values in args
+    for key, value in args.items():
+        if isinstance(value, str):
+            args[key] = value.strip()
 
     if not validate_phone(args["phone"]):
         return error_response(
-            "Invalid phone format (example: +1 1234567890.", ErrorType.BAD_REQUEST
+            f"Invalid phone format {args['phone']}", ErrorType.BAD_REQUEST
         )
 
     if not validate_email(args["email"]):
