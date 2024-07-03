@@ -1,11 +1,11 @@
 from edify import db, jwt
 from edify.utils.constants import (
-    AuthLevel,
-    SupportedLanguages,
-    OfferStatus,
+    AuthLevelEnum,
+    SupportedLanguagesEnum,
+    OfferStatusEnum,
 )
 from edify.utils.utils import validate_email, validate_phone
-from sqlalchemy import Index, Enum, event
+from sqlalchemy import Index, event
 from flask_login import UserMixin
 from flask_jwt_extended import current_user, create_access_token, decode_token
 from datetime import datetime, timedelta
@@ -32,7 +32,11 @@ class User(db.Model, UserMixin):
     Entries are updated in the account editing route
     """
 
-    __table_args__ = (Index("ix_username", "username"),)
+    __table_args__ = (
+        Index("ix_username", "username"),
+        Index("ix_email", "email"),
+        Index("ix_phone", "phone"),
+    )
 
     # Primary key that identifies the user
     id = db.Column(db.Integer, primary_key=True)
@@ -84,7 +88,12 @@ class User(db.Model, UserMixin):
     token_last_refresh = db.Column(db.DateTime, nullable=True)
 
     # Field that indicates the level of permissions.
-    auth_level = db.Column(Enum(AuthLevel), nullable=False, default=AuthLevel.STUDENT)
+    auth_level = db.Column(
+        db.String(30),
+        db.ForeignKey("auth_level.value"),
+        nullable=False,
+        default=AuthLevelEnum.STUDENT,
+    )
 
     # Whether or not the user verified it's email. NOT IMPLEMENTED
     mail_is_verified = db.Column(db.Boolean, nullable=False, default=False)
@@ -97,7 +106,10 @@ class User(db.Model, UserMixin):
 
     # Preferred language by the user for display.
     language = db.Column(
-        Enum(SupportedLanguages), nullable=False, default=SupportedLanguages.ENGLISH
+        db.String(30),
+        db.ForeignKey("supported_language.value"),
+        nullable=False,
+        default=SupportedLanguagesEnum.ENGLISH,
     )
 
     # Profile picture
@@ -315,7 +327,12 @@ class Offer(db.Model):
     amount = db.Column(db.Float, nullable=False)
 
     # Status of the offer
-    status = db.Column(db.Enum(OfferStatus), nullable=False, default=OfferStatus.SENT)
+    status = db.Column(
+        db.String(30),
+        db.ForeignKey("offer_status.value"),
+        nullable=False,
+        default=OfferStatusEnum.SENT,
+    )
 
     # Entry creation date (to keep track)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -702,3 +719,15 @@ class NotificationType(db.Model):
             "name": self.name,
             "question_required": self.question_required,
         }
+
+
+class AuthLevel(db.Model):
+    value = db.Column(db.String(50), unique=True, nullable=False, primary_key=True)
+
+
+class SupportedLanguage(db.Model):
+    value = db.Column(db.String(50), unique=True, nullable=False, primary_key=True)
+
+
+class OfferStatus(db.Model):
+    value = db.Column(db.String(50), unique=True, nullable=False, primary_key=True)

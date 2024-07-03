@@ -17,20 +17,8 @@ class ErrorType(Enum):
     ACCESS_FORBIDDEN = HTTPStatus.FORBIDDEN
     MAINTENANCE = HTTPStatus.FORBIDDEN
     BAD_REQUEST = HTTPStatus.BAD_REQUEST
-
-
-class AuthLevel(Enum):
-    """Authorization levels"""
-
-    # Simple student: Basic access level for students
-    STUDENT = 0
-
-    # School Admin: High-level admin with broad oversight capabilities within a school
-    SCHOOL_ADMIN = 5
-
-    # Super Admin: Root account with the highest level of access
-    # Can see/edit everything
-    SUPER_ADMIN = 100
+    REQUEST_TIMEOUT = HTTPStatus.REQUEST_TIMEOUT
+    INTERNAL_ERROR = HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 class EdifyEnvironments(Enum):
@@ -46,18 +34,35 @@ class EdifyEnvironments(Enum):
     TEST = "TEST"
 
 
-class SupportedLanguages(Enum):
+class EnumBase:
+    @classmethod
+    def values(cls):
+        return [value for key, value in vars(cls).items() if not key.startswith("__")]
+
+
+class AuthLevelEnum(EnumBase):
+    """Authorization levels"""
+
+    # Simple student: Basic access level for students
+    STUDENT = "STUDENT"
+
+    # School Admin: High-level admin with broad oversight capabilities within a school
+    SCHOOL_ADMIN = "SCHOOL_ADMIN"
+
+    # Super Admin: Root account with the highest level of access
+    # Can see/edit everything
+    SUPER_ADMIN = "SUPER_ADMIN"
+
+
+class SupportedLanguagesEnum(EnumBase):
     """List of languages supported by the platform."""
 
-    # Options must be one of:
-    # https://meta.wikimedia.org/wiki/Template:List_of_language_names_ordered_by_code?setlang=ru
-
     # English language support
-    ENGLISH = "en"
+    ENGLISH = "ENGLISH"
 
 
-class OfferStatus(Enum):
-    """List of status for a offer question."""
+class OfferStatusEnum(EnumBase):
+    """List of status for an offer question."""
 
     SENT = "SENT"
     ACCEPTED = "ACCEPTED"

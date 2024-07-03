@@ -14,7 +14,7 @@ from edify.models import (
     NotificationType,
     Major,
 )
-from edify.utils.constants import SupportedLanguages, AuthLevel, OfferStatus
+from edify.utils.constants import SupportedLanguagesEnum, AuthLevelEnum, OfferStatusEnum
 import string
 
 fake = Faker()
@@ -77,7 +77,7 @@ def generate_fake_offers(num_offers):
             user_id=choice(users).id,
             question_id=choice(questions).id,
             amount=randint(5, 100),
-            status=choice(list(OfferStatus)),
+            status=choice(OfferStatusEnum.values()),
         )
         offers.append(offer)
     return offers
