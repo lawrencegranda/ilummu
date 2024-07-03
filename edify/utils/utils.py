@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import random
 import json
 import random
+import phonenumbers
 
 
 def error_response(message: str, error_type: ErrorType) -> tuple:
@@ -22,7 +23,26 @@ email_regex = re.compile(r"^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$")
 
 
 def validate_phone(phone):
-    return phone_regex.match(phone)
+    try:
+        # Parse the phone number
+        parsed_number = phonenumbers.parse(phone, None)
+
+        # Check if the number is valid
+        return phonenumbers.is_valid_number(parsed_number)
+    except:
+        return False
+
+
+def format_phone(phone):
+    if not validate_phone(phone):
+        return phone
+
+    parsed_number = phonenumbers.parse(phone, None)
+    phone = phonenumbers.format_number(
+        parsed_number, phonenumbers.PhoneNumberFormat.INTERNATIONAL
+    )
+
+    return phone
 
 
 def validate_email(email):
