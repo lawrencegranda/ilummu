@@ -6,6 +6,7 @@ from flask_jwt_extended import jwt_required, current_user, exceptions
 
 import time
 
+frontend = Blueprint("frontend", __name__, url_prefix="/")
 
 subjects = [
     {"value": "cals", "name": "Agriculture and Life Sciences"},
@@ -399,9 +400,6 @@ def get_notifications():
     return notifications
 
 
-frontend = Blueprint("frontend", __name__, url_prefix="/")
-
-
 @frontend.route("/")
 def index():
     return render_template(
@@ -496,3 +494,6 @@ def fetch_question(id_qstn):
         offer_accepted=offer_accepted,
         offers=offers,
     )
+
+
+frontend.register_blueprint(question)

@@ -26,10 +26,11 @@ def create_app(config_class):
     jwt.init_app(app)
     migrate.init_app(app, db)
 
-    from edify.routes.routes import frontend, question
+    from edify.frontend.routes import frontend
+    from edify.backend.routes import backend
 
     app.register_blueprint(frontend)
-    app.register_blueprint(question)
+    app.register_blueprint(backend)
 
     # Return validation errors as JSON
     @app.errorhandler(422)

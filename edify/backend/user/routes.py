@@ -10,8 +10,14 @@ from webargs.flaskparser import use_args
 import os
 import json
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
-from edify.utils.constants import ErrorType, AuthLevel, SupportedLanguages
-from edify.utils.utils import error_response
+from edify.utils.constants import ErrorType, AuthLevelEnum, SupportedLanguagesEnum
+from edify.utils.utils import (
+    error_response,
+    validate_date,
+    validate_email,
+    validate_phone,
+    generate_funny_username,
+)
 from datetime import datetime, timedelta
 from edify import db
 from edify.models import (
@@ -27,15 +33,18 @@ from edify.models import (
     NotificationType,
     Major,
 )
+from edify import db, bcrypt
 
-user = Blueprint("user", __name__)
+user = Blueprint("user", __name__, url_prefix="/user")
 
 
-def generate_access_token(user: User, days: int = 5) -> None:
-    user.token = user.get_reset_token(timedelta(days=days).total_seconds())
+def generate_access_token(user, days=5):
+    access_token = create_access_token(
+        identity=user.id, expires_delta=timedelta(days=days)
+    )
+    user.token = access_token
     user.token_last_refresh = datetime.utcnow()
-
-    return
+    return access_token
 
 
 # Endpoint: user/login
@@ -69,8 +78,8 @@ def login(args):
     db.session.commit()
 
     if user.auth_level in [
-        AuthLevel.SCHOOL_ADMIN.value,
-        AuthLevel.SUPER_ADMIN.value,
+        AuthLevelEnum.SCHOOL_ADMIN.value,
+        AuthLevelEnum.SUPER_ADMIN.value,
     ]:
         # Nothing for now
         pass
@@ -97,26 +106,38 @@ def login(args):
 )
 def new_user(args):
     """Endpoint to create a new user."""
+    print(args)
+
+    if not validate_phone(args["phone"]):
+        return error_response(
+            "Invalid phone format (example: +1 1234567890.", ErrorType.BAD_REQUEST
+        )
+
+    if not validate_email(args["email"]):
+        return error_response("Invalid email format.", ErrorType.BAD_REQUEST)
 
     # Check if email is already taken
-    user = User.query.filter_by(email=args["email"]).first()
+    user = db.session.query(User).filter_by(email=args["email"]).first()
     if user:
         return error_response("Email is already taken", ErrorType.BAD_REQUEST)
 
     # Check if phone is already taken
     # TODO: Format phone
-    user = User.query.filter_by(phone=args["phone"]).first()
+    user = db.session.query(User).filter_by(phone=args["phone"]).first()
     if user:
         return error_response("Phone is already taken", ErrorType.BAD_REQUEST)
 
     language = args["language"]
     if not language:
-        language = SupportedLanguages.ENGLISH
+        language = SupportedLanguagesEnum.ENGLISH
 
     if args["school"]:
         school = db.session.query(School).filter_by(name=args["school"]).first()
     else:
         school = db.session.query(School).filter_by(name="Cornell University").first()
+
+    if not school:
+        return error_response("Invalid school.", ErrorType.BAD_REQUEST)
 
     major = (
         db.session.query(Major)
@@ -124,12 +145,27 @@ def new_user(args):
         .first()
     )
 
+    if not major:
+        return error_response("Invalid Major.", ErrorType.BAD_REQUEST)
+
     # Hash password  before storing it in the db for privacy purposes
     hashed_password = bcrypt.generate_password_hash(args["password"]).decode("utf-8")
 
+    # New Username (funny)
+    n = 3
+    counter = 0
+    username = generate_funny_username(n)
+    while db.session.query(User).filter_by(username=username).first():
+        # print(username)
+        if counter > 10:
+            n += 1
+        if counter > 100:
+            return error_response("Ran out of usernames.", ErrorType.INTERNAL_ERROR)
+        username = generate_funny_username(n)
+
     # Create new user in the User table
     user = User(
-        username=None,
+        username=username,
         firstname=args["firstname"],
         lastname=args["lastname"],
         email=args["email"],
@@ -146,13 +182,15 @@ def new_user(args):
     db.session.commit()
 
     # Generate and commit the access token for the user for 5 days
-    generate_access_token(user, 5)
+    access_token = generate_access_token(user, 5)
     db.session.commit()
 
     return (
         jsonify({"token": access_token, "user": user.to_dict(simplified=True)}),
         HTTPStatus.CREATED,
     )
+
+    print("Done!")
 
     # TODO: Format and validate phone number,
     # TODO: Format and validate email,
