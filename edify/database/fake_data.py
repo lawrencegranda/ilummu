@@ -15,6 +15,7 @@ from edify.models import (
     Major,
 )
 from edify.utils.constants import SupportedLanguagesEnum, AuthLevelEnum, OfferStatusEnum
+from edify.utils.utils import validate_phone
 import string
 
 fake = Faker()
@@ -26,6 +27,13 @@ def generate_fake_users(num_users):
 
     users = []
     for _ in range(num_users):
+        phone = f"+1 {''.join(choices(string.digits, k=10))}"
+        while (
+            not validate_phone(phone)
+            or db.session.query(User).filter_by(phone=phone).first()
+        ):
+            phone = f"+1 {''.join(choices(string.digits, k=10))}"
+
         user = User(
             username=fake.user_name(),
             firstname=fake.first_name(),
@@ -34,7 +42,7 @@ def generate_fake_users(num_users):
             major_id=choice(majors).id,
             graduation=fake.future_date(end_date="+4y"),
             email=fake.email(),
-            phone=f"+1 {''.join(choices(string.digits, k=9))}",
+            phone=phone,
             password=fake.password(length=12),
             token=fake.sha256(),
             token_last_refresh=fake.date_time_between(start_date="-1y", end_date="now"),
@@ -42,8 +50,8 @@ def generate_fake_users(num_users):
             phone_is_verified=fake.boolean(),
             is_mock=True,
         )
-        users.append(user)
-    return users
+        db.session.add(user)
+    return
 
 
 def generate_fake_questions(num_questions):
@@ -120,7 +128,7 @@ def populate_fake():
     # Add mock data to the database
     with db.session.begin():
         users = generate_fake_users(num_users)
-        db.session.add_all(users)
+        # db.session.add_all(users)
 
         questions = generate_fake_questions(num_questions)
         db.session.add_all(questions)
