@@ -17,6 +17,7 @@ from edify.utils.utils import (
     validate_email,
     validate_phone,
     generate_funny_username,
+    format_phone,
 )
 from datetime import datetime, timedelta
 from edify import db
@@ -61,13 +62,13 @@ def login(args):
             "Incorrect email or password", ErrorType.INCORRECT_CREDENTIALS
         )
 
-    # Check it the user has the email verified
-    if user.mail_is_verified is False:
-        return error_response("Email not verified", ErrorType.USER_NOT_VERIFIED)
+    # # Check it the user has the email verified
+    # if user.mail_is_verified is False:
+    #     return error_response("Email not verified", ErrorType.USER_NOT_VERIFIED)
 
-    # Check it the user has the phone number verified
-    if user.phone_is_verified is False:
-        return error_response("Phone not verified", ErrorType.USER_NOT_VERIFIED)
+    # # Check it the user has the phone number verified
+    # if user.phone_is_verified is False:
+    #     return error_response("Phone not verified", ErrorType.USER_NOT_VERIFIED)
 
     # Authentication token to be used in subsequent requests
     access_token = create_access_token(
@@ -79,8 +80,8 @@ def login(args):
     db.session.commit()
 
     if user.auth_level in [
-        AuthLevelEnum.SCHOOL_ADMIN.value,
-        AuthLevelEnum.SUPER_ADMIN.value,
+        AuthLevelEnum.SCHOOL_ADMIN,
+        AuthLevelEnum.SUPER_ADMIN,
     ]:
         # Nothing for now
         pass
@@ -91,6 +92,7 @@ def login(args):
     )
 
 
+# Endpoint: user/new
 @user.route("/new", methods=["POST"])
 @use_args(
     {
@@ -116,6 +118,7 @@ def new_user(args):
         return error_response(
             f"Invalid phone format {args['phone']}", ErrorType.BAD_REQUEST
         )
+    args["phone"] = format_phone(args["phone"])
 
     if not validate_email(args["email"]):
         return error_response("Invalid email format.", ErrorType.BAD_REQUEST)
@@ -126,7 +129,6 @@ def new_user(args):
         return error_response("Email is already taken", ErrorType.BAD_REQUEST)
 
     # Check if phone is already taken
-    # TODO: Format phone
     user = db.session.query(User).filter_by(phone=args["phone"]).first()
     if user:
         return error_response("Phone is already taken", ErrorType.BAD_REQUEST)
@@ -134,6 +136,12 @@ def new_user(args):
     language = args["language"]
     if not language:
         language = SupportedLanguagesEnum.ENGLISH
+
+    if language not in SupportedLanguagesEnum.values():
+        return error_response(
+            f"Invalid language: {language} is not one of {' '.join(SupportedLanguagesEnum.values())}",
+            ErrorType.BAD_REQUEST,
+        )
 
     if args["school"]:
         school = db.session.query(School).filter_by(name=args["school"]).first()
@@ -193,10 +201,3 @@ def new_user(args):
         jsonify({"token": access_token, "user": user.to_dict(simplified=True)}),
         HTTPStatus.CREATED,
     )
-
-    print("Done!")
-
-    # TODO: Format and validate phone number,
-    # TODO: Format and validate email,
-    # TODO: Format graduation date,
-    # TODO: Check language
