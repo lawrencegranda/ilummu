@@ -18,8 +18,13 @@ def error_response(message: str, error_type: ErrorType) -> tuple:
     )
 
 
-phone_regex = re.compile(r"^\+\d{1,2}\s\d{9,15}$")
-email_regex = re.compile(r"^[\w\-\.]+@([\w\-]+\.)+[\w\-]{2,4}$")
+email_regex = re.compile(
+    r"^[a-zA-Z0-9]([\w\-\.])+@[a-zA-Z0-9]([\w\-]+\.)+\.[a-zA-Z]{2,6}$"
+)
+validate_email = lambda x: email_regex.match(x)
+
+email_postfix_regex = re.compile(r"^[a-zA-Z0-9]([\w\-]+\.)+\.[a-zA-Z]{2,6}$")
+validate_email_postfix = lambda x: email_postfix_regex.match(x)
 
 
 def validate_phone(phone):
@@ -43,10 +48,6 @@ def format_phone(phone):
     )
 
     return phone
-
-
-def validate_email(email):
-    return email_regex.match(email)
 
 
 def validate_date(date):
@@ -78,3 +79,12 @@ def generate_funny_username(n):
 
     username = f"{adjective}{noun}{suffix}"
     return username
+
+
+def format_strip(target, value, oldvalue, initiator):
+    return value.strip()
+
+
+format_title_case = lambda x: format_strip(*x).title()
+format_lower_case = lambda x: format_strip(*x).lower()
+format_upper_case = lambda x: format_strip(*x).upper()
