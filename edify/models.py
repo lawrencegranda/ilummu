@@ -4,7 +4,15 @@ from edify.utils.constants import (
     SupportedLanguagesEnum,
     OfferStatusEnum,
 )
-from edify.utils.utils import validate_email, validate_phone, format_phone
+from edify.utils.utils import (
+    validate_email,
+    validate_email_postfix,
+    validate_phone,
+    format_phone,
+    format_title_case,
+    format_lower_case,
+    format_upper_case,
+)
 from sqlalchemy import Index, event
 from flask_login import UserMixin
 from flask_jwt_extended import current_user, create_access_token, decode_token
@@ -44,13 +52,13 @@ class User(db.Model, UserMixin):
     # User's username
     username = db.Column(db.String(30), unique=True, nullable=False)
 
-    # User's first name
+    # User's first name, titlecase
     firstname = db.Column(db.String(20), nullable=False)
 
-    # User's last name
+    # User's last name, titlecase
     lastname = db.Column(db.String(35), nullable=False)
 
-    # User's email
+    # User's email, lowercase
     # Must be unique
     email = db.Column(db.String(120), unique=True, nullable=False)
 
@@ -187,22 +195,18 @@ class User(db.Model, UserMixin):
 
         return
 
-
-# Event listener to format phone number before insert/update
-@event.listens_for(User.phone, "set", retval=True)
-def format_phone_number(target, value, oldvalue, initiator):
-    return format_phone(value)
-
-
-# Event listener to trim email before insert/update
-@event.listens_for(User.email, "set", retval=True)
-def trim_email(target, value, oldvalue, initiator):
-    return value.strip().lower()
+    @staticmethod
+    def format_phone(target, value, oldvalue, initiator):
+        return format_phone(value)
 
 
 # Attach event listeners
 event.listen(User, "before_insert", User.validator)
 event.listen(User, "before_update", User.validator)
+event.listen(User.phone, "set", User.format_phone, retval=True)
+event.listen(User.firstname, "set", format_title_case, retval=True)
+event.listen(User.lastname, "set", format_title_case, retval=True)
+event.listen(User.email, "set", format_lower_case, retval=True)
 
 
 class Question(db.Model):
@@ -467,7 +471,7 @@ class Major(db.Model):
     # Primary key that identifies the major
     id = db.Column(db.Integer, primary_key=True)
 
-    # Major name
+    # Major name, titlecase
     name = db.Column(db.String(100), nullable=False)
 
     # AcademicField associated with the major
@@ -510,6 +514,7 @@ class Major(db.Model):
 # Attach event listeners
 event.listen(Major, "before_insert", Major.validator)
 event.listen(Major, "before_update", Major.validator)
+event.listen(Major.name, "set", format_title_case, retval=True)
 
 
 class AcademicField(db.Model):
@@ -524,10 +529,10 @@ class AcademicField(db.Model):
     # Primary key that identifies the academic_field
     id = db.Column(db.Integer, primary_key=True)
 
-    # AcademicField's value (e.g., academic_field code)
-    value = db.Column(db.String(20), unique=True, nullable=False)
+    # AcademicField's value (e.g., academic_field code), lowercase
+    value = db.Column(db.String(30), unique=True, nullable=False)
 
-    # AcademicField's name
+    # AcademicField's name, titlecase
     name = db.Column(db.String(100), nullable=False)
 
     # AcademicField's school
@@ -545,6 +550,11 @@ class AcademicField(db.Model):
             "name": self.name,
             "school_id": self.school_id,
         }
+
+
+# Attach event listeners
+event.listen(AcademicField.value, "set", format_lower_case, retval=True)
+event.listen(AcademicField.name, "set", format_title_case, retval=True)
 
 
 class Method(db.Model):
@@ -618,10 +628,10 @@ class Course(db.Model):
     # Primary key that identifies the course
     id = db.Column(db.Integer, primary_key=True)
 
-    # Course value (e.g., course code)
+    # Course value (e.g., course code), uppercase
     code = db.Column(db.String(10), nullable=False)
 
-    # Course name
+    # Course name, titlecase
     name = db.Column(db.String(100), nullable=False)
 
     # AcademicField associated with the course
@@ -665,6 +675,8 @@ class Course(db.Model):
 # Attach event listeners
 event.listen(Course, "before_insert", Course.validator)
 event.listen(Course, "before_update", Course.validator)
+event.listen(Course.code, "set", format_upper_case, retval=True)
+event.listen(Course.name, "set", format_title_case, retval=True)
 
 
 class School(db.Model):
@@ -679,16 +691,16 @@ class School(db.Model):
     # Primary key that identifies the school
     id = db.Column(db.Integer, primary_key=True)
 
-    # School name
+    # School name, titlecase
     name = db.Column(db.String(100), nullable=False, unique=True)
 
-    # School country
+    # School country, titlecase
     country = db.Column(db.String(100), nullable=True)
 
-    # School state
+    # School state, titlecase
     state = db.Column(db.String(100), nullable=True)
 
-    # Email
+    # Enterprise email, ex.: cornell.edu, lowercase
     email_postfix = db.Column(db.String(100), nullable=False)
 
     def __repr__(self):
@@ -702,6 +714,22 @@ class School(db.Model):
             "state": self.state,
             "email_postfix": self.email_postfix,
         }
+
+    @staticmethod
+    def validator(mapper, connection, target):
+        if target.email_postfix and not validate_email_postfix(target.email_postfix):
+            raise ValueError(
+                f'SCHOOL MODEL: Email postfix does not fit pattern ("{target.email_postfix}").'
+            )
+
+
+# Attach event listeners
+event.listen(School, "before_insert", School.validator)
+event.listen(School, "before_update", School.validator)
+event.listen(School.name, "set", format_title_case, retval=True)
+event.listen(School.country, "set", format_title_case, retval=True)
+event.listen(School.state, "set", format_title_case, retval=True)
+event.listen(School.email_postfix, "set", format_lower_case, retval=True)
 
 
 class NotificationType(db.Model):
@@ -733,13 +761,29 @@ class NotificationType(db.Model):
         }
 
 
+# Attach event listeners
+event.listen(NotificationType.name, "set", format_title_case, retval=True)
+
+
 class AuthLevel(db.Model):
+    """
+    Table that stores different authorization levels for users.
+    """
+
     value = db.Column(db.String(50), unique=True, nullable=False, primary_key=True)
 
 
 class SupportedLanguage(db.Model):
+    """
+    Table that stores the languages supported by the platform.
+    """
+
     value = db.Column(db.String(50), unique=True, nullable=False, primary_key=True)
 
 
 class OfferStatus(db.Model):
+    """
+    Table that stores the status of offers/questions.
+    """
+
     value = db.Column(db.String(50), unique=True, nullable=False, primary_key=True)
