@@ -6,6 +6,10 @@ from flask_jwt_extended import jwt_required, current_user, exceptions
 
 import time
 
+# -----------------------------------------------------------------------------
+# Route Declaration
+# -----------------------------------------------------------------------------
+# Endpoint: /
 frontend = Blueprint("frontend", __name__, url_prefix="/")
 
 subjects = [
@@ -496,4 +500,7 @@ def fetch_question(id_qstn):
     )
 
 
+# -----------------------------------------------------------------------------
+# Children Blueprints
+# -----------------------------------------------------------------------------
 frontend.register_blueprint(question)
