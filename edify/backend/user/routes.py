@@ -37,6 +37,11 @@ from edify.models import (
 from edify import db, bcrypt
 from http import HTTPStatus
 
+
+# -----------------------------------------------------------------------------
+# Route Declaration
+# -----------------------------------------------------------------------------
+# Endpoint: /user/
 user = Blueprint("user", __name__, url_prefix="/user")
 
 
