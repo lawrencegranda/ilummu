@@ -4,6 +4,8 @@ from flask_jwt_extended import (
     decode_token,
     jwt_required,
     current_user,
+    set_access_cookies,
+    unset_access_cookies,
 )
 from webargs import fields, validate
 from webargs.flaskparser import use_args
@@ -37,7 +39,6 @@ from edify.models import (
 from edify import db, bcrypt
 from http import HTTPStatus
 
-
 # -----------------------------------------------------------------------------
 # Route Declaration
 # -----------------------------------------------------------------------------
@@ -46,9 +47,7 @@ user = Blueprint("user", __name__, url_prefix="/user")
 
 
 def generate_access_token(user, days=5):
-    access_token = create_access_token(
-        identity=user.id, expires_delta=timedelta(days=days)
-    )
+    access_token = user.get_reset_token(timedelta(days=days).total_seconds())
     user.token = access_token
     user.token_last_refresh = datetime.utcnow()
     return access_token
@@ -91,22 +90,26 @@ def login(args):
         # Nothing for now
         pass
 
-    return (
-        jsonify({"token": access_token, "user": user.to_dict(simplified=True)}),
-        HTTPStatus.OK,
+    response = jsonify(
+        {"access_token": access_token, "user": user.to_dict(simplified=True)}
     )
+    set_access_cookies(response, access_token)
+
+    return (response, HTTPStatus.OK)
 
 
 # Endpoint: user/new
 @user.route("/new", methods=["POST"])
 @use_args(
     {
-        "firstname": fields.Str(required=True, validate=validate.Length(min=2, max=20)),
-        "lastname": fields.Str(required=True, validate=validate.Length(min=2, max=35)),
+        "firstname": fields.Str(
+            required=False, validate=validate.Length(min=2, max=20)
+        ),
+        "lastname": fields.Str(required=False, validate=validate.Length(min=2, max=35)),
         "email": fields.Email(required=True, validate=validate.Length(min=3, max=120)),
         "phone": fields.Str(required=True, validate=validate.Length(min=12, max=19)),
         "password": fields.Str(required=True),
-        "school": fields.Str(required=True),
+        "school": fields.Str(required=False),
         "major": fields.Str(required=True),
         "graduation": fields.Date(required=True),
         "language": fields.Str(required=False),
@@ -114,6 +117,7 @@ def login(args):
 )
 def new_user(args):
     """Endpoint to create a new user."""
+    print(args)
     # Trim all string values in args
     for key, value in args.items():
         if isinstance(value, str):
@@ -138,8 +142,9 @@ def new_user(args):
     if user:
         return error_response("Phone is already taken", ErrorType.BAD_REQUEST)
 
-    language = args["language"]
-    if not language:
+    if "language" in args and args["language"]:
+        language = args["language"]
+    else:
         language = SupportedLanguagesEnum.ENGLISH
 
     if language not in SupportedLanguagesEnum.values():
@@ -148,7 +153,7 @@ def new_user(args):
             ErrorType.BAD_REQUEST,
         )
 
-    if args["school"]:
+    if "school" in args and args["school"]:
         school = db.session.query(School).filter_by(name=args["school"]).first()
     else:
         school = db.session.query(School).filter_by(name="Cornell University").first()
@@ -180,6 +185,11 @@ def new_user(args):
             return error_response("Ran out of usernames.", ErrorType.INTERNAL_ERROR)
         username = generate_funny_username(n)
 
+    if "firstname" not in args or not args["firstname"]:
+        args["firstname"] = username
+    if "lastname" not in args or not args["lastname"]:
+        args["lastname"] = username
+
     # Create new user in the User table
     user = User(
         username=username,
@@ -202,7 +212,21 @@ def new_user(args):
     access_token = generate_access_token(user, 5)
     db.session.commit()
 
-    return (
-        jsonify({"token": access_token, "user": user.to_dict(simplified=True)}),
-        HTTPStatus.CREATED,
+    response = jsonify(
+        {"access_token": access_token, "user": user.to_dict(simplified=True)}
     )
+    set_access_cookies(response, access_token)
+
+    return (response, HTTPStatus.CREATED)
+
+
+# Endpoint: user/logout
+@user.route("/logout", methods=["POST"])
+@jwt_required()
+def logout():
+    """Endpoint to log out a user."""
+
+    response = jsonify({"message": "Successfully logged out."})
+    unset_access_cookies(response)
+
+    return (response, HTTPStatus.OK)
