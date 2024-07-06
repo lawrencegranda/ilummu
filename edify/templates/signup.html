@@ -19,27 +19,27 @@ Sign Up
   {{ super() }}
   
   <script>
-    var errorMsg
+    var errorMsg;
 
+    // Function to reset error messages
     const reset = () => {
       errorMsg.text("");
       errorMsg.hide();
     };
-  
+
+    // Function to display error messages
     const showError = (msg) => {
       errorMsg.text(msg);
       errorMsg.show();
     };
 
+    // Ensure the document is ready before executing the script
     $(document).ready(() => {
       errorMsg = $("#error-msg");
       reset();
     });
 
-    {% if login == false %}
-
-    
-
+    {% if login == false %}  // Conditional for signup form
     $(document).ready(() => {
       const phoneInputField = document.querySelector("#signup-phone");
       const phoneInput = window.intlTelInput(phoneInputField, {
@@ -48,91 +48,159 @@ Sign Up
         nationalMode: true,
         separateDialCode: true,
         hiddenInput: () => ({ phone: "full_phone", country: "country_code" }),
-        utilsScript:
-          "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+        utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
       });
 
       const errorMap = ["invalid", "invalid country code", "too short", "too long", "invalid"];
       errorMsg = $("#error-msg");
-    
+
+      // Form submission event handler for signup form
       $("#signup-form").on("submit", function (event) {
+        event.preventDefault(); // Prevent default form submission
         reset();
 
         var netid = $("#signup-email").val().trim();
         if (!netid) {
           showError("NetID is required for email.");
-          event.preventDefault();
           return;
         } else if (netid.length >= 7) {
           showError("NetID is too long.");
-          event.preventDefault();
           return;
         } else if (netid.length < 3) {
           showError("NetID is too short.");
-          event.preventDefault();
           return;
         }
 
         var phone = $("#signup-phone").val().trim();
         if (!phone) {
           showError("Phone number is required.");
-          event.preventDefault();
           return;
         } else if (!phoneInput.isValidNumber()) {
           const errorCode = phoneInput.getValidationError();
           const msg = errorMap[errorCode] || "Invalid";
           showError("Phone number is " + msg);
-          event.preventDefault();
           return;
         }
-    
+
         var gradyear = parseInt($("#signup-grade").val().trim());
         if (!gradyear) {
           showError("Graduation year is required.");
-          event.preventDefault();
           return;
-        } else if (gradyear < 1900 | gradyear > 2050) {
+        } else if (gradyear < 1900 || gradyear > 2050) {
           showError("Invalid graduation year.");
-          event.preventDefault();
           return;
         }
 
-        var major = $('#signup-major').val();
-        if ($('option[value="' + major + '""]').length == 0) {
+        var major = $('#signup-major').val().trim();
+        if ($('option[value="' + major + '"]').length == 0) {
           showError("Invalid major, select from the list.");
-          event.preventDefault();
           return;
         }
+
+        var password = $("#signup-password").val().trim();
+        if (!password) {
+          showError("Password is required.");
+          return;
+        } else if (password.length < 8) {
+          showError("Password must be at least 8 characters long.");
+          return;
+        }
+
+        // If validation passes, format the data
+        var data = {
+          email: netid + "@cornell.edu",
+          phone: phoneInput.getNumber(),
+          password: password,
+          major: major,
+          graduation: gradyear + "-05-30", // Assuming May 30th as a placeholder date
+        };
+
+        // Send the data via AJAX POST request
+        $.ajax({
+          url: '/user/new',
+          type: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify(data),
+          success: function(response) {
+            // Handle success (e.g., redirect to dashboard page)
+            // window.location.href = "/dashboard";
+            console.log(response)
+            return
+          },
+          error: function(error) {
+            console.log(error)
+            console.log(error['responseJSON']['errors'])
+            // Handle error (e.g., display error message)
+            try {
+              showError(error['responseJSON']['errors']);
+            } catch(e) {
+              showError("An error occurred during signup. Please try again.");
+            }
+          }
+        });
       });
     });
 
-    {% else %}
-
+    {% else %}  // Conditional for login form
     $(document).ready(() => {
       errorMsg = $("#error-msg");
 
+      // Form submission event handler for login form
       $("#login-form").on("submit", function (event) {
+        event.preventDefault(); // Prevent default form submission
         reset();
 
         var netid = $("#signup-email").val().trim();
         if (!netid) {
           showError("NetID is required for email.");
-          event.preventDefault();
           return;
         } else if (netid.length >= 7) {
           showError("NetID is too long.");
-          event.preventDefault();
           return;
         } else if (netid.length < 3) {
           showError("NetID is too short.");
-          event.preventDefault();
           return;
         }
+
+        var password = $("#signup-password").val().trim();
+        if (!password) {
+          showError("Password is required.");
+          return;
+        } else if (password.length < 8) {
+          showError("Password must be at least 8 characters long.");
+          return;
+        }
+
+        // If validation passes, format the data
+        var data = {
+          email: netid + "@cornell.edu",
+          password: password,
+        };
+
+        // Send the data via AJAX POST request
+        $.ajax({
+          url: '/user/login',
+          type: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify(data),
+          success: function(response) {
+            // Handle success (e.g., redirect to dashboard page)
+            // window.location.href = "/dashboard";
+            console.log(response)
+            return
+          },
+          error: function(error) {
+            // Handle error (e.g., display error message)
+            console.log(error)
+            showError("An error occurred during signup. Please try again.");
+          }
+        });
       });
     });
     {% endif %}
   </script>
 {% endblock %}
+
 
 
 {% block head %}
