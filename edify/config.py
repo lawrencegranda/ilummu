@@ -19,3 +19,19 @@ class Config:
         SQLALCHEMY_DATABASE_URI = os.environ["DB_URL"]
     elif ENV == EdifyEnvironments.TEST.value:
         SQLALCHEMY_DATABASE_URI = "sqlite:///site.db"
+
+    # Configure all the ways you want to allow JWTs to be sent.
+    JWT_TOKEN_LOCATION = ["headers", "cookies"]
+
+    # If true this will only allow the cookies that contain your JWTs to be sent
+    # over https. In production, this should always be set to True.
+    JWT_COOKIE_SECURE = False
+
+    # Disable CSRF protection. In almost every case, this is a bad idea.
+    # See examples/csrf_protection_with_cookies.py for how safely store JWTs
+    # in cookies.
+    JWT_COOKIE_CSRF_PROTECT = False
+
+    # Controls if the cookies will be set as session cookies,which are deleted
+    # when the browser is closed.
+    JWT_SESSION_COOKIE = False
