@@ -136,20 +136,6 @@ class User(db.Model, UserMixin):
             return None
         return User.query.get(user_id)
 
-    def generate_auth_token(self, expires_sec=1000):
-        s = Serializer(current_app.config["SECRET_KEY"], expires_sec=expires_sec)
-        return s.dumps({"id": self.id})
-
-    @staticmethod
-    def verify_auth_token(token):
-        s = Serializer(current_app.config["SECRET_KEY"])
-        try:
-            data = s.loads(token)
-        except Exception:
-            return None  # valid token, but expired or invalid token
-        user = User.query.get(data["id"])
-        return user
-
     def __repr__(self):
         return f"({self.id}, {self.username}, {self.email}\n"
 
