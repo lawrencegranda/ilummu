@@ -19,11 +19,11 @@ def error_response(message: str, error_type: ErrorType) -> tuple:
 
 
 email_regex = re.compile(
-    r"^[a-zA-Z0-9]([\w\-\.])+@[a-zA-Z0-9]([\w\-]+\.)+\.[a-zA-Z]{2,6}$"
+    r"^[a-zA-Z0-9]([\w\-\.])+@[a-zA-Z0-9]+[\w\-\.]*\w\.[a-zA-Z]{2,6}$"
 )
 validate_email = lambda x: email_regex.match(x)
 
-email_postfix_regex = re.compile(r"^[a-zA-Z0-9]([\w\-]+\.)+\.[a-zA-Z]{2,6}$")
+email_postfix_regex = re.compile(r"^[a-zA-Z0-9]+[\w\-\.]*\w\.[a-zA-Z]{2,6}$")
 validate_email_postfix = lambda x: email_postfix_regex.match(x)
 
 
@@ -85,6 +85,6 @@ def format_strip(target, value, oldvalue, initiator):
     return value.strip()
 
 
-format_title_case = lambda x: format_strip(*x).title()
-format_lower_case = lambda x: format_strip(*x).lower()
-format_upper_case = lambda x: format_strip(*x).upper()
+format_title_case = lambda *x: format_strip(*x).title()
+format_lower_case = lambda *x: format_strip(*x).lower()
+format_upper_case = lambda *x: format_strip(*x).upper()
