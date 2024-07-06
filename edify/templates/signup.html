@@ -123,13 +123,11 @@ Sign Up
           data: JSON.stringify(data),
           success: function(response) {
             // Handle success (e.g., redirect to dashboard page)
-            // window.location.href = "/dashboard";
-            console.log(response)
+            window.location.href = "/dashboard";
             return
           },
           error: function(error) {
             console.log(error)
-            console.log(error['responseJSON']['errors'])
             // Handle error (e.g., display error message)
             try {
               showError(error['responseJSON']['errors']);
@@ -185,14 +183,17 @@ Sign Up
           data: JSON.stringify(data),
           success: function(response) {
             // Handle success (e.g., redirect to dashboard page)
-            // window.location.href = "/dashboard";
-            console.log(response)
+            window.location.href = "/dashboard";
             return
           },
           error: function(error) {
-            // Handle error (e.g., display error message)
             console.log(error)
-            showError("An error occurred during signup. Please try again.");
+            // Handle error (e.g., display error message)
+            try {
+              showError(error['responseJSON']['errors']);
+            } catch(e) {
+              showError("An error occurred during signup. Please try again.");
+            }
           }
         });
       });

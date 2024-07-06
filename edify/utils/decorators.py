@@ -1,5 +1,5 @@
 from functools import wraps
-from flask import jsonify, current_app
+from flask import jsonify, current_app, redirect, url_for
 from http import HTTPStatus
 from typing import Callable, List, Union
 from flask_login import UserMixin
@@ -88,19 +88,15 @@ def maintenance_mode(function: Callable) -> Callable:
 def no_token_allowed(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        print("HELLo")
         verify_jwt_in_request(optional=True)
 
         user_id = get_jwt_identity()
         if not user_id:
-            print("No token 1")
             return f(*args, **kwargs)
 
         if User.query.get(user_id):
-            print("token")
-            return redirect(url_for("dashboard"))
+            return redirect(url_for("frontend.dashboard"))
 
-        print("No token 2")
         return f(*args, **kwargs)
 
     return decorated
