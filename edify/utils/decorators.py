@@ -3,10 +3,11 @@ from flask import jsonify, current_app
 from http import HTTPStatus
 from typing import Callable, List, Union
 from flask_login import UserMixin
-from flask_jwt_extended import jwt
+from edify import jwt
 from edify.models import User
 from edify.utils.constants import AuthLevelEnum, ErrorType
 from edify.utils.utils import error_response
+from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
 
 
 @jwt.user_lookup_loader
@@ -82,3 +83,24 @@ def maintenance_mode(function: Callable) -> Callable:
         return function(*args, **kwargs)
 
     return decorator
+
+
+def no_token_allowed(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        print("HELLo")
+        verify_jwt_in_request(optional=True)
+
+        user_id = get_jwt_identity()
+        if not user_id:
+            print("No token 1")
+            return f(*args, **kwargs)
+
+        if User.query.get(user_id):
+            print("token")
+            return redirect(url_for("dashboard"))
+
+        print("No token 2")
+        return f(*args, **kwargs)
+
+    return decorated

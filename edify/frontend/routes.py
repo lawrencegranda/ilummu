@@ -3,6 +3,7 @@ from http import HTTPStatus
 from edify import db, bcrypt
 from typing import Any
 from flask_jwt_extended import jwt_required, current_user, exceptions
+from edify.utils.decorators import no_token_allowed
 
 import time
 
@@ -415,16 +416,18 @@ def index():
 
 
 @frontend.route("/login")
+@no_token_allowed
 def login():
     return render_template("signup.html", login=True)
 
 
 @frontend.route("/signup")
+@no_token_allowed
 def signup():
     return render_template("signup.html", login=False, majors=majors)
 
 
-@frontend.route("/dashboard", methods=["POST", "GET"])
+@frontend.route("/dashboard")
 def dashboard():
     questions = get_questions()
 
@@ -444,7 +447,7 @@ question = Blueprint("question", __name__, url_prefix="/question")
 
 
 # Endpoint: /question/<id_itr>
-@question.route("/<int:id_qstn>", methods=["POST", "GET"])
+@question.route("/<int:id_qstn>")
 def fetch_question(id_qstn):
     notifications = get_notifications()
 
