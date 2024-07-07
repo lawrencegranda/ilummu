@@ -88,3 +88,20 @@ def format_strip(target, value, oldvalue, initiator):
 format_title_case = lambda *x: format_strip(*x).title()
 format_lower_case = lambda *x: format_strip(*x).lower()
 format_upper_case = lambda *x: format_strip(*x).upper()
+
+
+def get_college_year(date: datetime.date) -> str:
+    current = datetime.today()
+
+    delta_years = (date - current).days / 365.0
+
+    if delta_years < 0 or delta_years > 4:
+        return f"Class of '{date.year.__repr__[-2:]}"
+    if delta_years < 1:
+        return f"Senior"
+    if delta_years < 2:
+        return f"Junior"
+    if delta_years < 3:
+        return f"Sophomore"
+    else:
+        return f"Freshman"
