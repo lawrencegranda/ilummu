@@ -12,6 +12,7 @@ from edify.utils.utils import (
     format_title_case,
     format_lower_case,
     format_upper_case,
+    get_college_year,
 )
 from sqlalchemy import Index, event
 from flask_login import UserMixin
@@ -21,7 +22,7 @@ from flask import current_app, jsonify
 from collections import OrderedDict, defaultdict
 from functools import wraps
 from http import HTTPStatus
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 import re
 
 
@@ -79,6 +80,9 @@ class User(db.Model, UserMixin):
     # Many-to-One relationship with School model
     major_id = db.Column(db.Integer, db.ForeignKey("major.id"), nullable=False)
     major = db.relationship("Major", backref="users", lazy=True)
+
+    # Rating
+    rating = db.Column(db.Float, nullable=True)
 
     # User's graduation year
     graduation = db.Column(db.DateTime, nullable=False)
@@ -153,6 +157,7 @@ class User(db.Model, UserMixin):
             "school_id": self.school_id,
             "major_id": self.major_id,
             "language": self.language,
+            "graduation": self.graduation,
         }
 
         # Add all extra information
@@ -161,6 +166,9 @@ class User(db.Model, UserMixin):
             return_dict["mail_is_verified"] = self.mail_is_verified
             return_dict["phone_is_verified"] = self.phone_is_verified
             return_dict["is_mock"] = self.is_mock
+            return_dict["year"] = get_college_year(self.graduation)
+            return_dict["major"] = self.major.name
+            return_dict["rating"] = self.rating
 
         return return_dict
 
@@ -184,6 +192,16 @@ class User(db.Model, UserMixin):
     @staticmethod
     def format_phone(target, value, oldvalue, initiator):
         return format_phone(value)
+
+    @staticmethod
+    def get_dict_all(user_list: List[User]) -> Dict[int, Dict[str, Any]]:
+        result = {}
+
+        for user in user_list:
+            user_dict = user.to_dict(simplified=False)
+            result[user_dict["id"]] = user_dict
+
+        return result
 
 
 # Attach event listeners
@@ -255,7 +273,7 @@ class Question(db.Model):
     def __repr__(self):
         return f"Question({self.id}, {self.user_id}, {self.course_id}, {self.solved})"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, simplified=True) -> Dict[str, Any]:
         return {
             "id": self.id,
             "user_id": self.user_id,
@@ -345,7 +363,7 @@ class Offer(db.Model):
     def __repr__(self):
         return f"Offer({self.id}, {self.question_id}, {self.amount}, {self.status})"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, simplified=True) -> Dict[str, Any]:
         return {
             "id": self.id,
             "question_id": self.question_id,
@@ -416,7 +434,7 @@ class Notification(db.Model):
     def __repr__(self):
         return f"Notification({self.id}, {self.user_id}, {self.message})"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, simplified=True) -> Dict[str, Any]:
         return {
             "id": self.id,
             "user_id": self.user_id,
@@ -475,7 +493,7 @@ class Major(db.Model):
     def __repr__(self):
         return f"Major({self.id}, {self.name})"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, simplified=True) -> Dict[str, Any]:
         return {
             "id": self.id,
             "name": self.name,
@@ -529,13 +547,23 @@ class AcademicField(db.Model):
     def __repr__(self):
         return f"AcademicField({self.id}, {self.name}, {self.school_id})"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, simplified=True) -> Dict[str, Any]:
         return {
             "id": self.id,
             "value": self.value,
             "name": self.name,
             "school_id": self.school_id,
         }
+
+    @staticmethod
+    def get_list_all(field_list: List[AcademicField]) -> List[Dict[str, Any]]:
+        result = []
+
+        for field in field_list:
+            ind_dict = field.to_dict(simplified=False)
+            result.append(ind_dict)
+
+        return result
 
 
 # Attach event listeners
@@ -564,12 +592,22 @@ class Method(db.Model):
     def __repr__(self):
         return f"Method({self.id}, {self.name})"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, simplified=True) -> Dict[str, Any]:
         return {
             "id": self.id,
             "value": self.value,
             "name": self.name,
         }
+
+    @staticmethod
+    def get_list_all(method_list: List[Method]) -> List[Dict[str, Any]]:
+        result = []
+
+        for method in method_list:
+            ind_dict = method.to_dict(simplified=False)
+            result.append(ind_dict)
+
+        return result
 
 
 class TimeInterval(db.Model):
@@ -591,12 +629,22 @@ class TimeInterval(db.Model):
     def __repr__(self):
         return f"TimeInterval({self.value})"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, simplified=True) -> Dict[str, Any]:
         return {
             "value": self.value,
             "name": self.name,
             "shortname": self.shortname,
         }
+
+    @staticmethod
+    def get_dict_all(time_list: List[TimeInterval]) -> Dict[int, Dict[str, Any]]:
+        result = {}
+
+        for time in time_list:
+            ind_dict = method.to_dict(simplified=False)
+            result[time.id] = ind_dict
+
+        return result
 
 
 class Course(db.Model):
@@ -635,7 +683,7 @@ class Course(db.Model):
     def __repr__(self):
         return f"Course({self.id}, {self.code}, {self.name}, {self.academic_field_id})"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, simplified=True) -> Dict[str, Any]:
         return {
             "id": self.id,
             "code": self.code,
@@ -692,7 +740,7 @@ class School(db.Model):
     def __repr__(self):
         return f"School({self.id}, {self.name}, {self.email_postfix})"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, simplified=True) -> Dict[str, Any]:
         return {
             "id": self.id,
             "name": self.name,
@@ -739,7 +787,7 @@ class NotificationType(db.Model):
     def __repr__(self):
         return f"NotificationType({self.id}, {self.name})"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self, simplified=True) -> Dict[str, Any]:
         return {
             "id": self.id,
             "name": self.name,
