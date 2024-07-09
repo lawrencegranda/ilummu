@@ -1,4 +1,3 @@
-from flask import jsonify
 from edify.utils.constants import ErrorType
 import re
 from datetime import datetime, timedelta
@@ -6,6 +5,16 @@ import random
 import json
 import random
 import phonenumbers
+from flask import jsonify, current_app, url_for
+
+
+def internal_request(url, method="GET"):
+    with current_app.test_request_context(url, method=method):
+        response = current_app.dispatch_request()
+
+    data, status = response[0].get_json(), response[1]
+
+    return data, status
 
 
 def error_response(message: str, error_type: ErrorType) -> tuple:
