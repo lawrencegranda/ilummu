@@ -37,11 +37,16 @@ from http import HTTPStatus
 from typing import Optional
 
 
+# -----------------------------------------------------------------------------
+# Helper Function
+# -----------------------------------------------------------------------------
+
+
 def get_current_user() -> Optional[User]:
     return current_user if isinstance(current_user, UserMixin) else None
 
 
-def generate_access_token(user, days=5):
+def generate_access_token(user: User, days: int = 5) -> Any:
     access_token = user.get_reset_token(timedelta(days=days).total_seconds())
     user.token = access_token
     user.token_last_refresh = datetime.utcnow()

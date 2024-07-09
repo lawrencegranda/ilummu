@@ -127,7 +127,7 @@ class User(db.Model, UserMixin):
     # Profile picture
     image_file = db.Column(db.String(40), nullable=False, default="default.jpg")
 
-    def get_reset_token(self, expires_sec=18000):
+    def get_reset_token(self, expires_sec: int = 18000) -> Any:
         return create_access_token(
             identity=self.id, expires_delta=timedelta(seconds=expires_sec)
         )
