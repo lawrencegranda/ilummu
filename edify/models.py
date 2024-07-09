@@ -194,7 +194,7 @@ class User(db.Model, UserMixin):
         return format_phone(value)
 
     @staticmethod
-    def get_dict_all(user_list: List[User]) -> Dict[int, Dict[str, Any]]:
+    def get_dict_all(user_list: List["User"]) -> Dict[int, Dict[str, Any]]:
         result = {}
 
         for user in user_list:
@@ -514,6 +514,16 @@ class Major(db.Model):
 
         return
 
+    @staticmethod
+    def get_list_all(major_list: List["Major"]) -> List[Dict[str, Any]]:
+        result = []
+
+        for major in major_list:
+            ind_dict = major.to_dict(simplified=False)
+            result.append(ind_dict)
+
+        return result
+
 
 # Attach event listeners
 event.listen(Major, "before_insert", Major.validator)
@@ -556,7 +566,7 @@ class AcademicField(db.Model):
         }
 
     @staticmethod
-    def get_list_all(field_list: List[AcademicField]) -> List[Dict[str, Any]]:
+    def get_list_all(field_list: List["AcademicField"]) -> List[Dict[str, Any]]:
         result = []
 
         for field in field_list:
@@ -589,6 +599,9 @@ class Method(db.Model):
     # Method name
     name = db.Column(db.String(100), nullable=False)
 
+    # Whether the method is still supported
+    supported = db.Column(db.Boolean, nullable=False, default=True)
+
     def __repr__(self):
         return f"Method({self.id}, {self.name})"
 
@@ -600,7 +613,7 @@ class Method(db.Model):
         }
 
     @staticmethod
-    def get_list_all(method_list: List[Method]) -> List[Dict[str, Any]]:
+    def get_list_all(method_list: List["Method"]) -> List[Dict[str, Any]]:
         result = []
 
         for method in method_list:
@@ -637,12 +650,12 @@ class TimeInterval(db.Model):
         }
 
     @staticmethod
-    def get_dict_all(time_list: List[TimeInterval]) -> Dict[int, Dict[str, Any]]:
+    def get_dict_all(time_list: List["TimeInterval"]) -> Dict[int, Dict[str, Any]]:
         result = {}
 
         for time in time_list:
-            ind_dict = method.to_dict(simplified=False)
-            result[time.id] = ind_dict
+            ind_dict = time.to_dict(simplified=False)
+            result[time.value] = ind_dict
 
         return result
 
