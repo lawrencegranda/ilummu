@@ -1,17 +1,14 @@
 from flask import Blueprint, url_for, jsonify, current_app
 from flask_jwt_extended import (
     create_access_token,
-    decode_token,
     jwt_required,
     current_user,
     set_access_cookies,
     unset_access_cookies,
 )
+from flask_login import UserMixin
 from webargs import fields, validate
 from webargs.flaskparser import use_args
-import os
-import json
-from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 from edify.utils.constants import ErrorType, AuthLevelEnum, SupportedLanguagesEnum
 from edify.utils.utils import (
     error_response,
@@ -22,7 +19,6 @@ from edify.utils.utils import (
     format_phone,
 )
 from datetime import datetime, timedelta
-from edify import db
 from edify.models import (
     User,
     Question,
@@ -38,6 +34,7 @@ from edify.models import (
 )
 from edify import db, bcrypt
 from http import HTTPStatus
+from typing import Optional
 
 # -----------------------------------------------------------------------------
 # Route Declaration
@@ -46,11 +43,26 @@ from http import HTTPStatus
 user = Blueprint("user", __name__, url_prefix="/user")
 
 
+def get_current_user() -> Optional[User]:
+    return current_user if isinstance(current_user, UserMixin) else None
+
+
 def generate_access_token(user, days=5):
     access_token = user.get_reset_token(timedelta(days=days).total_seconds())
     user.token = access_token
     user.token_last_refresh = datetime.utcnow()
     return access_token
+
+
+# Endpoint: user/
+@user.route("/", methods=["GET"])
+@jwt_required()
+def get_user():
+    user = get_current_user()
+    if user:
+        return jsonify(user.to_dict(simplified=True)), 200
+
+    return error_response("User not found.", ErrorType.NOT_FOUND)
 
 
 # Endpoint: user/login

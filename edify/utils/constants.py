@@ -19,6 +19,7 @@ class ErrorType(Enum):
     BAD_REQUEST = HTTPStatus.BAD_REQUEST
     REQUEST_TIMEOUT = HTTPStatus.REQUEST_TIMEOUT
     INTERNAL_ERROR = HTTPStatus.INTERNAL_SERVER_ERROR
+    NOT_FOUND = HTTPStatus.NOT_FOUND
 
 
 class EdifyEnvironments(Enum):
