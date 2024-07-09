@@ -16,12 +16,6 @@ from edify.models import *
 import time
 from edify.utils.utils import internal_request
 
-# -----------------------------------------------------------------------------
-# Route Declaration
-# -----------------------------------------------------------------------------
-# Endpoint: /
-frontend = Blueprint("frontend", __name__, url_prefix="/")
-
 
 def fetch_data(url, method="GET"):
     data, status = internal_request(url, method)
@@ -32,6 +26,21 @@ def fetch_data(url, method="GET"):
     return data.get("data", [])
 
 
+# -----------------------------------------------------------------------------
+# Route Blueprint
+# -----------------------------------------------------------------------------
+# Endpoint: /
+frontend = Blueprint("frontend", __name__, url_prefix="/")
+# Endpoint: /question/
+question = Blueprint("question", __name__, url_prefix="/question")
+
+
+# -----------------------------------------------------------------------------
+# Blueprint Endpoints (frontend)
+# -----------------------------------------------------------------------------
+
+
+# Endpoint: /
 @frontend.route("/")
 def index():
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
@@ -46,12 +55,14 @@ def index():
     )
 
 
+# Endpoint: /login
 @frontend.route("/login")
 @no_token_allowed
 def login():
     return render_template("signup.html", login=True)
 
 
+# Endpoint: /signup
 @frontend.route("/signup")
 @no_token_allowed
 def signup():
@@ -60,6 +71,7 @@ def signup():
     return render_template("signup.html", login=False, majors=majors)
 
 
+# Endpoint: /dashboard
 @frontend.route("/dashboard")
 def dashboard():
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
@@ -79,7 +91,9 @@ def dashboard():
     )
 
 
-question = Blueprint("question", __name__, url_prefix="/question")
+# -----------------------------------------------------------------------------
+# Blueprint Endpoints (question)
+# -----------------------------------------------------------------------------
 
 
 # Endpoint: /question/<id_qstn>

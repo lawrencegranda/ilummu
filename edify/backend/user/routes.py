@@ -36,12 +36,6 @@ from edify import db, bcrypt
 from http import HTTPStatus
 from typing import Optional
 
-# -----------------------------------------------------------------------------
-# Route Declaration
-# -----------------------------------------------------------------------------
-# Endpoint: /user/
-user = Blueprint("user", __name__, url_prefix="/user")
-
 
 def get_current_user() -> Optional[User]:
     return current_user if isinstance(current_user, UserMixin) else None
@@ -54,7 +48,31 @@ def generate_access_token(user, days=5):
     return access_token
 
 
-# Endpoint: user/
+# -----------------------------------------------------------------------------
+# Route Blueprint
+# -----------------------------------------------------------------------------
+# Endpoint: /user/
+user = Blueprint("user", __name__, url_prefix="/user")
+
+
+# -----------------------------------------------------------------------------
+# Blueprint Endpoints (user)
+# -----------------------------------------------------------------------------
+
+
+# Endpoint: /user/logout
+@user.route("/logout", methods=["POST"])
+@jwt_required()
+def logout():
+    """Endpoint to log out a user."""
+
+    response = jsonify({"message": "Successfully logged out."})
+    unset_access_cookies(response)
+
+    return (response, HTTPStatus.OK)
+
+
+# Endpoint: /user
 @user.route("/", methods=["GET"])
 @jwt_required()
 def get_user():
@@ -65,7 +83,7 @@ def get_user():
     return error_response("User not found.", ErrorType.NOT_FOUND)
 
 
-# Endpoint: user/login
+# Endpoint: /user/login
 @user.route("/login", methods=["POST"])
 @use_args({"email": fields.Email(required=True), "password": fields.Str(required=True)})
 def login(args):
@@ -110,7 +128,7 @@ def login(args):
     return (response, HTTPStatus.OK)
 
 
-# Endpoint: user/new
+# Endpoint: /user/new
 @user.route("/new", methods=["POST"])
 @use_args(
     {
@@ -230,15 +248,3 @@ def new_user(args):
     set_access_cookies(response, access_token)
 
     return (response, HTTPStatus.CREATED)
-
-
-# Endpoint: user/logout
-@user.route("/logout", methods=["POST"])
-@jwt_required()
-def logout():
-    """Endpoint to log out a user."""
-
-    response = jsonify({"message": "Successfully logged out."})
-    unset_access_cookies(response)
-
-    return (response, HTTPStatus.OK)

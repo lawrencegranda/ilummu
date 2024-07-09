@@ -8,7 +8,7 @@ from edify.utils.decorators import no_token_allowed
 import time
 
 # -----------------------------------------------------------------------------
-# Route Declaration
+# Route Blueprint
 # -----------------------------------------------------------------------------
 # Endpoint: /
 frontend = Blueprint("frontend", __name__, url_prefix="/")
