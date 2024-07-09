@@ -3,10 +3,11 @@ from edify.backend.user.routes import user
 from edify.backend.data.routes import data
 
 # -----------------------------------------------------------------------------
-# Route Declaration
+# Route Blueprint
 # -----------------------------------------------------------------------------
 # Endpoint: /
 backend = Blueprint("backend", __name__, url_prefix="/")
+
 
 # -----------------------------------------------------------------------------
 # Children Blueprints

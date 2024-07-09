@@ -17,14 +17,14 @@ from http import HTTPStatus
 from edify.utils.utils import internal_request
 
 # -----------------------------------------------------------------------------
-# Route Declaration
+# Route Blueprint
 # -----------------------------------------------------------------------------
 # Endpoint: /data/
 data = Blueprint("data", __name__, url_prefix="/data")
 
 
 # -----------------------------------------------------------------------------
-# Route Endpoints
+# Blueprint Endpoints (data)
 # -----------------------------------------------------------------------------
 
 
