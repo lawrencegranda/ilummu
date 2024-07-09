@@ -16,6 +16,10 @@ from edify.models import *
 import time
 from edify.utils.utils import internal_request
 
+# -----------------------------------------------------------------------------
+# Helper Functions
+# -----------------------------------------------------------------------------
+
 
 def fetch_data(url, method="GET"):
     data, status = internal_request(url, method)
