@@ -25,7 +25,6 @@ def generate_fake_users(num_users):
     school = db.session.query(School).filter_by(name="Cornell University").first()
     majors = db.session.query(Major).all()
 
-    users = []
     for _ in range(num_users):
         phone = f"+1 {''.join(choices(string.digits, k=10))}"
         while (
@@ -81,14 +80,30 @@ def generate_fake_offers(num_offers):
 
     offers = []
     for _ in range(num_offers):
+        user_id = choice(users).id
+        question_id = choice(questions).id
+        status = choice(OfferStatusEnum.values())
+        active = not (status in OfferStatusEnum.inactive)
+
+        while (
+            db.session.query(Offer)
+            .filter_by(user_id=user_id, question_id=question_id, active=active)
+            .first()
+        ):
+            user_id = choice(users).id
+            question_id = choice(questions).id
+            status = choice(OfferStatusEnum.values())
+            active = not (status in OfferStatusEnum.inactive)
+
         offer = Offer(
-            user_id=choice(users).id,
-            question_id=choice(questions).id,
+            user_id=user_id,
+            question_id=question_id,
             amount=randint(5, 100),
-            status=choice(OfferStatusEnum.values()),
+            status=status,
+            active=active,
         )
-        offers.append(offer)
-    return offers
+        db.session.add(offer)
+    return
 
 
 def generate_fake_notifications(num_notifications):
@@ -127,14 +142,12 @@ def populate_fake():
     # Generate mock data
     # Add mock data to the database
     with db.session.begin():
-        users = generate_fake_users(num_users)
-        # db.session.add_all(users)
+        generate_fake_users(num_users)
 
         questions = generate_fake_questions(num_questions)
         db.session.add_all(questions)
 
-        offers = generate_fake_offers(num_offers)
-        db.session.add_all(offers)
+        generate_fake_offers(num_offers)
 
         notifications = generate_fake_notifications(num_notifications)
         db.session.add_all(notifications)
