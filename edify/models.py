@@ -3,6 +3,7 @@ from edify.utils.constants import (
     AuthLevelEnum,
     SupportedLanguagesEnum,
     OfferStatusEnum,
+    PREVIEW_LENGTH,
 )
 from edify.utils.utils import (
     validate_email,
@@ -13,10 +14,12 @@ from edify.utils.utils import (
     format_lower_case,
     format_upper_case,
     get_college_year,
+    get_time_ago,
+    trim_text,
 )
-from sqlalchemy import Index, event
+from sqlalchemy import Index, UniqueConstraint, event
 from flask_login import UserMixin
-from flask_jwt_extended import current_user, create_access_token, decode_token
+from flask_jwt_extended import create_access_token, decode_token
 from datetime import datetime, timedelta
 from flask import current_app, jsonify
 from collections import OrderedDict, defaultdict
@@ -246,6 +249,7 @@ class Question(db.Model):
     solve_time = db.Column(
         db.Integer, db.ForeignKey("time_interval.value"), nullable=False
     )
+    time_interval = db.relationship("TimeInterval", lazy=True)
 
     # Price offered for solving the question
     price = db.Column(db.Float, nullable=False)
@@ -257,6 +261,7 @@ class Question(db.Model):
 
     # Preferred method of communication
     method_id = db.Column(db.Integer, db.ForeignKey("method.id"), nullable=False)
+    method = db.relationship("Method", backref="questions", lazy=True)
 
     # Indicates if the question has been solved
     solved = db.Column(db.Boolean, nullable=False, default=False)
@@ -311,6 +316,26 @@ class Question(db.Model):
 
         return
 
+    @staticmethod
+    def get_list_all(question_list: List["Question"]) -> List[Dict[str, Any]]:
+        result = []
+
+        for qstn in question_list:
+            qstn_dict = qstn.to_dict(simplified=False)
+
+            qstn_dict["subject"] = qstn.course.academic_field.name
+            qstn_dict["course_code"] = qstn.course.code
+            qstn_dict["course_name"] = qstn.course.name
+            qstn_dict["time_ago"] = get_time_ago(qstn.created_at)
+            qstn_dict["method"] = qstn.method.name
+            qstn_dict["user"] = qstn.user.username
+            qstn_dict["preview"] = trim_text(qstn.request, PREVIEW_LENGTH)
+            qstn_dict["solve_time"] = qstn.time_interval.shortname
+
+            result.append(qstn_dict)
+
+        return result
+
 
 # Attach event listeners
 event.listen(Question, "before_insert", Question.validator)
@@ -328,6 +353,7 @@ class Offer(db.Model):
     __table_args__ = (
         Index("ix_offer_question_id", "question_id"),
         Index("ix_offer_user_id", "user_id"),
+        UniqueConstraint("user_id", "question_id", "active", name="_user_question_uc"),
     )
 
     # Primary key that identifies the offer
@@ -345,6 +371,9 @@ class Offer(db.Model):
 
     # Amount offered
     amount = db.Column(db.Float, nullable=False)
+
+    # Wether the offer is active
+    active = db.Column(db.Boolean, nullable=False, default=True)
 
     # Status of the offer
     status = db.Column(
@@ -375,7 +404,7 @@ class Offer(db.Model):
         }
 
     @staticmethod
-    def validator(mapper, connection, target):
+    def validator(mapper, connection, target: "Offer"):
         if target.amount <= 0:
             raise ValueError(
                 f'OFFER MODEL: Amount must be a positive value ("{target.amount}").'
@@ -384,6 +413,16 @@ class Offer(db.Model):
         if target.updated_at and target.updated_at < target.created_at:
             raise ValueError(
                 f'OFFER MODEL: Creation ("{target.created_at}") must be before update ("{target.updated_at}").'
+            )
+
+        if target.status in OfferStatusEnum.inactive and target.active:
+            raise ValueError(
+                f'OFFER MODEL: Offer status is inactive ("{target.status}") but still active).'
+            )
+
+        if not target.active and not target.status in OfferStatusEnum.inactive:
+            raise ValueError(
+                f'OFFER MODEL: Offer is not active but status is not inactive ("{target.status}").'
             )
 
         return
@@ -457,6 +496,16 @@ class Notification(db.Model):
 
         return
 
+    @staticmethod
+    def get_list_all(notification_list: List["Notification"]) -> List[Dict[str, Any]]:
+        result = []
+
+        for qstn in notification_list:
+            noti_dict = qstn.to_dict(simplified=False)
+            result.append(noti_dict)
+
+        return result
+
 
 # Attach event listeners
 event.listen(Notification, "before_insert", Notification.validator)
@@ -470,7 +519,10 @@ class Major(db.Model):
     Entries are created to list available majors.
     """
 
-    __table_args__ = (Index("ix_major_academic_field_id", "academic_field_id"),)
+    __table_args__ = (
+        Index("ix_major_academic_field_id", "academic_field_id"),
+        UniqueConstraint("name", "academic_field_id", name="_major_field_uc"),
+    )
 
     # Primary key that identifies the major
     id = db.Column(db.Integer, primary_key=True)
@@ -538,7 +590,10 @@ class AcademicField(db.Model):
     Entries are created to list available academic_fields.
     """
 
-    __table_args__ = (Index("ix_academic_field_school_id", "school_id"),)
+    __table_args__ = (
+        Index("ix_academic_field_school_id", "school_id"),
+        UniqueConstraint("name", "school_id", name="_field_school_uc"),
+    )
 
     # Primary key that identifies the academic_field
     id = db.Column(db.Integer, primary_key=True)
@@ -670,6 +725,8 @@ class Course(db.Model):
     __table_args__ = (
         Index("ix_course_code", "code"),
         Index("ix_course_academic_field_id", "academic_field_id"),
+        UniqueConstraint("code", "name", "academic_field_id", name="_course_field_uc"),
+        UniqueConstraint("code", "name", "school_id", name="_course_school_uc"),
     )
 
     # Primary key that identifies the course

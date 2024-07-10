@@ -1,6 +1,9 @@
 from enum import Enum
 from http import HTTPStatus
 
+# Number of characters to show in the question request preview.
+PREVIEW_LENGTH: int = 127
+
 
 class ErrorType(Enum):
     """Different Error Types"""
@@ -20,6 +23,7 @@ class ErrorType(Enum):
     REQUEST_TIMEOUT = HTTPStatus.REQUEST_TIMEOUT
     INTERNAL_ERROR = HTTPStatus.INTERNAL_SERVER_ERROR
     NOT_FOUND = HTTPStatus.NOT_FOUND
+    USER_NOT_FOUND = HTTPStatus.NOT_FOUND
 
 
 class EdifyEnvironments(Enum):
@@ -38,7 +42,11 @@ class EdifyEnvironments(Enum):
 class EnumBase:
     @classmethod
     def values(cls):
-        return [value for key, value in vars(cls).items() if not key.startswith("__")]
+        return [
+            value
+            for key, value in vars(cls).items()
+            if not key.startswith("_") and key == key.upper()
+        ]
 
 
 class AuthLevelEnum(EnumBase):
@@ -70,3 +78,5 @@ class OfferStatusEnum(EnumBase):
     DECLINED = "DECLINED"
     EDITED = "EDITED"
     REMOVED = "REMOVED"
+
+    inactive = [DECLINED, REMOVED]
