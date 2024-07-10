@@ -11,10 +11,14 @@ from edify.models import (
     School,
     NotificationType,
     Major,
+    Question,
+    Notification,
+    Offer,
 )
 from edify import db
 from http import HTTPStatus
-from edify.utils.utils import internal_request
+from edify.utils.utils import internal_request, error_response
+from edify.utils.constants import ErrorType
 
 # -----------------------------------------------------------------------------
 # Route Blueprint
@@ -100,3 +104,78 @@ def fetch_intervals():
     time_intervals = TimeInterval.get_dict_all(db.session.query(TimeInterval).all())
 
     return jsonify({"data": time_intervals}), HTTPStatus.OK
+
+
+# Endpoint: /data/notifications
+@data.route("/notifications", methods=["GET"])
+def fetch_user_notifications():
+    user = get_current_user()
+
+    if not user:
+        return error_response("User not found", ErrorType.USER_NOT_FOUND)
+
+    notifications = []
+    if user:
+        notifications = Notification.get_list_all(user.notifications)
+
+    return jsonify({"data": notifications}), HTTPStatus.OK
+
+
+# Endpoint: /data/questions
+@data.route("/questions", methods=["GET"])
+def fetch_questions():
+    questions = Question.get_list_all(db.session.query(Question).all())
+
+    return jsonify({"data": questions}), HTTPStatus.OK
+
+
+# Endpoint: /data/question/<id_question>
+@data.route("/question/<int:id_question>", methods=["GET"])
+@jwt_required(optional=True)
+def get_question(id_question):
+    question = db.session.query(Question).get(id_question)
+
+    if not question:
+        return error_response("Question not found", ErrorType.NOT_FOUND)
+
+    qstn_dict = Question.get_list_all([question])[0]
+
+    return jsonify({"data": [qstn_dict]}), HTTPStatus.OK
+
+
+# Endpoint: /data/question/<id_question>/is_author
+@data.route("/question/<int:id_question>/is_author", methods=["GET"])
+@jwt_required()
+def is_question_author(id_question):
+    question = db.session.query(Question).get(id_question)
+    if not question:
+        return error_response("Question not found", ErrorType.NOT_FOUND)
+
+    user = get_current_user()
+    if not user:
+        return error_response("User not found", ErrorType.USER_NOT_FOUND)
+
+    is_author = question.user_id == user.id
+
+    return jsonify({"data": [is_author]}), HTTPStatus.OK
+
+
+# Endpoint: /data/question/<id_question>/offer_made
+@data.route("/question/<int:id_question>/offer_made", methods=["GET"])
+@jwt_required()
+def question_offer_made(id_question):
+    question = db.session.query(Question).get(id_question)
+    if not question:
+        return error_response("Question not found", ErrorType.NOT_FOUND)
+
+    user = get_current_user()
+    if not user:
+        return error_response("User not found", ErrorType.USER_NOT_FOUND)
+
+    offer_made = (
+        db.session.query(Offer)
+        .filter_by(question_id=question.id, user_id=user.id)
+        .order
+    )
+
+    return jsonify({"data": [is_author]}), HTTPStatus.OK

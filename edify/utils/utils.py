@@ -5,14 +5,27 @@ import random
 import json
 import random
 import phonenumbers
-from flask import jsonify, current_app, url_for
+from flask import jsonify, current_app, url_for, request as flask_request
+from werkzeug.test import EnvironBuilder
+from werkzeug.wrappers import Request
 
 
 def internal_request(url, method="GET"):
-    with current_app.test_request_context(url, method=method):
-        response = current_app.dispatch_request()
+    # Build the environment
+    builder = EnvironBuilder(path=url, method=method)
+    env = builder.get_environ()
 
-    data, status = response[0].get_json(), response[1]
+    # Check if the user has a JWT token cookie and add it to the environment
+    token = flask_request.cookies.get("access_token_cookie")
+    if token:
+        env["HTTP_COOKIE"] = f"access_token_cookie={token}"
+
+    # Create the test request context with the environment
+    with current_app.test_request_context(environ_overrides=env):
+        response = current_app.full_dispatch_request()
+
+    # Parse the response
+    data, status = response.get_json(), response.status_code
 
     return data, status
 
@@ -114,3 +127,41 @@ def get_college_year(date: datetime.date) -> str:
         return f"Sophomore"
     else:
         return f"Freshman"
+
+
+def get_time_ago(date: datetime) -> str:
+    current = datetime.now()
+    diff = current - date
+
+    if diff < timedelta(minutes=1):
+        return "Just now"
+    elif diff < timedelta(hours=1):
+        minutes = int(diff.total_seconds() // 60)
+        return f"{minutes} minute{'s' if minutes > 1 else ''} ago"
+    elif diff < timedelta(days=1):
+        hours = int(diff.total_seconds() // 3600)
+        return f"{hours} hour{'s' if hours > 1 else ''} ago"
+    elif diff < timedelta(days=2):
+        return "Yesterday"
+    elif diff < timedelta(weeks=1):
+        days = diff.days
+        return f"{days} day{'s' if days > 1 else ''} ago"
+    elif diff < timedelta(weeks=2):
+        return "Last week"
+    elif diff < timedelta(weeks=4):
+        weeks = diff.days // 7
+        return f"{weeks} week{'s' if weeks > 1 else ''} ago"
+    elif diff < timedelta(days=60):
+        return "Last month"
+    elif diff < timedelta(days=365):
+        months = diff.days // 30
+        return f"{months} month{'s' if months > 1 else ''} ago"
+    elif diff < timedelta(years=2):
+        return "Last year"
+    else:
+        years = diff.days // 365
+        return f"{years} year{'s' if years > 1 else ''} ago"
+
+
+def trim_text(string: str, length: int):
+    return string[0:length] + "..." if len(string) > length + 3 else string

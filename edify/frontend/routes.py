@@ -10,7 +10,7 @@ from flask import (
 from http import HTTPStatus
 from edify import db, bcrypt
 from typing import Any
-from flask_jwt_extended import jwt_required, current_user, exceptions
+from flask_jwt_extended import jwt_required, exceptions, get_jwt_identity
 from edify.utils.decorators import no_token_allowed
 from edify.models import *
 import time
@@ -25,7 +25,8 @@ def fetch_data(url, method="GET"):
     data, status = internal_request(url, method)
 
     if status != HTTPStatus.OK:
-        return None
+        print(f"fetch_data: {status}")
+        return []
 
     return data.get("data", [])
 
@@ -48,7 +49,11 @@ question = Blueprint("question", __name__, url_prefix="/question")
 @frontend.route("/")
 def index():
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
+    subjects.sort(key=lambda d: d["name"])
+
     methods = fetch_data(url_for("backend.data.fetch_methods"), "GET")
+    methods.sort(key=lambda d: d["name"])
+
     time_intervals = fetch_data(url_for("backend.data.fetch_intervals"), "GET")
 
     return render_template(
@@ -71,19 +76,28 @@ def login():
 @no_token_allowed
 def signup():
     majors = fetch_data(url_for("backend.data.fetch_user_majors"), "GET")
+    majors.sort(key=lambda d: d["name"])
 
     return render_template("signup.html", login=False, majors=majors)
 
 
 # Endpoint: /dashboard
 @frontend.route("/dashboard")
+@jwt_required()
 def dashboard():
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
+    subjects.sort(key=lambda d: d["name"])
+
     methods = fetch_data(url_for("backend.data.fetch_methods"), "GET")
+    methods.sort(key=lambda d: d["name"])
+
     time_intervals = fetch_data(url_for("backend.data.fetch_intervals"), "GET")
 
-    notifications = None
-    questions = None
+    questions = fetch_data(url_for("backend.data.fetch_questions"), "GET")
+    questions.sort(key=lambda d: (d["solved"], d["created_at"]))
+
+    notifications = fetch_data(url_for("backend.data.fetch_user_notifications"), "GET")
+    notifications.sort(key=lambda d: d["created_at"])
 
     return render_template(
         "dashboard.html",
@@ -100,16 +114,42 @@ def dashboard():
 # -----------------------------------------------------------------------------
 
 
-# Endpoint: /question/<id_qstn>
-@question.route("/<int:id_qstn>")
-def fetch_question(id_qstn):
+# Endpoint: /question/<id_question>
+@question.route("/<int:id_question>")
+@jwt_required(optional=True)
+def fetch_question(id_question):
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
+    subjects.sort(key=lambda d: d["name"])
+
     methods = fetch_data(url_for("backend.data.fetch_methods"), "GET")
+    methods.sort(key=lambda d: d["name"])
+
     time_intervals = fetch_data(url_for("backend.data.fetch_intervals"), "GET")
 
-    question = None
+    question = fetch_data(
+        url_for("backend.data.get_question", id_question=id_question), "GET"
+    )[0]
 
-    notifications = None
+    if not get_jwt_identity():
+        is_author = False
+        made_offer = False
+        offer_made = None
+        accepted_offer = False
+        offer_accepted = None
+        offers = []
+
+    else:
+        is_author = fetch_data(
+            url_for("backend.data.is_question_author", id_question=id_question), "GET"
+        )[0]
+        made_offer = False
+        offer_made = None
+        accepted_offer = False
+        offer_accepted = None
+        offers = []
+
+    notifications = fetch_data(url_for("backend.data.fetch_user_notifications"), "GET")
+    notifications.sort(key=lambda d: d["created_at"])
 
     return render_template(
         "view.html",

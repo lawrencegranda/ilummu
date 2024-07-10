@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, Blueprint, jsonify, current_a
 from http import HTTPStatus
 from edify import db, bcrypt
 from typing import Any
-from flask_jwt_extended import jwt_required, current_user, exceptions
+from flask_jwt_extended import jwt_required, exceptions
 from edify.utils.decorators import no_token_allowed
 
 import time
