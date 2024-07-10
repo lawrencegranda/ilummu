@@ -27,7 +27,7 @@ Question
           </div>
         </div>
         <div class="question-right">
-          <p id="question-date">{{q['date']}}, {{q['time']}}</p>
+          <p id="question-date">{{q['time_ago']}}</p>
           
           <div class="question-labels">
             <div class="question-price">${{'%.2f' % q['price']}}</div>
@@ -40,8 +40,8 @@ Question
         </div>
       </div>
       <div class="question-bottom">
-        <p class="question-class">{{q['number']}}: {{q['name']}}</p>
-        <p class="question-info">{{q['solve-time']}} solve time &#x2022; {{q['method']}}</p>
+        <p class="question-class">{{q['course_code']}}: {{q['course_name']}}</p>
+        <p class="question-info">{{q['solve_time']}} solve time &#x2022; {{q['method']}}</p>
         <p class="question-text">{{q['request']}}</p>
       </div>
     </div>

@@ -34,7 +34,7 @@ from edify.models import (
 )
 from edify import db, bcrypt
 from http import HTTPStatus
-from typing import Optional
+from typing import Optional, Any
 
 
 # -----------------------------------------------------------------------------
@@ -85,7 +85,7 @@ def get_user():
     if user:
         return jsonify(user.to_dict(simplified=True)), 200
 
-    return error_response("User not found.", ErrorType.NOT_FOUND)
+    return error_response("User not found", ErrorType.USER_NOT_FOUND)
 
 
 # Endpoint: /user/login
