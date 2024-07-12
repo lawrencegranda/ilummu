@@ -164,24 +164,5 @@ $(document).ready(function () {
 
   });
 
-  $('#button-log-out').on("click", function () {
-    $.ajax({
-      url: '/user/logout',
-      type: 'POST',
-      contentType: 'application/json',
-      data: null,
-      success: function (response) {
-        // Handle success (e.g., redirect to main page)
-        console.log(response)
-        window.location.href = "/";
-      },
-      error: function (error) {
-        // Handle error (e.g., display error message)
-        console.log(error);
-        window.location.href = "/";
-      }
-    });
-  });
-
 
 });
