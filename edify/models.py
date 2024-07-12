@@ -17,6 +17,7 @@ from edify.utils.utils import (
     get_time_ago,
     trim_text,
 )
+from abc import ABCMeta, ABC, abstractmethod
 from sqlalchemy import Index, UniqueConstraint, event
 from flask_login import UserMixin
 from flask_jwt_extended import create_access_token, decode_token
@@ -29,7 +30,38 @@ from typing import Optional, Dict, Any, List
 import re
 
 
-class User(db.Model, UserMixin):
+# Custom metaclass combining the metaclasses of SQLAlchemy's Model and ABCMeta
+class ModelABCMeta(type(db.Model), ABCMeta):
+    pass
+
+
+class BaseModel(db.Model, ABC, metaclass=ModelABCMeta):
+    """
+    Abstract base class for all models, providing common methods and enforcing
+    implementation of essential methods in subclasses.
+    """
+
+    __abstract__ = True
+
+    @abstractmethod
+    def __repr__(self) -> str:
+        pass
+
+    @abstractmethod
+    def to_dict(self, simplified=False) -> Dict[str, Any]:
+        pass
+
+    @staticmethod
+    def to_dict_all(elem_list: List["BaseModel"]) -> List[Dict[str, Any]]:
+        return [elem.to_dict(simplified=False) for elem in elem_list]
+
+
+# Custom metaclass combining the metaclasses of SQLAlchemy's Model and ABCMeta
+class UserModelABCMeta(type(BaseModel), type(UserMixin)):
+    pass
+
+
+class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
     """
     Table that contains user information
 
@@ -196,16 +228,6 @@ class User(db.Model, UserMixin):
     def format_phone(target, value, oldvalue, initiator):
         return format_phone(value)
 
-    @staticmethod
-    def get_dict_all(user_list: List["User"]) -> Dict[int, Dict[str, Any]]:
-        result = {}
-
-        for user in user_list:
-            user_dict = user.to_dict(simplified=False)
-            result[user_dict["id"]] = user_dict
-
-        return result
-
 
 # Attach event listeners
 event.listen(User, "before_insert", User.validator)
@@ -216,7 +238,7 @@ event.listen(User.lastname, "set", format_title_case, retval=True)
 event.listen(User.email, "set", format_lower_case, retval=True)
 
 
-class Question(db.Model):
+class Question(BaseModel):
     """
     Table that contains question information
 
@@ -279,7 +301,7 @@ class Question(db.Model):
         return f"Question({self.id}, {self.user_id}, {self.course_id}, {self.solved})"
 
     def to_dict(self, simplified=True) -> Dict[str, Any]:
-        return {
+        result = {
             "id": self.id,
             "user_id": self.user_id,
             "course_id": self.course_id,
@@ -291,6 +313,18 @@ class Question(db.Model):
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }
+
+        if simplified == False:
+            result["user"] = self.user.to_dict(simplified=False)
+            result["subject"] = self.course.academic_field.name
+            result["course_code"] = self.course.code
+            result["course_name"] = self.course.name
+            result["time_ago"] = get_time_ago(self.created_at)
+            result["method"] = self.method.name
+            result["preview"] = trim_text(self.request, PREVIEW_LENGTH)
+            result["solve_time"] = self.time_interval.shortname
+
+        return result
 
     @staticmethod
     def validator(mapper, connection, target):
@@ -316,33 +350,13 @@ class Question(db.Model):
 
         return
 
-    @staticmethod
-    def get_list_all(question_list: List["Question"]) -> List[Dict[str, Any]]:
-        result = []
-
-        for qstn in question_list:
-            qstn_dict = qstn.to_dict(simplified=False)
-
-            qstn_dict["subject"] = qstn.course.academic_field.name
-            qstn_dict["course_code"] = qstn.course.code
-            qstn_dict["course_name"] = qstn.course.name
-            qstn_dict["time_ago"] = get_time_ago(qstn.created_at)
-            qstn_dict["method"] = qstn.method.name
-            qstn_dict["user"] = qstn.user.username
-            qstn_dict["preview"] = trim_text(qstn.request, PREVIEW_LENGTH)
-            qstn_dict["solve_time"] = qstn.time_interval.shortname
-
-            result.append(qstn_dict)
-
-        return result
-
 
 # Attach event listeners
 event.listen(Question, "before_insert", Question.validator)
 event.listen(Question, "before_update", Question.validator)
 
 
-class Offer(db.Model):
+class Offer(BaseModel):
     """
     Table that contains offer information
 
@@ -390,18 +404,24 @@ class Offer(db.Model):
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     def __repr__(self):
-        return f"Offer({self.id}, {self.question_id}, {self.amount}, {self.status})"
+        return f"Offer({self.id}, {self.question_id}, {self.amount}, {self.status}, {self.active})"
 
     def to_dict(self, simplified=True) -> Dict[str, Any]:
-        return {
+        result = {
             "id": self.id,
             "question_id": self.question_id,
             "user_id": self.user_id,
             "amount": self.amount,
             "status": self.status,
+            "active": self.active,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }
+
+        if simplified == False:
+            result["user"] = self.user.to_dict(simplified=False)
+
+        return result
 
     @staticmethod
     def validator(mapper, connection, target: "Offer"):
@@ -433,7 +453,7 @@ event.listen(Offer, "before_insert", Offer.validator)
 event.listen(Offer, "before_update", Offer.validator)
 
 
-class Notification(db.Model):
+class Notification(BaseModel):
     """
     Table that contains notification information
 
@@ -496,23 +516,13 @@ class Notification(db.Model):
 
         return
 
-    @staticmethod
-    def get_list_all(notification_list: List["Notification"]) -> List[Dict[str, Any]]:
-        result = []
-
-        for qstn in notification_list:
-            noti_dict = qstn.to_dict(simplified=False)
-            result.append(noti_dict)
-
-        return result
-
 
 # Attach event listeners
 event.listen(Notification, "before_insert", Notification.validator)
 event.listen(Notification, "before_update", Notification.validator)
 
 
-class Major(db.Model):
+class Major(BaseModel):
     """
     Table that contains major information
 
@@ -566,16 +576,6 @@ class Major(db.Model):
 
         return
 
-    @staticmethod
-    def get_list_all(major_list: List["Major"]) -> List[Dict[str, Any]]:
-        result = []
-
-        for major in major_list:
-            ind_dict = major.to_dict(simplified=False)
-            result.append(ind_dict)
-
-        return result
-
 
 # Attach event listeners
 event.listen(Major, "before_insert", Major.validator)
@@ -583,7 +583,7 @@ event.listen(Major, "before_update", Major.validator)
 event.listen(Major.name, "set", format_title_case, retval=True)
 
 
-class AcademicField(db.Model):
+class AcademicField(BaseModel):
     """
     Table that contains academic_field information
 
@@ -620,23 +620,13 @@ class AcademicField(db.Model):
             "school_id": self.school_id,
         }
 
-    @staticmethod
-    def get_list_all(field_list: List["AcademicField"]) -> List[Dict[str, Any]]:
-        result = []
-
-        for field in field_list:
-            ind_dict = field.to_dict(simplified=False)
-            result.append(ind_dict)
-
-        return result
-
 
 # Attach event listeners
 event.listen(AcademicField.value, "set", format_lower_case, retval=True)
 event.listen(AcademicField.name, "set", format_title_case, retval=True)
 
 
-class Method(db.Model):
+class Method(BaseModel):
     """
     Table that contains method information
 
@@ -667,18 +657,8 @@ class Method(db.Model):
             "name": self.name,
         }
 
-    @staticmethod
-    def get_list_all(method_list: List["Method"]) -> List[Dict[str, Any]]:
-        result = []
 
-        for method in method_list:
-            ind_dict = method.to_dict(simplified=False)
-            result.append(ind_dict)
-
-        return result
-
-
-class TimeInterval(db.Model):
+class TimeInterval(BaseModel):
     """
     Table that contains time interval information
 
@@ -704,18 +684,8 @@ class TimeInterval(db.Model):
             "shortname": self.shortname,
         }
 
-    @staticmethod
-    def get_dict_all(time_list: List["TimeInterval"]) -> Dict[int, Dict[str, Any]]:
-        result = {}
 
-        for time in time_list:
-            ind_dict = time.to_dict(simplified=False)
-            result[time.value] = ind_dict
-
-        return result
-
-
-class Course(db.Model):
+class Course(BaseModel):
     """
     Table that contains course information
 
@@ -783,7 +753,7 @@ event.listen(Course.code, "set", format_upper_case, retval=True)
 event.listen(Course.name, "set", format_title_case, retval=True)
 
 
-class School(db.Model):
+class School(BaseModel):
     """
     Table that contains school information
 
@@ -836,7 +806,7 @@ event.listen(School.state, "set", format_title_case, retval=True)
 event.listen(School.email_postfix, "set", format_lower_case, retval=True)
 
 
-class NotificationType(db.Model):
+class NotificationType(BaseModel):
     """
     Table that contains notification type information
 
@@ -869,25 +839,49 @@ class NotificationType(db.Model):
 event.listen(NotificationType.name, "set", format_title_case, retval=True)
 
 
-class AuthLevel(db.Model):
+class AuthLevel(BaseModel):
     """
     Table that stores different authorization levels for users.
     """
 
     value = db.Column(db.String(50), unique=True, nullable=False, primary_key=True)
 
+    def __repr__(self):
+        return f"AuthLevel({self.value})"
 
-class SupportedLanguage(db.Model):
+    def to_dict(self, simplified=True) -> Dict[str, Any]:
+        return {
+            "value": self.value,
+        }
+
+
+class SupportedLanguage(BaseModel):
     """
     Table that stores the languages supported by the platform.
     """
 
     value = db.Column(db.String(50), unique=True, nullable=False, primary_key=True)
 
+    def __repr__(self):
+        return f"SupportedLanguage({self.value})"
 
-class OfferStatus(db.Model):
+    def to_dict(self, simplified=True) -> Dict[str, Any]:
+        return {
+            "value": self.value,
+        }
+
+
+class OfferStatus(BaseModel):
     """
     Table that stores the status of offers/questions.
     """
 
     value = db.Column(db.String(50), unique=True, nullable=False, primary_key=True)
+
+    def __repr__(self):
+        return f"OfferStatus({self.value})"
+
+    def to_dict(self, simplified=True) -> Dict[str, Any]:
+        return {
+            "value": self.value,
+        }
