@@ -24,6 +24,7 @@ class ErrorType(Enum):
     INTERNAL_ERROR = HTTPStatus.INTERNAL_SERVER_ERROR
     NOT_FOUND = HTTPStatus.NOT_FOUND
     USER_NOT_FOUND = HTTPStatus.NOT_FOUND
+    UNAUTHORIZED = HTTPStatus.UNAUTHORIZED
 
 
 class EdifyEnvironments(Enum):
