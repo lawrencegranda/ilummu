@@ -118,7 +118,7 @@ def get_college_year(date: datetime.date) -> str:
     delta_years = (date - current).days / 365.0
 
     if delta_years < 0 or delta_years > 4:
-        return f"Class of '{date.year.__repr__[-2:]}"
+        return f"Class of '{date.year.__repr__()[-2:]}"
     if delta_years < 1:
         return f"Senior"
     if delta_years < 2:
