@@ -3,11 +3,11 @@ from flask import jsonify, current_app, redirect, url_for
 from http import HTTPStatus
 from typing import Callable, List, Union
 from flask_login import UserMixin
-from edify import jwt
-from edify.models import User
+from edify import jwt, db
+from edify.models import User, Question
 from edify.utils.constants import AuthLevelEnum, ErrorType
 from edify.utils.utils import error_response
-from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
+from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity, current_user
 
 
 @jwt.user_lookup_loader
@@ -87,7 +87,7 @@ def maintenance_mode(function: Callable) -> Callable:
 
 def no_token_allowed(f):
     @wraps(f)
-    def decorated(*args, **kwargs):
+    def decorator(*args, **kwargs):
         verify_jwt_in_request(optional=True)
 
         user_id = get_jwt_identity()
@@ -99,4 +99,48 @@ def no_token_allowed(f):
 
         return f(*args, **kwargs)
 
-    return decorated
+    return decorator
+
+
+def author_required(arg_name: str):
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            verify_jwt_in_request(optional=False)
+
+            # Check for the argument in kwargs first, then in args
+            if arg_name in kwargs:
+                value = kwargs[arg_name]
+            elif arg_name in f.__code__.co_varnames:
+                arg_index = f.__code__.co_varnames.index(arg_name)
+                value = args[arg_index]
+            else:
+                return error_response(
+                    "Question id argument must be passed in", ErrorType.BAD_REQUEST
+                )
+
+            # Check if the value is an int
+            if not isinstance(value, int):
+                return error_response(
+                    "Question id argument must be an int", ErrorType.BAD_REQUEST
+                )
+
+            user_id = get_jwt_identity()
+            if not user_id or not User.query.get(user_id):
+                return error_response("User not found", ErrorType.USER_NOT_FOUND)
+
+            id_question = value
+            question = db.session.query(Question).get(id_question)
+            if not question:
+                return error_response("Question not found", ErrorType.NOT_FOUND)
+
+            if question.user_id != user_id:
+                return error_response(
+                    "User is not the author of the question", ErrorType.UNAUTHORIZED
+                )
+
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
