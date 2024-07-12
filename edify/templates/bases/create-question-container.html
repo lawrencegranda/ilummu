@@ -55,7 +55,7 @@
           <p class="create-question-label">Time needed:</p>
 
           <select id="create-question-solve-time" class="create-question-selector" required>
-            {% for interval in time_intervals.values()|sort(attribute='value') %}
+            {% for interval in time_intervals %}
             <option value="{{interval['value']}}">{{interval['name']}}</option>
             {% endfor %}
           </select>
