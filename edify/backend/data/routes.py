@@ -19,6 +19,7 @@ from edify import db
 from http import HTTPStatus
 from edify.utils.utils import internal_request, error_response
 from edify.utils.constants import ErrorType
+from edify.utils.decorators import author_required
 
 # -----------------------------------------------------------------------------
 # Route Blueprint
@@ -53,7 +54,7 @@ def fetch_user_subjects():
 # Endpoint: /data/school/<id_school>/subjects
 @data.route("/school/<int:id_school>/subjects", methods=["GET"])
 def fetch_school_subjects(id_school):
-    subjects = AcademicField.get_list_all(
+    subjects = AcademicField.to_dict_all(
         db.session.query(AcademicField).filter_by(school_id=id_school).all()
     )
 
@@ -81,7 +82,7 @@ def fetch_user_majors():
 # Endpoint: /data/school/<id_school>/majors
 @data.route("/school/<int:id_school>/majors", methods=["GET"])
 def fetch_school_majors(id_school):
-    majors = Major.get_list_all(
+    majors = Major.to_dict_all(
         db.session.query(Major).filter_by(school_id=id_school).all()
     )
 
@@ -91,7 +92,7 @@ def fetch_school_majors(id_school):
 # Endpoint: /data/methods
 @data.route("/methods", methods=["GET"])
 def fetch_methods():
-    methods = Method.get_list_all(
+    methods = Method.to_dict_all(
         db.session.query(Method).filter_by(supported=True).all()
     )
 
@@ -101,7 +102,7 @@ def fetch_methods():
 # Endpoint: /data/intervals
 @data.route("/intervals", methods=["GET"])
 def fetch_intervals():
-    time_intervals = TimeInterval.get_dict_all(db.session.query(TimeInterval).all())
+    time_intervals = TimeInterval.to_dict_all(db.session.query(TimeInterval).all())
 
     return jsonify({"data": time_intervals}), HTTPStatus.OK
 
@@ -116,7 +117,7 @@ def fetch_user_notifications():
 
     notifications = []
     if user:
-        notifications = Notification.get_list_all(user.notifications)
+        notifications = Notification.to_dict_all(user.notifications)
 
     return jsonify({"data": notifications}), HTTPStatus.OK
 
@@ -124,7 +125,7 @@ def fetch_user_notifications():
 # Endpoint: /data/questions
 @data.route("/questions", methods=["GET"])
 def fetch_questions():
-    questions = Question.get_list_all(db.session.query(Question).all())
+    questions = Question.to_dict_all(db.session.query(Question).all())
 
     return jsonify({"data": questions}), HTTPStatus.OK
 
@@ -138,7 +139,7 @@ def get_question(id_question):
     if not question:
         return error_response("Question not found", ErrorType.NOT_FOUND)
 
-    qstn_dict = Question.get_list_all([question])[0]
+    qstn_dict = Question.to_dict_all([question])[0]
 
     return jsonify({"data": [qstn_dict]}), HTTPStatus.OK
 
@@ -174,8 +175,28 @@ def question_offer_made(id_question):
 
     offer_made = (
         db.session.query(Offer)
-        .filter_by(question_id=question.id, user_id=user.id)
-        .order
+        .filter_by(question_id=question.id, user_id=user.id, active=True)
+        .first()
     )
 
-    return jsonify({"data": [is_author]}), HTTPStatus.OK
+    if not offer_made:
+        return jsonify({"data": []}), HTTPStatus.OK
+
+    return jsonify({"data": [offer_made.to_dict(simplified=False)]}), HTTPStatus.OK
+
+
+# Endpoint: /data/question/<id_question>/offers_received
+@data.route("/question/<int:id_question>/offers_received", methods=["GET"])
+@jwt_required()
+@author_required("id_question")
+def offers_received(id_question):
+    question = db.session.query(Question).get(id_question)
+    user = get_current_user()
+
+    offers = (
+        db.session.query(Offer).filter_by(question_id=question.id, active=True).all()
+    )
+
+    offers = Offer.to_dict_all(offers)
+
+    return jsonify({"data": offers}), HTTPStatus.OK
