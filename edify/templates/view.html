@@ -19,11 +19,11 @@ Question
       <div class="question-top">
         <div class="question-left">
           <div id="question-user-profile">
-            <img src="https://robohash.org/{{q['user']}}" alt="Avatar" class="avatar"/>
+            <img src="https://robohash.org/{{q['user']['username']}}" alt="Avatar" class="avatar"/>
           </div>
           <div class="question-user">
-            <p class="question-user-name">{{q['user']}}</p>
-            <p class="question-user-info">{{q['major']}} &#x2022; {{q['year']}}</p>
+            <p class="question-user-name">{{q['user']['username']}}</p>
+            <p class="question-user-info">{{q['user']['major']}} &#x2022; {{q['user']['year']}}</p>
           </div>
         </div>
         <div class="question-right">
