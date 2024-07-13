@@ -139,7 +139,7 @@ def author_required(arg_name: str):
                     "User is not the author of the question", ErrorType.UNAUTHORIZED
                 )
 
-            return func(*args, **kwargs)
+            return f(*args, **kwargs)
 
         return wrapper
 
