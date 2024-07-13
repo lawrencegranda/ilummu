@@ -79,13 +79,13 @@ def logout():
 
 # Endpoint: /user
 @user.route("/", methods=["GET"])
-@jwt_required()
+@jwt_required(optional=True)
 def get_user():
     user = get_current_user()
     if user:
-        return jsonify(user.to_dict(simplified=True)), 200
+        return jsonify(user.to_dict(simplified=False)), HTTPStatus.OK
 
-    return error_response("User not found", ErrorType.USER_NOT_FOUND)
+    return jsonify(None), ErrorType.USER_NOT_FOUND
 
 
 # Endpoint: /user/login
