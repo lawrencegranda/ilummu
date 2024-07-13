@@ -6,11 +6,17 @@ from flask import (
     jsonify,
     current_app,
     url_for,
+    redirect,
 )
 from http import HTTPStatus
 from edify import db, bcrypt
 from typing import Any
-from flask_jwt_extended import jwt_required, exceptions, get_jwt_identity
+from flask_jwt_extended import (
+    jwt_required,
+    exceptions,
+    get_jwt_identity,
+    unset_jwt_cookies,
+)
 from edify.utils.decorators import no_token_allowed
 from edify.models import *
 import time
@@ -78,7 +84,24 @@ def signup():
     majors = fetch_data(url_for("backend.data.fetch_user_majors"), "GET")
     majors.sort(key=lambda d: d["name"])
 
+    print(majors)
+
     return render_template("signup.html", login=False, majors=majors)
+
+
+# Endpoint: /logout
+@frontend.route("/logout")
+@jwt_required()
+def logout():
+    response, status = internal_request(url_for("backend.user.logout"), method="POST")
+
+    # If the backend logout was successful, clear the cookies and redirect
+    if status == HTTPStatus.OK:
+        response = redirect(url_for("frontend.index"))
+        unset_jwt_cookies(response)
+        return response
+
+    return redirect(url_for("frontend.index"))
 
 
 # Endpoint: /dashboard
@@ -126,42 +149,56 @@ def fetch_question(id_question):
 
     time_intervals = fetch_data(url_for("backend.data.fetch_intervals"), "GET")
 
+    notifications = fetch_data(url_for("backend.data.fetch_user_notifications"), "GET")
+    notifications.sort(key=lambda d: d["created_at"])
+
     question = fetch_data(
         url_for("backend.data.get_question", id_question=id_question), "GET"
     )[0]
 
-    if not get_jwt_identity():
-        is_author = False
-        made_offer = False
-        offer_made = None
-        accepted_offer = False
-        offer_accepted = None
-        offers = []
+    is_author = False
+    made_offer = False
+    offer_made = None
+    accepted_offer = False
+    offer_accepted = None
+    offers = []
 
-    else:
+    user, code = internal_request(url_for("backend.user.get_user"), "GET")
+    print(user, code)
+
+    if user:
         is_author = fetch_data(
             url_for("backend.data.is_question_author", id_question=id_question), "GET"
         )[0]
-        made_offer = False
-        offer_made = None
-        accepted_offer = False
-        offer_accepted = None
-        offers = []
 
-    notifications = fetch_data(url_for("backend.data.fetch_user_notifications"), "GET")
-    notifications.sort(key=lambda d: d["created_at"])
+        if is_author:
+            offers = fetch_data(
+                url_for("backend.data.offers_received", id_question=id_question), "GET"
+            )
+
+        offer_made = fetch_data(
+            url_for("backend.data.question_offer_made", id_question=id_question), "GET"
+        )
+
+        if offer_made:
+            made_offer = True
+            offer_made = fetch_data(
+                url_for("backend.data.question_offer_made", id_question=id_question),
+                "GET",
+            )
+        else:
+            offer_made = None
 
     return render_template(
-        "view.html",
+        "question.html",
         subjects=subjects,
         methods=methods,
         time_intervals=time_intervals,
         notifications=notifications,
-        q=question,
+        user=user,
+        question=question,
         is_author=is_author,
-        made_offer=made_offer,
         offer_made=offer_made,
-        accepted_offer=accepted_offer,
         offer_accepted=offer_accepted,
         offers=offers,
     )
