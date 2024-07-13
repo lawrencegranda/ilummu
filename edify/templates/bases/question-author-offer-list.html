@@ -5,11 +5,11 @@
     <div class="offer">
       <div class="offer-left">
         <div class="offer-user-profile">
-          <img src="https://robohash.org/{{offer['user']}}" alt="Avatar" class="avatar"/>
+          <img src="https://robohash.org/{{offer['user']['username']}}" alt="Avatar" class="avatar"/>
         </div>
         <div class="question-user">
           <p class="question-user-name">
-            {{offer['user']}} 
+            {{offer['user']['username']}} 
             &nbsp;
             <span class="rating">
               {% if offer['rating'] is not number %}
@@ -22,7 +22,7 @@
               {% endif %}
             </span>
           </p>
-          <p class="question-user-info">{{offer['major']}} &#x2022; {{offer['year']}}</p>
+          <p class="question-user-info">{{offer['user']['major']}} &#x2022; {{offer['user']['year']}}</p>
         </div>
       </div>
       <div class="offer-right">

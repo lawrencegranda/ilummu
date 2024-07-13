@@ -6,11 +6,11 @@
     <div class="accepted-offer">
       <div class="offer-left">
         <div class="offer-user-profile">
-          <img src="https://robohash.org/{{offer_accepted['user']}}" alt="Avatar" class="avatar"/>
+          <img src="https://robohash.org/{{offer_accepted['user']['username']}}" alt="Avatar" class="avatar"/>
         </div>
         <div class="question-user">
           <p class="question-user-name">
-            {{offer_accepted['user']}} 
+            {{offer_accepted['user']['username']}} 
             &nbsp;
             <span class="rating">
               {% if not offer_accepted['rating'] %}
@@ -23,7 +23,7 @@
               {% endif %}
             </span>
           </p>
-          <p class="question-user-info">{{offer_accepted['major']}} &#x2022; {{offer_accepted['year']}}</p>
+          <p class="question-user-info">{{offer_accepted['user']['major']}} &#x2022; {{offer_accepted['user']['year']}}</p>
         </div>
       </div>
       <div class="accepted-offer-price">Pay ${{'%.2f' % offer_accepted['amount']}}</div>
@@ -41,11 +41,11 @@
     <div class="accepted-offer">
       <div class="offer-left">
         <div class="offer-user-profile">
-          <img src="https://robohash.org/{{q['user']}}" alt="Avatar" class="avatar"/>
+          <img src="https://robohash.org/{{q['user']['username']}}" alt="Avatar" class="avatar"/>
         </div>
         <div class="question-user">
-          <p class="question-user-name">{{q['user']}}</p>
-          <p class="question-user-info">{{q['major']}} &#x2022; {{q['year']}}</p>
+          <p class="question-user-name">{{q['user']['username']}}</p>
+          <p class="question-user-info">{{q['user']['major']}} &#x2022; {{q['user']['year']}}</p>
         </div>
       </div>
       <div class="accepted-offer-price">Earn ${{'%.2f' % offer_made['amount']}}</div>
