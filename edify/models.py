@@ -151,6 +151,9 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
     # Indicates whether the user is a mock user or not.
     is_mock = db.Column(db.Boolean, nullable=False, default=False)
 
+    # Indicates whether the user is test user or not.
+    is_test = db.Column(db.Boolean, nullable=False, default=False)
+
     # Preferred language by the user for display.
     language = db.Column(
         db.String(30),
@@ -204,6 +207,7 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
             return_dict["year"] = get_college_year(self.graduation)
             return_dict["major"] = self.major.name
             return_dict["rating"] = self.rating
+            return_dict["notifications"] = Notification.to_dict_all(self.notifications)
 
         return return_dict
 

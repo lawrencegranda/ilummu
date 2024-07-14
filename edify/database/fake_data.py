@@ -21,6 +21,42 @@ import string
 fake = Faker()
 
 
+def generate_test_users(num_users):
+    school = db.session.query(School).filter_by(name="Cornell University").first()
+    majors = db.session.query(Major).all()
+
+    for i in range(num_users):
+        phone = f"+1 {''.join(choices(string.digits, k=10))}"
+        while (
+            not validate_phone(phone)
+            or db.session.query(User).filter_by(phone=phone).first()
+        ):
+            phone = f"+1 {''.join(choices(string.digits, k=10))}"
+
+        email = f"user{i}@{school.email_postfix}"
+
+        if db.session.query(User).filter_by(email=email).first():
+            continue
+
+        user = User(
+            username=fake.user_name(),
+            firstname=fake.first_name(),
+            lastname=fake.last_name(),
+            school_id=school.id,
+            major_id=choice(majors).id,
+            graduation=fake.future_date(end_date="+4y"),
+            email=f"user{i}@{school.email_postfix}",
+            phone=phone,
+            password=f"password_user{i}",
+            mail_is_verified=fake.boolean(),
+            phone_is_verified=fake.boolean(),
+            is_mock=True,
+            is_test=True,
+        )
+        db.session.add(user)
+    return
+
+
 def generate_fake_users(num_users):
     school = db.session.query(School).filter_by(name="Cornell University").first()
     majors = db.session.query(Major).all()
@@ -43,8 +79,6 @@ def generate_fake_users(num_users):
             email=fake.email(),
             phone=phone,
             password=fake.password(length=12),
-            token=fake.sha256(),
-            token_last_refresh=fake.date_time_between(start_date="-1y", end_date="now"),
             mail_is_verified=fake.boolean(),
             phone_is_verified=fake.boolean(),
             is_mock=True,
@@ -134,7 +168,8 @@ def generate_fake_notifications(num_notifications):
 
 
 def populate_fake():
-    num_users = 10
+    num_test_users = 3
+    num_users = 5
     num_questions = 20
     num_offers = 30
     num_notifications = 15
@@ -142,6 +177,8 @@ def populate_fake():
     # Generate mock data
     # Add mock data to the database
     with db.session.begin():
+        generate_test_users(num_test_users)
+
         generate_fake_users(num_users)
 
         questions = generate_fake_questions(num_questions)
