@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
+from werkzeug.exceptions import HTTPException
 
 
 # Initialize extensions
@@ -29,18 +30,28 @@ def create_app(config_class):
     from edify.frontend.routes import frontend
     from edify.backend.routes import backend
 
+    # # Return validation errors as JSON
+    # @app.errorhandler(422)
+    # def handle_error(err):
+    #     headers = err.data.get("headers", None)
+    #     messages = err.data.get("messages", ["Invalid request."])
+    #     if headers:
+    #         return jsonify({"errors": messages}), err.code, headers
+    #     else:
+    #         return jsonify({"errors": messages}), err.code
+
+    # -----------------------------------------------------------------------------
+    # Error Handler
+    # -----------------------------------------------------------------------------
+    @frontend.errorhandler(Exception)
+    def handle_error(e):
+        """Return JSON instead of HTML for HTTP errors."""
+        # start with the correct headers and status code from the error
+        print(e)
+        return
+
     app.register_blueprint(frontend)
     app.register_blueprint(backend)
-
-    # Return validation errors as JSON
-    @app.errorhandler(422)
-    def handle_error(err):
-        headers = err.data.get("headers", None)
-        messages = err.data.get("messages", ["Invalid request."])
-        if headers:
-            return jsonify({"errors": messages}), err.code, headers
-        else:
-            return jsonify({"errors": messages}), err.code
 
     print("\n------ URL MAP: ------\n", app.url_map, "\n----------------------\n")
 
