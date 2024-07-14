@@ -23,9 +23,9 @@
 					<div class="notification-center-dimensions">
 						<div class="notification-center">
 							<p class="notifications-title">Notifcations</p>
-							{% for notification in notifications %}
+							{% for notification in user.notifications | sort(reverse=true, attribute='created_at') %}
 							<div class="notification">
-								<p class="notification-text">{{notification['message']}}</p>
+								<p class="notification-text">{{notification.message}}</p>
 								<button class="btn btn-view" type="button">view</button>
 							</div>
 							{% endfor %}
