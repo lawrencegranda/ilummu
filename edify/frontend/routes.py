@@ -106,8 +106,10 @@ def logout():
 
 # Endpoint: /dashboard
 @frontend.route("/dashboard")
-@jwt_required()
+@jwt_required(optional=True)
 def dashboard():
+    user, code = internal_request(url_for("backend.user.get_user"), "GET")
+
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
     subjects.sort(key=lambda d: d["name"])
 
@@ -127,7 +129,7 @@ def dashboard():
         subjects=subjects,
         methods=methods,
         time_intervals=time_intervals,
-        notifications=notifications,
+        user=user,
         questions=questions,
     )
 
@@ -141,6 +143,8 @@ def dashboard():
 @question.route("/<int:id_question>")
 @jwt_required(optional=True)
 def fetch_question(id_question):
+    user, code = internal_request(url_for("backend.user.get_user"), "GET")
+
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
     subjects.sort(key=lambda d: d["name"])
 
@@ -162,9 +166,6 @@ def fetch_question(id_question):
     accepted_offer = False
     offer_accepted = None
     offers = []
-
-    user, code = internal_request(url_for("backend.user.get_user"), "GET")
-    print(user, code)
 
     if user:
         is_author = fetch_data(
