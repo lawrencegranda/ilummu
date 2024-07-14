@@ -85,7 +85,7 @@ def get_user():
     if user:
         return jsonify(user.to_dict(simplified=False)), HTTPStatus.OK
 
-    return jsonify(None), ErrorType.USER_NOT_FOUND
+    return jsonify(None), HTTPStatus.NOT_FOUND
 
 
 # Endpoint: /user/login
