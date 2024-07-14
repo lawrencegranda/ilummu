@@ -2,8 +2,10 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
+from flask_jwt_extended.exceptions import UserLookupError
 from flask_migrate import Migrate
 from werkzeug.exceptions import HTTPException
+from http import HTTPStatus
 
 
 # Initialize extensions
@@ -41,14 +43,19 @@ def create_app(config_class):
     #         return jsonify({"errors": messages}), err.code
 
     # -----------------------------------------------------------------------------
-    # Error Handler
+    # Error Handlers
     # -----------------------------------------------------------------------------
+    @frontend.errorhandler(UserLookupError)
+    def handle_error2(e):
+        # Possible fix: logout to unset cookies
+        return jsonify("User not found"), HTTPStatus.NOT_FOUND
+
     @frontend.errorhandler(Exception)
     def handle_error(e):
-        """Return JSON instead of HTML for HTTP errors."""
-        # start with the correct headers and status code from the error
-        print(e)
-        return
+        return (
+            jsonify("An unexpected error occurred."),
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+        )
 
     app.register_blueprint(frontend)
     app.register_blueprint(backend)

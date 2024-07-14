@@ -20,7 +20,7 @@ from flask_jwt_extended import (
 from edify.utils.decorators import no_token_allowed
 from edify.models import *
 import time
-from edify.utils.utils import internal_request
+from edify.utils.utils import internal_request, error_response
 
 # -----------------------------------------------------------------------------
 # Helper Functions
@@ -143,7 +143,11 @@ def dashboard():
 @question.route("/<int:id_question>")
 @jwt_required(optional=True)
 def fetch_question(id_question):
-    user, code = internal_request(url_for("backend.user.get_user"), "GET")
+    print("HI")
+    # user, code = internal_request(url_for("backend.user.get_user"), "GET")
+    user, code = None, 400
+    print("ERROR", code)
+    print("EEEOR")
 
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
     subjects.sort(key=lambda d: d["name"])
@@ -158,7 +162,12 @@ def fetch_question(id_question):
 
     question = fetch_data(
         url_for("backend.data.get_question", id_question=id_question), "GET"
-    )[0]
+    )
+
+    if not question:
+        return error_response("Not a valid question", HTTPStatus.NOT_FOUND)
+
+    question = question[0]
 
     is_author = False
     made_offer = False
@@ -189,6 +198,8 @@ def fetch_question(id_question):
             )
         else:
             offer_made = None
+
+    print("OKAY")
 
     return render_template(
         "question.html",
