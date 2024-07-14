@@ -5,7 +5,7 @@ Question
 {% endblock %}
 
 {% block navbar %}
-{% include 'bases/navbar-logged.html' %}
+{% include 'bases/navbar-logged.html' if user else 'bases/navbar-not-logged.html' %}
 {% endblock %}
 
 {% block top %}
@@ -13,7 +13,11 @@ Question
 {% endblock %}
 
 {% block content %}
+{% if user %}
+<div class="container main-content logged">
+{% else %}
 <div class="container main-content">
+{% endif %}
   <div class="question-wrapper">
     <div class="question-body">
       <div class="question-top">

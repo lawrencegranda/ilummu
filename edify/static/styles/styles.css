@@ -1448,6 +1448,12 @@ p.question-text {
 
 }
 
+p.login-prompt {
+    font-size: 19px;
+    font-weight: 450;
+    text-align: center;
+}
+
 .comments-bar-container {
     width: 100%;
     display: flex;
@@ -1817,6 +1823,9 @@ button.btn-reply:hover {
 
     .main-content:not(.landing-content) {
         width: 1300px;
+    }
+
+    .main-content.logged:not(.landing-content) {
         margin-left: calc(calc(100vw - 1300px - 350px - 60px) / 2);
     }
 

@@ -13,7 +13,11 @@ Question
 {% endblock %}
 
 {% block content %}
+{% if user %}
+<div class="container main-content logged">
+{% else %}
 <div class="container main-content">
+{% endif %}
   <div class="question-wrapper">
     <div class="question-body">
       <div class="question-top">
@@ -45,13 +49,13 @@ Question
       </div>
     </div>
 
-    <div class="separator"></div>
-
     {% if not user %}
+      <div class="separator"></div>
       <p class="login-prompt">Please <a href="/login">log in</a> to see more details or interact with this question.</p>
     {% else %}
       {% if is_author %}
         {% if offer_accepted %}
+          <div class="separator"></div>
           <div class="accepted-offer-wrapper">
             <div class="accepted-offer">
               <div class="offer-left">
@@ -107,6 +111,7 @@ Question
       {% else %}
         {% import 'macros/offer-declined-macro.html' as macro %}
         {% if offer_made.status == "ACCEPTED" %}
+          <div class="separator"></div>
           <div class="accepted-offer-wrapper">
             <div class="accepted-offer">
               <div class="offer-left">
