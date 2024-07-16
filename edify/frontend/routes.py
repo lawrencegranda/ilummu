@@ -1,12 +1,12 @@
 from flask import (
     Flask,
     render_template,
-    request,
     Blueprint,
     jsonify,
     current_app,
     url_for,
     redirect,
+    request,
 )
 from http import HTTPStatus
 from edify import db, bcrypt
@@ -54,6 +54,26 @@ question = Blueprint("question", __name__, url_prefix="/question")
 # Endpoint: /
 @frontend.route("/")
 def index():
+    subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
+    subjects.sort(key=lambda d: d["name"])
+
+    methods = fetch_data(url_for("backend.data.fetch_methods"), "GET")
+    methods.sort(key=lambda d: d["name"])
+
+    time_intervals = fetch_data(url_for("backend.data.fetch_intervals"), "GET")
+
+    return render_template(
+        "/home.html",
+        subjects=subjects,
+        methods=methods,
+        time_intervals=time_intervals,
+    )
+
+
+# Endpoint: /home
+@frontend.route("/home")
+@jwt_required(optional=True)
+def home():
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
     subjects.sort(key=lambda d: d["name"])
 
@@ -143,11 +163,7 @@ def dashboard():
 @question.route("/<int:id_question>")
 @jwt_required(optional=True)
 def fetch_question(id_question):
-    print("HI")
-    # user, code = internal_request(url_for("backend.user.get_user"), "GET")
-    user, code = None, 400
-    print("ERROR", code)
-    print("EEEOR")
+    user, code = internal_request(url_for("backend.user.get_user"), "GET")
 
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
     subjects.sort(key=lambda d: d["name"])
@@ -198,8 +214,6 @@ def fetch_question(id_question):
             )
         else:
             offer_made = None
-
-    print("OKAY")
 
     return render_template(
         "question.html",

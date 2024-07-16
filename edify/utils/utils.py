@@ -5,9 +5,8 @@ import random
 import json
 import random
 import phonenumbers
-from flask import jsonify, current_app, url_for, request as flask_request
+from flask import jsonify, current_app, url_for, request
 from werkzeug.test import EnvironBuilder
-from werkzeug.wrappers import Request
 
 
 def internal_request(url, method="GET"):
@@ -16,7 +15,7 @@ def internal_request(url, method="GET"):
     env = builder.get_environ()
 
     # Check if the user has a JWT token cookie and add it to the environment
-    token = flask_request.cookies.get("access_token_cookie")
+    token = request.cookies.get("access_token_cookie")
     if token:
         env["HTTP_COOKIE"] = f"access_token_cookie={token}"
 

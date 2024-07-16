@@ -38,6 +38,9 @@ def generate_test_users(num_users):
         if db.session.query(User).filter_by(email=email).first():
             continue
 
+        password = User.hash_password(f"password_user{i}")
+        print(f"password_user{i}")
+
         user = User(
             username=fake.user_name(),
             firstname=fake.first_name(),
@@ -47,10 +50,10 @@ def generate_test_users(num_users):
             graduation=fake.future_date(end_date="+4y"),
             email=f"user{i}@{school.email_postfix}",
             phone=phone,
-            password=f"password_user{i}",
+            password=password,
             mail_is_verified=fake.boolean(),
             phone_is_verified=fake.boolean(),
-            is_mock=True,
+            is_mock=False,
             is_test=True,
         )
         db.session.add(user)
@@ -69,6 +72,8 @@ def generate_fake_users(num_users):
         ):
             phone = f"+1 {''.join(choices(string.digits, k=10))}"
 
+        password = User.hash_password(fake.password(length=12))
+
         user = User(
             username=fake.user_name(),
             firstname=fake.first_name(),
@@ -78,7 +83,7 @@ def generate_fake_users(num_users):
             graduation=fake.future_date(end_date="+4y"),
             email=fake.email(),
             phone=phone,
-            password=fake.password(length=12),
+            password=password,
             mail_is_verified=fake.boolean(),
             phone_is_verified=fake.boolean(),
             is_mock=True,

@@ -1,4 +1,4 @@
-from flask import Blueprint, url_for, jsonify, current_app
+from flask import Blueprint, url_for, jsonify, current_app, request
 from flask_jwt_extended import (
     create_access_token,
     jwt_required,
@@ -32,7 +32,7 @@ from edify.models import (
     NotificationType,
     Major,
 )
-from edify import db, bcrypt
+from edify import db
 from http import HTTPStatus
 from typing import Optional, Any
 
@@ -96,7 +96,7 @@ def login(args):
     user = db.session.query(User).filter_by(email=args["email"], is_mock=False).first()
 
     # Check if user exists and if the given password is correct
-    if not user or not bcrypt.check_password_hash(user.password, args["password"]):
+    if not user or not user.check_password(args["password"]):
         return error_response(
             "Incorrect email or password", ErrorType.INCORRECT_CREDENTIALS
         )
@@ -206,7 +206,7 @@ def new_user(args):
         return error_response("Invalid Major.", ErrorType.BAD_REQUEST)
 
     # Hash password  before storing it in the db for privacy purposes
-    hashed_password = bcrypt.generate_password_hash(args["password"]).decode("utf-8")
+    hashed_password = User.hash_password(args["password"])
 
     # New Username (funny)
     n = 3

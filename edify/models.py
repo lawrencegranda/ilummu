@@ -1,4 +1,4 @@
-from edify import db, jwt
+from edify import db, jwt, bcrypt
 from edify.utils.constants import (
     AuthLevelEnum,
     SupportedLanguagesEnum,
@@ -164,6 +164,13 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
 
     # Profile picture
     image_file = db.Column(db.String(40), nullable=False, default="default.jpg")
+
+    def check_password(self, password: str) -> bool:
+        return bcrypt.check_password_hash(self.password, password)
+
+    @staticmethod
+    def hash_password(password: str) -> str:
+        return bcrypt.generate_password_hash(password).decode("utf-8")
 
     def get_reset_token(self, expires_sec: int = 18000) -> Any:
         return create_access_token(
