@@ -129,7 +129,7 @@ def get_college_year(date: datetime.date) -> str:
 
 
 def get_time_ago(date: datetime) -> str:
-    current = datetime.now()
+    current = datetime.utcnow()
     diff = current - date
 
     if diff < timedelta(minutes=1):

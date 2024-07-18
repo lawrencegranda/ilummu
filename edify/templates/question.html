@@ -51,7 +51,7 @@ Question
 
     {% if not user %}
       <div class="separator"></div>
-      <p class="login-prompt">Please <a href="/login">log in</a> to see more details or interact with this question.</p>
+      <p class="question-statement">Please <a href="/login">log in</a> to see more details or interact with this question.</p>
     {% else %}
       {% if is_author %}
         {% if offer_accepted %}
@@ -154,6 +154,8 @@ Question
           {% elif offer_made.status == "DECLINED" %}
             {{ macro.declined_offer('You can make another offer or find another question.') }}
           {% else %}
+            <div class="separator"></div>
+            <p class="question-statement">Waiting for the student to accept your offer.</p>
           {% endif %}
         {% endif %}
       {% endif%}
