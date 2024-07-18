@@ -53,21 +53,14 @@ question = Blueprint("question", __name__, url_prefix="/question")
 
 # Endpoint: /
 @frontend.route("/")
+@jwt_required(optional=True)
 def index():
-    subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
-    subjects.sort(key=lambda d: d["name"])
+    user, code = internal_request(url_for("backend.user.get_user"), "GET")
 
-    methods = fetch_data(url_for("backend.data.fetch_methods"), "GET")
-    methods.sort(key=lambda d: d["name"])
-
-    time_intervals = fetch_data(url_for("backend.data.fetch_intervals"), "GET")
-
-    return render_template(
-        "/home.html",
-        subjects=subjects,
-        methods=methods,
-        time_intervals=time_intervals,
-    )
+    if user:
+        return dashboard()
+    else:
+        return home()
 
 
 # Endpoint: /home
@@ -188,7 +181,6 @@ def fetch_question(id_question):
     is_author = False
     made_offer = False
     offer_made = None
-    accepted_offer = False
     offer_accepted = None
     offers = []
 
@@ -201,6 +193,9 @@ def fetch_question(id_question):
             offers = fetch_data(
                 url_for("backend.data.offers_received", id_question=id_question), "GET"
             )
+            for offer in offers:
+                if offer["status"] == OfferStatusEnum.ACCEPTED:
+                    offer_accepted = offer
 
         offer_made = fetch_data(
             url_for("backend.data.question_offer_made", id_question=id_question), "GET"

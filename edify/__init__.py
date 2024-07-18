@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import JWTManager, unset_access_cookies
 from flask_jwt_extended.exceptions import UserLookupError
 from flask_migrate import Migrate
 from werkzeug.exceptions import HTTPException
@@ -21,7 +21,7 @@ def create_app(config_class):
 
     # Passing app as a parameter here instead of on initialization
     # (FlaskDoc)
-    # This is so that the extension object does not initialy get bound to the application.
+    # This is so that the extension object does not initially get bound to the application.
     # Using this design pattern, no application specific state is stored on the extension
     # object so one extension object can be used for multiple apps.
     db.init_app(app)
@@ -48,10 +48,14 @@ def create_app(config_class):
     @frontend.errorhandler(UserLookupError)
     def handle_error2(e):
         # Possible fix: logout to unset cookies
-        return jsonify("User not found"), HTTPStatus.NOT_FOUND
+        response = jsonify("User not found. Try again...")
+        unset_access_cookies(response)
+
+        return response, HTTPStatus.NOT_FOUND
 
     @frontend.errorhandler(Exception)
     def handle_error(e):
+        print(e)
         return (
             jsonify("An unexpected error occurred."),
             HTTPStatus.INTERNAL_SERVER_ERROR,
