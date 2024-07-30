@@ -1,7 +1,12 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-from flask_jwt_extended import JWTManager, unset_access_cookies, jwt_required
+from flask_jwt_extended import (
+    JWTManager,
+    unset_jwt_cookies,
+    jwt_required,
+    verify_jwt_in_request,
+)
 from flask_jwt_extended.exceptions import UserLookupError
 from flask_migrate import Migrate
 from werkzeug.exceptions import HTTPException
@@ -32,32 +37,25 @@ def create_app(config_class):
     from edify.frontend.routes import frontend
     from edify.backend.routes import backend
 
-    # # Return validation errors as JSON
-    # @app.errorhandler(422)
-    # def handle_error(err):
-    #     headers = err.data.get("headers", None)
-    #     messages = err.data.get("messages", ["Invalid request."])
-    #     if headers:
-    #         return jsonify({"errors": messages}), err.code, headers
-    #     else:
-    #         return jsonify({"errors": messages}), err.code
-
-    @app.after_request
-    @jwt_required(optional=True)
-    def check_access_cookie(response):
-        return response
-
     # -----------------------------------------------------------------------------
     # Error Handlers
     # -----------------------------------------------------------------------------
     @frontend.errorhandler(UserLookupError)
-    @frontend.errorhandler(ExpiredSignatureError)
-    def handle_error2(e):
+    def invalid_user(e):
         # Possible fix: logout to unset cookies
-        response = jsonify("User not found. Try again...")
-        unset_access_cookies(response)
+        print(f"User not found: {e}")
+        return redirect(url_for("frontend.logout"))
 
-        return response, HTTPStatus.NOT_FOUND
+    @frontend.errorhandler(ExpiredSignatureError)
+    def expired_jwt(e):
+        token = verify_jwt_in_request(optional=True, refresh=True)
+
+        if not token:
+            return redirect(url_for("frontend.logout"))
+
+        print(token)
+
+        return e
 
     @frontend.errorhandler(Exception)
     def handle_error(e):

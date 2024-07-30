@@ -3,7 +3,8 @@ from flask_jwt_extended import (
     jwt_required,
     current_user,
     set_access_cookies,
-    unset_access_cookies,
+    set_refresh_cookies,
+    unset_jwt_cookies,
 )
 from flask_login import UserMixin
 from webargs import fields, validate
@@ -52,6 +53,11 @@ def generate_access_token(user: User) -> Any:
     return access_token
 
 
+def generate_refresh_token(user: User) -> Any:
+    refresh_token = user.get_refresh_token()
+    return refresh_token
+
+
 # -----------------------------------------------------------------------------
 # Route Blueprint
 # -----------------------------------------------------------------------------
@@ -71,7 +77,7 @@ def logout():
     """Endpoint to log out a user."""
 
     response = jsonify({"message": "Successfully logged out."})
-    unset_access_cookies(response)
+    unset_jwt_cookies(response)
 
     return (response, HTTPStatus.OK)
 
@@ -122,7 +128,13 @@ def login(args):
     response = jsonify(
         {"access_token": access_token, "user": user.to_dict(simplified=True)}
     )
+
     set_access_cookies(response, access_token)
+    set_refresh_cookies(
+        response,
+        generate_refresh_token(user),
+        max_age=current_app.config["JWT_REFRESH_TOKEN_EXPIRES"],
+    )
 
     return (response, HTTPStatus.OK)
 
@@ -243,6 +255,12 @@ def new_user(args):
     response = jsonify(
         {"access_token": access_token, "user": user.to_dict(simplified=True)}
     )
+
     set_access_cookies(response, access_token)
+    set_refresh_cookies(
+        response,
+        generate_refresh_token(user),
+        max_age=current_app.config["JWT_REFRESH_TOKEN_EXPIRES"],
+    )
 
     return (response, HTTPStatus.CREATED)

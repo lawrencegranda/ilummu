@@ -115,7 +115,7 @@ def signup():
 
 # Endpoint: /logout
 @frontend.route("/logout")
-@jwt_required()
+@jwt_required(optional=True)
 def logout():
     response = internal_request(url_for("backend.user.logout"), method="POST")
 
