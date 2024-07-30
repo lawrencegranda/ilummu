@@ -120,14 +120,12 @@ def logout():
     response = internal_request(url_for("backend.user.logout"), method="POST")
 
     # If the backend logout was successful, clear the cookies and redirect
-    if response.status_code == HTTPStatus.OK:
-        response = redirect(url_for("frontend.index"))
-        unset_jwt_cookies(response)
-        return response
+    if response.status_code != HTTPStatus.OK:
+        print("Unsuccessful logout.")
 
-    print("Unsuccessful logout.")
-
-    return redirect(url_for("frontend.index"))
+    response = redirect(url_for("frontend.login"))
+    unset_jwt_cookies(response)
+    return response
 
 
 # Endpoint: /dashboard
