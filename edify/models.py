@@ -20,7 +20,7 @@ from edify.utils.utils import (
 from abc import ABCMeta, ABC, abstractmethod
 from sqlalchemy import Index, UniqueConstraint, event
 from flask_login import UserMixin
-from flask_jwt_extended import create_access_token, decode_token
+from flask_jwt_extended import create_access_token, decode_token, create_refresh_token
 from datetime import datetime, timedelta
 from flask import current_app, jsonify
 from collections import OrderedDict, defaultdict
@@ -174,6 +174,9 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
 
     def get_reset_token(self) -> Any:
         return create_access_token(identity=self.id)
+
+    def get_refresh_token(self) -> Any:
+        return create_refresh_token(identity=self.id)
 
     @staticmethod
     def verify_reset_token(token):
