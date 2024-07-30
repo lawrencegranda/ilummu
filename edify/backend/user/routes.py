@@ -109,13 +109,8 @@ def login(args):
     # if user.phone_is_verified is False:
     #     return error_response("Phone not verified", ErrorType.USER_NOT_VERIFIED)
 
-    # Authentication token to be used in subsequent requests
-    access_token = create_access_token(
-        identity=user.id, expires_delta=timedelta(days=5)
-    )
-
     # Generate and commit the access token for the user for 5 days
-    generate_access_token(user, 5)
+    access_token = generate_access_token(user, 5)
     db.session.commit()
 
     if user.auth_level in [
@@ -152,7 +147,6 @@ def login(args):
 )
 def new_user(args):
     """Endpoint to create a new user."""
-    print(args)
     # Trim all string values in args
     for key, value in args.items():
         if isinstance(value, str):

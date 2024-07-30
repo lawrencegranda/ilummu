@@ -21,6 +21,8 @@ from edify.utils.decorators import no_token_allowed
 from edify.models import *
 import time
 from edify.utils.utils import internal_request, error_response
+from webargs import fields, validate
+from webargs.flaskparser import use_args
 
 # -----------------------------------------------------------------------------
 # Helper Functions
@@ -143,6 +145,32 @@ def dashboard():
         methods=methods,
         time_intervals=time_intervals,
         user=user,
+        questions=questions,
+    )
+
+
+# Endpoint: /list
+@frontend.route("/list", methods=["GET"])
+@use_args({"field": fields.Str(required=False), "text": fields.Str(required=False)})
+def question_list():
+    # Trim all string values in args
+    for key, value in args.items():
+        if isinstance(value, str):
+            args[key] = value.strip().lowe()
+
+    questions = fetch_data(url_for("backend.data.fetch_questions"), "GET")
+
+    if args["field"]:
+        field = None
+    else:
+        field = None
+
+    text = args["field"] if args["field"] else ""
+
+    questions.sort(key=lambda d: (d["solved"], d["created_at"]))
+
+    return render_template(
+        "bases/question-list.html",
         questions=questions,
     )
 

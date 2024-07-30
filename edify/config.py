@@ -1,5 +1,6 @@
 import os
 from edify.utils.constants import EdifyEnvironments
+from datetime import timedelta
 
 
 class Config:
@@ -25,13 +26,17 @@ class Config:
 
     # If true this will only allow the cookies that contain your JWTs to be sent
     # over https. In production, this should always be set to True.
-    JWT_COOKIE_SECURE = False
+    JWT_COOKIE_SECURE = True
 
     # Disable CSRF protection. In almost every case, this is a bad idea.
     # See examples/csrf_protection_with_cookies.py for how safely store JWTs
     # in cookies.
     JWT_COOKIE_CSRF_PROTECT = False
 
-    # Controls if the cookies will be set as session cookies,which are deleted
+    # Controls if the cookies will be set as session cookies, which are deleted
     # when the browser is closed.
     JWT_SESSION_COOKIE = False
+
+    # Control expiration time
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
