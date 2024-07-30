@@ -1,6 +1,5 @@
 from flask import Blueprint, url_for, jsonify, current_app, request
 from flask_jwt_extended import (
-    create_access_token,
     jwt_required,
     current_user,
     set_access_cookies,
@@ -46,8 +45,8 @@ def get_current_user() -> Optional[User]:
     return current_user if isinstance(current_user, UserMixin) else None
 
 
-def generate_access_token(user: User, days: int = 5) -> Any:
-    access_token = user.get_reset_token(timedelta(days=days).total_seconds())
+def generate_access_token(user: User) -> Any:
+    access_token = user.get_reset_token()
     user.token = access_token
     user.token_last_refresh = datetime.utcnow()
     return access_token
@@ -109,8 +108,8 @@ def login(args):
     # if user.phone_is_verified is False:
     #     return error_response("Phone not verified", ErrorType.USER_NOT_VERIFIED)
 
-    # Generate and commit the access token for the user for 5 days
-    access_token = generate_access_token(user, 5)
+    # Generate and commit the access token for the user
+    access_token = generate_access_token(user)
     db.session.commit()
 
     if user.auth_level in [
@@ -237,8 +236,8 @@ def new_user(args):
     db.session.add(user)
     db.session.commit()
 
-    # Generate and commit the access token for the user for 5 days
-    access_token = generate_access_token(user, 5)
+    # Generate and commit the access token for the user
+    access_token = generate_access_token(user)
     db.session.commit()
 
     response = jsonify(

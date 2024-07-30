@@ -45,7 +45,7 @@ def create_app(config_class):
     @app.after_request
     @jwt_required(optional=True)
     def check_access_cookie(response):
-        print("hello...")
+        return response
 
     # -----------------------------------------------------------------------------
     # Error Handlers

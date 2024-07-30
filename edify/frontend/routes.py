@@ -30,13 +30,22 @@ from webargs.flaskparser import use_args
 
 
 def fetch_data(url, method="GET"):
-    data, status = internal_request(url, method)
+    response = internal_request(url, method)
+
+    # Parse the response
+    data, status = response.get_json(), response.status_code
 
     if status != HTTPStatus.OK:
         print(f"fetch_data: {status}")
         return []
 
     return data.get("data", [])
+
+
+def get_user():
+    response = internal_request(url_for("backend.user.get_user"), "GET")
+
+    return response.get_json()
 
 
 # -----------------------------------------------------------------------------
@@ -57,7 +66,7 @@ question = Blueprint("question", __name__, url_prefix="/question")
 @frontend.route("/")
 @jwt_required(optional=True)
 def index():
-    user, code = internal_request(url_for("backend.user.get_user"), "GET")
+    user = get_user()
 
     if user:
         return dashboard()
@@ -108,13 +117,15 @@ def signup():
 @frontend.route("/logout")
 @jwt_required()
 def logout():
-    response, status = internal_request(url_for("backend.user.logout"), method="POST")
+    response = internal_request(url_for("backend.user.logout"), method="POST")
 
     # If the backend logout was successful, clear the cookies and redirect
-    if status == HTTPStatus.OK:
+    if response.status_code == HTTPStatus.OK:
         response = redirect(url_for("frontend.index"))
         unset_jwt_cookies(response)
         return response
+
+    print("Unsuccessful logout.")
 
     return redirect(url_for("frontend.index"))
 
@@ -123,7 +134,7 @@ def logout():
 @frontend.route("/dashboard")
 @jwt_required(optional=True)
 def dashboard():
-    user, code = internal_request(url_for("backend.user.get_user"), "GET")
+    user = get_user()
 
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
     subjects.sort(key=lambda d: d["name"])
@@ -184,7 +195,7 @@ def question_list():
 @question.route("/<int:id_question>")
 @jwt_required(optional=True)
 def fetch_question(id_question):
-    user, code = internal_request(url_for("backend.user.get_user"), "GET")
+    user = get_user()
 
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
     subjects.sort(key=lambda d: d["name"])
