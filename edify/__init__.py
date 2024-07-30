@@ -1,12 +1,12 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-from flask_jwt_extended import JWTManager, unset_access_cookies
+from flask_jwt_extended import JWTManager, unset_access_cookies, jwt_required
 from flask_jwt_extended.exceptions import UserLookupError
 from flask_migrate import Migrate
 from werkzeug.exceptions import HTTPException
 from http import HTTPStatus
-
+from jwt.exceptions import ExpiredSignatureError
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -42,10 +42,16 @@ def create_app(config_class):
     #     else:
     #         return jsonify({"errors": messages}), err.code
 
+    @app.after_request
+    @jwt_required(optional=True)
+    def check_access_cookie(response):
+        print("hello...")
+
     # -----------------------------------------------------------------------------
     # Error Handlers
     # -----------------------------------------------------------------------------
     @frontend.errorhandler(UserLookupError)
+    @frontend.errorhandler(ExpiredSignatureError)
     def handle_error2(e):
         # Possible fix: logout to unset cookies
         response = jsonify("User not found. Try again...")
@@ -55,7 +61,7 @@ def create_app(config_class):
 
     @frontend.errorhandler(Exception)
     def handle_error(e):
-        print(e)
+        print(f"{type(e)}: {e}")
         return (
             jsonify("An unexpected error occurred."),
             HTTPStatus.INTERNAL_SERVER_ERROR,
