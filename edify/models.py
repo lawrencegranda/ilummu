@@ -172,10 +172,8 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
     def hash_password(password: str) -> str:
         return bcrypt.generate_password_hash(password).decode("utf-8")
 
-    def get_reset_token(self, expires_sec: int = 18000) -> Any:
-        return create_access_token(
-            identity=self.id, expires_delta=timedelta(seconds=expires_sec)
-        )
+    def get_reset_token(self) -> Any:
+        return create_access_token(identity=self.id)
 
     @staticmethod
     def verify_reset_token(token):

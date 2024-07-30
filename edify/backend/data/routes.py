@@ -44,11 +44,11 @@ def fetch_user_subjects():
     else:
         school = db.session.query(School).filter_by(name="Cornell University").first()
 
-    response, status = internal_request(
+    response = internal_request(
         url_for("backend.data.fetch_school_subjects", id_school=school.id), method="GET"
     )
 
-    return jsonify(response), status
+    return response
 
 
 # Endpoint: /data/school/<id_school>/subjects
@@ -72,11 +72,11 @@ def fetch_user_majors():
     else:
         school = db.session.query(School).filter_by(name="Cornell University").first()
 
-    response, status = internal_request(
+    response = internal_request(
         url_for("backend.data.fetch_school_majors", id_school=school.id), method="GET"
     )
 
-    return jsonify(response), status
+    return response
 
 
 # Endpoint: /data/school/<id_school>/majors

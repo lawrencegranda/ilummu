@@ -23,10 +23,7 @@ def internal_request(url, method="GET"):
     with current_app.test_request_context(environ_overrides=env):
         response = current_app.full_dispatch_request()
 
-    # Parse the response
-    data, status = response.get_json(), response.status_code
-
-    return data, status
+    return response
 
 
 def error_response(message: str, error_type: ErrorType) -> tuple:
