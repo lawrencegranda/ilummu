@@ -35,8 +35,12 @@ class Config:
 
     # Controls if the cookies will be set as session cookies, which are deleted
     # when the browser is closed.
-    JWT_SESSION_COOKIE = False
+    JWT_SESSION_COOKIE = True
 
-    # Control expiration time
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=30)
-    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=60)
+    # Control expiration time in seconds
+    JWT_ACCESS_TOKEN_EXPIRES: int = int(timedelta(minutes=30).total_seconds())
+    JWT_REFRESH_TOKEN_EXPIRES: int = int(timedelta(days=60).total_seconds())
+
+    # Cookies should only be sent with requests from the same site, providing maximum
+    # CSRF protection.
+    JWT_COOKIE_SAMESITE = "Strict"
