@@ -8,6 +8,7 @@ import flask
 from flask import jsonify, current_app, url_for, request
 from werkzeug.test import EnvironBuilder
 from typing import Optional, Any
+from flask import typing as flask_typing
 
 
 # Extracts the access token from the request headers
@@ -55,7 +56,7 @@ def get_request_cookie(request: flask.Request) -> Optional[str]:
 
 
 # Creates an internal request within the Flask application using test request context
-def internal_request(url: str, method: str = "GET") -> flask.Response:
+def internal_request(url: str, method: str = "GET") -> flask_typing.ResponseReturnValue:
     """
     Creates an internal request within the Flask application using test request context.
 

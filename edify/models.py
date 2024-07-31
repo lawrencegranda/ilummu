@@ -521,6 +521,9 @@ class Notification(BaseModel):
             db.select(NotificationType).filter_by(id=target.type_id)
         ).fetchone()
 
+        if not notification_type:
+            raise ValueError(f"NOTIFICATION MODEL: Notification type is invalid.")
+
         if notification_type.question_required and target.question_id is None:
             raise ValueError(
                 f'NOTIFICATION MODEL: Notification type requires a question ("{target.type_id}").'
