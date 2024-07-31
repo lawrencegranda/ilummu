@@ -115,7 +115,13 @@ def get_user():
 
 # Endpoint: /user/login
 @user.route("/login", methods=["POST"])
-@use_args({"email": fields.Email(required=True), "password": fields.Str(required=True)})
+@use_args(
+    {
+        "email": fields.Email(required=True),
+        "password": fields.Str(required=True),
+        "remember": fields.Boolean(required=False),
+    }
+)
 def login(args):
     # Get the user corresponding to the email that is logging in
     user = db.session.query(User).filter_by(email=args["email"], is_mock=False).first()
@@ -153,11 +159,13 @@ def login(args):
         response,
         access_token,
     )
-    set_refresh_cookies(
-        response,
-        generate_refresh_token(user),
-        max_age=current_app.config["JWT_REFRESH_TOKEN_EXPIRES"],
-    )
+
+    if "remember" in args and args["remember"]:
+        set_refresh_cookies(
+            response,
+            generate_refresh_token(user),
+            max_age=current_app.config["JWT_REFRESH_TOKEN_EXPIRES"],
+        )
 
     return (response, HTTPStatus.OK)
 
@@ -177,6 +185,7 @@ def login(args):
         "major": fields.Str(required=True),
         "graduation": fields.Date(required=True),
         "language": fields.Str(required=False),
+        "remember": fields.Boolean(required=False),
     }
 )
 def new_user(args):
@@ -283,10 +292,12 @@ def new_user(args):
         response,
         access_token,
     )
-    set_refresh_cookies(
-        response,
-        generate_refresh_token(user),
-        max_age=current_app.config["JWT_REFRESH_TOKEN_EXPIRES"],
-    )
+
+    if "remember" in args and args["remember"]:
+        set_refresh_cookies(
+            response,
+            generate_refresh_token(user),
+            max_age=current_app.config["JWT_REFRESH_TOKEN_EXPIRES"],
+        )
 
     return (response, HTTPStatus.CREATED)

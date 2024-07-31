@@ -106,6 +106,9 @@ Sign Up
           return;
         }
 
+        var remember = $("#signup-remember-box").prop("checked")
+        console.log(remember)
+
         // If validation passes, format the data
         var data = {
           email: netid + "@cornell.edu",
@@ -113,6 +116,7 @@ Sign Up
           password: password,
           major: major,
           graduation: gradyear + "-05-30", // Assuming May 30th as a placeholder date
+          remember: remember,
         };
 
         // Send the data via AJAX POST request
@@ -169,10 +173,14 @@ Sign Up
           return;
         }
 
+        var remember = $("#signup-remember-box").prop("checked")
+        console.log(remember)
+
         // If validation passes, format the data
         var data = {
           email: netid + "@cornell.edu",
           password: password,
+          remember: remember,
         };
 
         // Send the data via AJAX POST request

@@ -38,7 +38,7 @@ class Config:
     JWT_SESSION_COOKIE = True
 
     # Control expiration time in seconds
-    JWT_REFRESH_TOKEN_EXPIRES: int = int(timedelta(seconds=7).total_seconds())
+    JWT_REFRESH_TOKEN_EXPIRES: int = int(timedelta(days=90).total_seconds())
 
     # Cookies should only be sent with requests from the same site, providing maximum
     # CSRF protection.
