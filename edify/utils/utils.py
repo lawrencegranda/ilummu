@@ -4,12 +4,14 @@ from datetime import datetime, timedelta
 import random
 import json
 import phonenumbers
+import flask
 from flask import jsonify, current_app, url_for, request
 from werkzeug.test import EnvironBuilder
+from typing import Optional, Any
 
 
 # Extracts the access token from the request headers
-def get_access_header(request):
+def get_access_header(request: flask.Request) -> Optional[str]:
     """
     Extracts the access token from the request headers.
 
@@ -31,7 +33,7 @@ def get_access_header(request):
 
 
 # Extracts the access token from the request, either from headers or cookies
-def get_request_cookie(request):
+def get_request_cookie(request: flask.Request) -> Optional[str]:
     """
     Extracts the access token from the request, either from headers or cookies.
 
@@ -53,7 +55,7 @@ def get_request_cookie(request):
 
 
 # Creates an internal request within the Flask application using test request context
-def internal_request(url, method="GET"):
+def internal_request(url: str, method: str = "GET") -> flask.Response:
     """
     Creates an internal request within the Flask application using test request context.
 
@@ -118,7 +120,7 @@ validate_email_postfix = lambda x: email_postfix_regex.match(x)
 
 
 # Validates a phone number using the phonenumbers library
-def validate_phone(phone):
+def validate_phone(phone: str) -> bool:
     """
     Validates a phone number using the phonenumbers library.
 
@@ -139,7 +141,7 @@ def validate_phone(phone):
 
 
 # Formats a phone number to international format if it is valid
-def format_phone(phone):
+def format_phone(phone: str) -> str:
     """
     Formats a phone number to international format if it is valid.
 
@@ -161,7 +163,7 @@ def format_phone(phone):
 
 
 # Validates a date string in the format YYYY-MM-DD
-def validate_date(date):
+def validate_date(date: str) -> bool:
     """
     Validates a date string in the format YYYY-MM-DD.
 
@@ -179,7 +181,7 @@ def validate_date(date):
 
 
 # Loads username data from a JSON file
-def load_username_data(file_path):
+def load_username_data(file_path: str) -> dict:
     """
     Loads username data from a JSON file.
 
@@ -194,7 +196,7 @@ def load_username_data(file_path):
 
 
 # Generates a funny username using adjectives and nouns from the loaded data
-def generate_funny_username(n):
+def generate_funny_username(n: int) -> str:
     """
     Generates a funny username using adjectives and nouns from the loaded data.
 
@@ -222,7 +224,7 @@ def generate_funny_username(n):
 
 
 # Strips leading and trailing whitespace from a string
-def format_strip(target, value, oldvalue, initiator):
+def format_strip(target: Any, value: str, oldvalue: Any, initiator: Any) -> str:
     """
     Strips leading and trailing whitespace from a string.
 
@@ -249,12 +251,12 @@ format_upper_case = lambda *x: format_strip(*x).upper()
 
 
 # Determines the college year based on the given date
-def get_college_year(date: datetime.date) -> str:
+def get_college_year(date: datetime) -> str:
     """
     Determines the college year based on the given date.
 
     Args:
-        date (datetime.date): The date to calculate the college year from.
+        date (datetime): The date to calculate the college year from.
 
     Returns:
         str: The college year as a string (e.g., 'Senior', 'Junior').
@@ -320,7 +322,7 @@ def get_time_ago(date: datetime) -> str:
 
 
 # Trims a string to a specified length and appends ellipsis if the string exceeds the length
-def trim_text(string: str, length: int):
+def trim_text(string: str, length: int) -> str:
     """
     Trims a string to a specified length and appends ellipsis if the string exceeds the length.
 
