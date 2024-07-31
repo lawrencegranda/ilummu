@@ -1,17 +1,19 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, session, url_for, redirect
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import (
     JWTManager,
     unset_jwt_cookies,
     jwt_required,
-    verify_jwt_in_request,
+    get_jwt_identity,
+    set_access_cookies,
 )
 from flask_jwt_extended.exceptions import UserLookupError
 from flask_migrate import Migrate
 from werkzeug.exceptions import HTTPException
 from http import HTTPStatus
 from jwt.exceptions import ExpiredSignatureError
+from edify.utils.utils import internal_request
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -37,6 +39,32 @@ def create_app(config_class):
     from edify.frontend.routes import frontend
     from edify.backend.routes import backend
 
+    @frontend.before_request
+    @jwt_required(optional=True, refresh=True)
+    def before_request_func():
+        id = get_jwt_identity()
+
+        if id and "access_token_cookie" not in request.cookies:
+            print(request.cookies)
+            response = internal_request(url_for("backend.user.refresh"))
+
+            # Parse the response
+            data, status = response.get_json(), response.status_code
+            print(data, status)
+
+            if status != HTTPStatus.OK:
+                response = redirect(url_for("frontend.login"))
+                unset_jwt_cookies(response)
+                return response
+
+            # Modify the request to include the new access token cookie
+            request.environ["HTTP_COOKIE"] = (
+                f"access_token_cookie={data['access_token']}; {request.environ.get('HTTP_COOKIE', '')}"
+            )
+
+            print(request.cookies)
+            print(request.environ["HTTP_COOKIE"])
+
     # -----------------------------------------------------------------------------
     # Error Handlers
     # -----------------------------------------------------------------------------
@@ -47,15 +75,29 @@ def create_app(config_class):
         return redirect(url_for("frontend.logout"))
 
     @frontend.errorhandler(ExpiredSignatureError)
+    @jwt_required(optional=True, refresh=True)
     def expired_jwt(e):
-        token = verify_jwt_in_request(optional=True, refresh=True)
+        id = get_jwt_identity()
 
-        if not token:
-            return redirect(url_for("frontend.logout"))
+        if not id:
+            response = redirect(url_for("frontend.login"))
+            unset_jwt_cookies(response)
+            return response
 
-        print(token)
+        response = internal_request(url_for("backend.user.refresh"))
 
-        return e
+        # Parse the response
+        data, status = response.get_json(), response.status_code
+
+        if status != HTTPStatus.OK:
+            response = redirect(url_for("frontend.login"))
+            unset_jwt_cookies(response)
+            return response
+
+        response = redirect(url_for("frontend.dashboard"))
+        set_access_cookies(response, data["access_token"])
+
+        return response
 
     @frontend.errorhandler(Exception)
     def handle_error(e):

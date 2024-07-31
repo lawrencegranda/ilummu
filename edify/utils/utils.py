@@ -13,11 +13,19 @@ def internal_request(url, method="GET"):
     # Build the environment
     builder = EnvironBuilder(path=url, method=method)
     env = builder.get_environ()
+    env["HTTP_COOKIE"] = ""
 
     # Check if the user has a JWT token cookie and add it to the environment
     token = request.cookies.get("access_token_cookie")
     if token:
         env["HTTP_COOKIE"] = f"access_token_cookie={token}"
+
+    # Check if the user has a JWT refresh token
+    refresh_token = request.cookies.get("refresh_token_cookie")
+    if refresh_token:
+        env["HTTP_COOKIE"] = (
+            f'{env["HTTP_COOKIE"]}; refresh_token_cookie={refresh_token}'
+        )
 
     # Create the test request context with the environment
     with current_app.test_request_context(environ_overrides=env):
