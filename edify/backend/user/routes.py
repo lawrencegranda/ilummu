@@ -87,8 +87,9 @@ def logout():
 @jwt_required(refresh=True)
 def refresh():
     """Endpoint to refresh the user's access token."""
-
     user = get_current_user()
+
+    print(f"Refreshing token... User {user.id}")
 
     access_token = generate_access_token(user)
     db.session.commit()

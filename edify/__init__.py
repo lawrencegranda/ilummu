@@ -13,7 +13,7 @@ from flask_migrate import Migrate
 from werkzeug.exceptions import HTTPException
 from http import HTTPStatus
 from jwt.exceptions import ExpiredSignatureError
-from edify.utils.utils import internal_request
+from edify.utils.utils import internal_request, get_request_cookie
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -45,24 +45,25 @@ def create_app(config_class):
         id = get_jwt_identity()
 
         if id and "access_token_cookie" not in request.cookies:
-            print(request.cookies)
-            response = internal_request(url_for("backend.user.refresh"))
+            refresh = internal_request(url_for("backend.user.refresh"))
 
             # Parse the response
-            data, status = response.get_json(), response.status_code
+            data, status = refresh.get_json(), refresh.status_code
 
-            if status != HTTPStatus.OK:
-                response = redirect(url_for("frontend.login"))
-                unset_jwt_cookies(response)
-                return response
+            if status == HTTPStatus.OK:
+                # Modify the request headers to include the new access token
+                request.environ["HTTP_AUTHORIZATION"] = (
+                    f'Bearer {data["access_token"].strip()}'
+                )
 
-            # Modify the request to include the new access token cookie
-            request.environ["HTTP_COOKIE"] = (
-                f"access_token_cookie={data['access_token']}; {request.environ.get('HTTP_COOKIE', '')}"
-            )
+    @frontend.after_request
+    def after_request_func(response):
+        token = get_request_cookie(request)
+        if token:
+            # Modify the response to include the new access token cookie
+            set_access_cookies(response, token)
 
-            print(request.cookies)
-            print(request.environ["HTTP_COOKIE"])
+        return response
 
     # -----------------------------------------------------------------------------
     # Error Handlers
