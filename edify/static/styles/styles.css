@@ -1859,7 +1859,7 @@ button.btn-reply:hover {
     flex-direction: column;
     justify-content: flex-start;
     row-gap: 10px;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
 .notification {
