@@ -9,15 +9,22 @@ from flask import jsonify, current_app, url_for, request
 from werkzeug.test import EnvironBuilder
 
 
-def get_request_cookie(request):
+def get_access_header(request):
+    token = None
+
     if "HTTP_AUTHORIZATION" in request.environ:
         auth_header = request.headers.get("Authorization")
         token = (
             auth_header.split(" ")[1] if auth_header and " " in auth_header else None
         )
 
-        if token:
-            return token
+    return token
+
+
+def get_request_cookie(request):
+    token = get_access_header(request)
+    if token:
+        return token
 
     token = request.cookies.get("access_token_cookie")
     if token:

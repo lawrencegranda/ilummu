@@ -72,7 +72,6 @@ user = Blueprint("user", __name__, url_prefix="/user")
 
 # Endpoint: /user/logout
 @user.route("/logout", methods=["POST"])
-@jwt_required()
 def logout():
     """Endpoint to log out a user."""
 
@@ -91,11 +90,14 @@ def refresh():
 
     print(f"Refreshing token... User {user.id}")
 
-    access_token = generate_access_token(user)
+    token = generate_access_token(user)
     db.session.commit()
 
-    response = jsonify({"access_token": access_token})
-    set_access_cookies(response, access_token)
+    response = jsonify({"access_token": token})
+    set_access_cookies(
+        response,
+        token,
+    )
 
     return (response, HTTPStatus.OK)
 
@@ -147,7 +149,10 @@ def login(args):
         {"access_token": access_token, "user": user.to_dict(simplified=True)}
     )
 
-    set_access_cookies(response, access_token)
+    set_access_cookies(
+        response,
+        access_token,
+    )
     set_refresh_cookies(
         response,
         generate_refresh_token(user),
@@ -274,7 +279,10 @@ def new_user(args):
         {"access_token": access_token, "user": user.to_dict(simplified=True)}
     )
 
-    set_access_cookies(response, access_token)
+    set_access_cookies(
+        response,
+        access_token,
+    )
     set_refresh_cookies(
         response,
         generate_refresh_token(user),
