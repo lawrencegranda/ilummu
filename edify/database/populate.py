@@ -137,6 +137,7 @@ def populate_notification_types():
         {"name": "Question Solved", "question_required": True},
         {"name": "Account Verified", "question_required": False},
         {"name": "Password Reset", "question_required": False},
+        {"name": "Account Created", "question_required": False},
     ]
 
     with db.session.begin():

@@ -34,7 +34,8 @@ from edify.models import (
 )
 from edify import db
 from http import HTTPStatus
-from typing import Optional, Any
+from typing import Optional, Any, Tuple
+from flask import typing as flask_typing
 
 
 # -----------------------------------------------------------------------------
@@ -43,17 +44,41 @@ from typing import Optional, Any
 
 
 def get_current_user() -> Optional[User]:
+    """
+    Helper function to get the current user.
+
+    Returns:
+        Optional[User]: The current user if authenticated, otherwise None.
+    """
     return current_user if isinstance(current_user, UserMixin) else None
 
 
-def generate_access_token(user: User) -> Any:
+def generate_access_token(user: User) -> str:
+    """
+    Generate an access token for the user and update the user's token information.
+
+    Args:
+        user (User): The user for whom the access token is generated.
+
+    Returns:
+        str: The generated access token.
+    """
     access_token = user.get_reset_token()
     user.token = access_token
     user.token_last_refresh = datetime.utcnow()
     return access_token
 
 
-def generate_refresh_token(user: User) -> Any:
+def generate_refresh_token(user: User) -> str:
+    """
+    Generate a refresh token for the user.
+
+    Args:
+        user (User): The user for whom the refresh token is generated.
+
+    Returns:
+        str: The generated refresh token.
+    """
     refresh_token = user.get_refresh_token()
     return refresh_token
 
@@ -72,44 +97,50 @@ user = Blueprint("user", __name__, url_prefix="/user")
 
 # Endpoint: /user/logout
 @user.route("/logout", methods=["POST"])
-def logout():
-    """Endpoint to log out a user."""
+def logout() -> flask_typing.ResponseReturnValue:
+    """
+    Endpoint to log out a user.
 
+    Returns:
+        Response: JSON response indicating successful logout.
+    """
     response = jsonify({"message": "Successfully logged out."})
     unset_jwt_cookies(response)
-
     return (response, HTTPStatus.OK)
 
 
 # Endpoint: /user/refresh
 @user.route("/refresh", methods=["GET", "POST"])
 @jwt_required(refresh=True)
-def refresh():
-    """Endpoint to refresh the user's access token."""
+def refresh() -> flask_typing.ResponseReturnValue:
+    """
+    Endpoint to refresh the user's access token.
+
+    Returns:
+        Response: JSON response with the new access token.
+    """
     user = get_current_user()
-
     print(f"Refreshing token... User {user.id}")
-
     token = generate_access_token(user)
     db.session.commit()
-
     response = jsonify({"access_token": token})
-    set_access_cookies(
-        response,
-        token,
-    )
-
+    set_access_cookies(response, token)
     return (response, HTTPStatus.OK)
 
 
 # Endpoint: /user
 @user.route("/", methods=["GET"])
 @jwt_required(optional=True)
-def get_user():
+def get_user() -> flask_typing.ResponseReturnValue:
+    """
+    Endpoint to get the current user's information.
+
+    Returns:
+        Response: JSON response with the user's information or None if not found.
+    """
     user = get_current_user()
     if user:
         return jsonify(user.to_dict(simplified=False)), HTTPStatus.OK
-
     return jsonify(None), HTTPStatus.NOT_FOUND
 
 
@@ -122,7 +153,16 @@ def get_user():
         "remember": fields.Boolean(required=False),
     }
 )
-def login(args):
+def login(args) -> flask_typing.ResponseReturnValue:
+    """
+    Endpoint to log in a user.
+
+    Args:
+        args (dict): The login arguments containing email, password, and remember flag.
+
+    Returns:
+        Response: JSON response with the access token and user information.
+    """
     # Get the user corresponding to the email that is logging in
     user = db.session.query(User).filter_by(email=args["email"], is_mock=False).first()
 
@@ -132,11 +172,9 @@ def login(args):
             "Incorrect email or password", ErrorType.INCORRECT_CREDENTIALS
         )
 
-    # # Check it the user has the email verified
+    # # Uncomment these lines to enable email and phone verification checks
     # if user.mail_is_verified is False:
     #     return error_response("Email not verified", ErrorType.USER_NOT_VERIFIED)
-
-    # # Check it the user has the phone number verified
     # if user.phone_is_verified is False:
     #     return error_response("Phone not verified", ErrorType.USER_NOT_VERIFIED)
 
@@ -144,21 +182,14 @@ def login(args):
     access_token = generate_access_token(user)
     db.session.commit()
 
-    if user.auth_level in [
-        AuthLevelEnum.SCHOOL_ADMIN,
-        AuthLevelEnum.SUPER_ADMIN,
-    ]:
-        # Nothing for now
+    if user.auth_level in [AuthLevelEnum.SCHOOL_ADMIN, AuthLevelEnum.SUPER_ADMIN]:
+        # Additional logic for admin users (if needed)
         pass
 
     response = jsonify(
         {"access_token": access_token, "user": user.to_dict(simplified=True)}
     )
-
-    set_access_cookies(
-        response,
-        access_token,
-    )
+    set_access_cookies(response, access_token)
 
     if "remember" in args and args["remember"]:
         set_refresh_cookies(
@@ -188,8 +219,16 @@ def login(args):
         "remember": fields.Boolean(required=False),
     }
 )
-def new_user(args):
-    """Endpoint to create a new user."""
+def new_user(args) -> flask_typing.ResponseReturnValue:
+    """
+    Endpoint to create a new user.
+
+    Args:
+        args (dict): The user creation arguments.
+
+    Returns:
+        Response: JSON response with the access token and user information.
+    """
     # Trim all string values in args
     for key, value in args.items():
         if isinstance(value, str):
@@ -214,6 +253,7 @@ def new_user(args):
     if user:
         return error_response("Phone is already taken", ErrorType.BAD_REQUEST)
 
+    # Determine the user's language preference
     if "language" in args and args["language"]:
         language = args["language"]
     else:
@@ -225,6 +265,7 @@ def new_user(args):
             ErrorType.BAD_REQUEST,
         )
 
+    # Determine the user's school
     if "school" in args and args["school"]:
         school = db.session.query(School).filter_by(name=args["school"]).first()
     else:
@@ -233,24 +274,23 @@ def new_user(args):
     if not school:
         return error_response("Invalid school.", ErrorType.BAD_REQUEST)
 
+    # Determine the user's major
     major = (
         db.session.query(Major)
         .filter_by(name=args["major"], school_id=school.id)
         .first()
     )
-
     if not major:
         return error_response("Invalid Major.", ErrorType.BAD_REQUEST)
 
-    # Hash password  before storing it in the db for privacy purposes
+    # Hash password before storing it in the db for privacy purposes
     hashed_password = User.hash_password(args["password"])
 
-    # New Username (funny)
+    # Generate a unique and funny username
     n = 3
     counter = 0
     username = generate_funny_username(n)
     while db.session.query(User).filter_by(username=username).first():
-        # print(username)
         if counter > 10:
             n += 1
         if counter > 100:
@@ -278,20 +318,27 @@ def new_user(args):
 
     # Add new user to the database
     db.session.add(user)
-    db.session.commit()
 
-    # Generate and commit the access token for the user
+    # Flush to get ID
+    db.session.flush()
+
+    # Generate the access token for the user
     access_token = generate_access_token(user)
+
+    # Create a notification for the new user
+    notif = Notification(
+        type_id=NotificationType.query.filter_by(name="Account Created").first().id,
+        message=f"Welcome {username}!",
+        user_id=user.id,
+    )
+    db.session.add(notif)
+
     db.session.commit()
 
     response = jsonify(
         {"access_token": access_token, "user": user.to_dict(simplified=True)}
     )
-
-    set_access_cookies(
-        response,
-        access_token,
-    )
+    set_access_cookies(response, access_token)
 
     if "remember" in args and args["remember"]:
         set_refresh_cookies(
