@@ -9,6 +9,23 @@ from flask import jsonify, current_app, url_for, request
 from werkzeug.test import EnvironBuilder
 
 
+def get_request_cookie(request):
+    if "HTTP_AUTHORIZATION" in request.environ:
+        auth_header = request.headers.get("Authorization")
+        token = (
+            auth_header.split(" ")[1] if auth_header and " " in auth_header else None
+        )
+
+        if token:
+            return token
+
+    token = request.cookies.get("access_token_cookie")
+    if token:
+        return token
+
+    return None
+
+
 def internal_request(url, method="GET"):
     # Build the environment
     builder = EnvironBuilder(path=url, method=method)
@@ -16,7 +33,7 @@ def internal_request(url, method="GET"):
     env["HTTP_COOKIE"] = ""
 
     # Check if the user has a JWT token cookie and add it to the environment
-    token = request.cookies.get("access_token_cookie")
+    token = get_request_cookie(request)
     if token:
         env["HTTP_COOKIE"] = f"access_token_cookie={token}"
 
