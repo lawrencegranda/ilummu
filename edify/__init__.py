@@ -50,7 +50,6 @@ def create_app(config_class):
 
             # Parse the response
             data, status = response.get_json(), response.status_code
-            print(data, status)
 
             if status != HTTPStatus.OK:
                 response = redirect(url_for("frontend.login"))
