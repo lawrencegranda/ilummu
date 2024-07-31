@@ -82,6 +82,23 @@ def logout():
     return (response, HTTPStatus.OK)
 
 
+# Endpoint: /user/refresh
+@user.route("/refresh", methods=["GET", "POST"])
+@jwt_required(refresh=True)
+def refresh():
+    """Endpoint to refresh the user's access token."""
+
+    user = get_current_user()
+
+    access_token = generate_access_token(user)
+    db.session.commit()
+
+    response = jsonify({"access_token": access_token})
+    set_access_cookies(response, access_token)
+
+    return (response, HTTPStatus.OK)
+
+
 # Endpoint: /user
 @user.route("/", methods=["GET"])
 @jwt_required(optional=True)
