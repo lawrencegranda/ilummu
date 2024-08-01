@@ -223,4 +223,4 @@ def populate_fake():
 
 
 if __name__ == "__main__":
-    populate_database()
+    populate_fake()
