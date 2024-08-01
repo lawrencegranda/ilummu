@@ -10,6 +10,7 @@ from edify.utils.constants import (
 
 
 def populate_universities():
+    """Populate the database with predefined universities."""
     universities = [
         {
             "name": "Cornell University",
@@ -33,11 +34,12 @@ def populate_universities():
 
     with db.session.begin():
         for university_data in universities:
-            # Check if the university already exists
+            # Check for existing university by name
             existing_university = School.query.filter_by(
                 name=university_data["name"]
             ).first()
             if not existing_university:
+                # Create and add new university to the session
                 university = School(
                     name=university_data["name"],
                     country=university_data.get("country"),
@@ -50,6 +52,7 @@ def populate_universities():
 
 
 def populate_academic_fields():
+    """Populate the database with predefined academic fields."""
     academic_fields = [
         {"value": "cals", "name": "Agriculture and Life Sciences"},
         {"value": "aap", "name": "Architecture, Art and Planning"},
@@ -63,11 +66,12 @@ def populate_academic_fields():
 
     with db.session.begin():
         for academic_field_data in academic_fields:
-            # Check if the academic_field already exists
+            # Check for existing academic field by value
             existing_academic_field = AcademicField.query.filter_by(
                 value=academic_field_data["value"]
             ).first()
             if not existing_academic_field:
+                # Associate academic field with Cornell University
                 school = School.query.filter_by(name="Cornell University").first()
                 academic_field = AcademicField(
                     value=academic_field_data["value"],
@@ -80,6 +84,7 @@ def populate_academic_fields():
 
 
 def populate_methods():
+    """Populate the database with predefined communication methods."""
     methods = [
         {"value": "text-message", "name": "Text Message"},
         {"value": "voice-call", "name": "Voice Call"},
@@ -89,9 +94,10 @@ def populate_methods():
 
     with db.session.begin():
         for method_data in methods:
-            # Check if the method already exists
+            # Check for existing method by value
             existing_method = Method.query.filter_by(value=method_data["value"]).first()
             if not existing_method:
+                # Create and add new method to the session
                 method = Method(value=method_data["value"], name=method_data["name"])
                 db.session.add(method)
 
@@ -99,6 +105,7 @@ def populate_methods():
 
 
 def populate_time_intervals():
+    """Populate the database with predefined time intervals."""
     time_intervals = [
         {"value": 5, "name": "less than 5 min", "shortname": "<5 min"},
         {"value": 10, "name": "about 10 min", "shortname": "~10 min"},
@@ -113,11 +120,12 @@ def populate_time_intervals():
 
     with db.session.begin():
         for interval_data in time_intervals:
-            # Check if the time interval already exists
+            # Check for existing time interval by value
             existing_interval = TimeInterval.query.filter_by(
                 value=interval_data["value"]
             ).first()
             if not existing_interval:
+                # Create and add new time interval to the session
                 time_interval = TimeInterval(
                     value=interval_data["value"],
                     name=interval_data["name"],
@@ -129,11 +137,13 @@ def populate_time_intervals():
 
 
 def populate_notification_types():
+    """Populate the database with notification types based on the enumeration."""
     with db.session.begin():
         for type_name in NotificationTypeEnum.keys():
-            # Check if the notification type already exists
+            # Check for existing notification type by value
             existing_type = NotificationType.query.filter_by(value=type_name).first()
             if not existing_type:
+                # Create and add new notification type to the session
                 notification_type = NotificationType(
                     value=type_name,
                     question_required=NotificationTypeEnum.requires_question(type_name),
@@ -144,7 +154,10 @@ def populate_notification_types():
 
 
 def populate_majors():
+    """Populate the database with majors from a JSON file."""
+
     def load_majors_from_json(json_file):
+        """Load majors data from a JSON file."""
         with open(json_file) as f:
             majors_data = json.load(f)["majors"]
         return majors_data
@@ -155,14 +168,16 @@ def populate_majors():
         school = School.query.filter_by(name="Cornell University").first()
 
         for major_data in majors_data:
-            # Check if the major already exists
+            # Check for existing major by name
             existing_major = Major.query.filter_by(name=major_data["major"]).first()
             if not existing_major and school:
+                # Associate major with the correct academic field
                 academic_field = AcademicField.query.filter_by(
                     name=major_data["college"]
                 ).first()
 
                 if academic_field:
+                    # Create and add new major to the session
                     major = Major(
                         name=major_data["major"],
                         academic_field_id=academic_field.id,
@@ -178,6 +193,7 @@ def populate_majors():
 
 
 def populate_courses():
+    """Populate the database with predefined courses."""
     courses_data = [
         {
             "code": "ENG101",
@@ -198,15 +214,16 @@ def populate_courses():
 
     with db.session.begin():
         for course_data in courses_data:
-            # Check if the course already exists
+            # Check for existing course by code
             existing_course = Course.query.filter_by(code=course_data["code"]).first()
             if not existing_course:
-                # Fetch academic_field based on its value
+                # Fetch associated academic field
                 academic_field = AcademicField.query.filter_by(
                     value=course_data["academic_field"]
                 ).first()
 
                 if academic_field:
+                    # Create and add new course to the session
                     course = Course(
                         code=course_data["code"],
                         name=course_data["name"],
@@ -223,6 +240,7 @@ def populate_courses():
 
 
 def populate_enums():
+    """Populate the database with various enumerations."""
     with db.session.begin():
         # Populate AuthLevel table
         for level in AuthLevelEnum.keys():
@@ -246,6 +264,7 @@ def populate_enums():
 
 
 def populate_constants():
+    """Function to populate all constants into the database."""
     populate_enums()
     populate_universities()
     populate_academic_fields()
@@ -254,3 +273,7 @@ def populate_constants():
     populate_notification_types()
     populate_majors()
     populate_courses()
+
+
+if __name__ == "__main__":
+    populate_constants()
