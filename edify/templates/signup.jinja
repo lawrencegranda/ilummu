@@ -219,13 +219,21 @@ Sign Up
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
 
+{% endblock head %}
 
+{% block headers %}
 <style>
+  @import "style.css";
+
   .footer {
     display: none;
   }
+
+  body {
+    background-color: var(--blue--base);
+  }
 </style>
-{% endblock head %}
+{% endblock headers %}
 
 
 {% block content %}
@@ -244,7 +252,7 @@ Sign Up
               </a>
               <div class="brand-name" onclick="location.href='/home';"> Edify </div>
             </div>
-            <p class="made-students">Made by Cornell Students</p>
+            <p class="made-students">Made by <strong style="color: var(--red)">Cornell</strong> Students</p>
           </div>
           <p class="signup-title">
             {% if login == true %}
@@ -317,7 +325,7 @@ Sign Up
           </button>
           {% endif %}
 
-          <p class="signup-login">
+          <div class="signup-login">
             {% if login == false %}
             Already have an account? <a href="/login">Log In</a>
             {% else %}
@@ -325,7 +333,7 @@ Sign Up
             {% endif %}
             <br />
             Continue as a <a href="/dashboard">Guest</a>
-          </p>
+          </div>
         </div>
       </form>
   </div>

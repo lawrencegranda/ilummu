@@ -9,6 +9,7 @@
 }
 
 :root {
+    --red: #B31B1B;
     --blue--base: #3eacf3;
     --blue--light: #91cef7;
     --neutral--100: #f9f9fb;
@@ -2615,11 +2616,12 @@ p.create-question-title {
 }
 
 .signup-wrapper {
-    position: fixed;
+    position: relative;
     top: 0;
     bottom: 0;
     left: 0;
     right: 0;
+    min-height: 100vh;
     background-color: var(--blue--base);
     display: flex;
     flex-direction: column;
@@ -2749,6 +2751,8 @@ input#signup-email {
 .signup-login {
     font-size: 15px;
     text-align: center;
+    line-height: 1.8;
+    margin-top: 20px;
 }
 
 .signup-remember,
