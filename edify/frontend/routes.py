@@ -10,7 +10,6 @@ from flask import (
 )
 from http import HTTPStatus
 from edify import db, bcrypt
-from typing import Any
 from flask_jwt_extended import (
     jwt_required,
     exceptions,
@@ -23,13 +22,26 @@ import time
 from edify.utils.utils import internal_request, error_response
 from webargs import fields, validate
 from webargs.flaskparser import use_args
+from typing import Any, Dict, List, Optional
+from flask import typing as flask_typing
+from flask_typing import ResponseReturnValue
 
 # -----------------------------------------------------------------------------
 # Helper Functions
 # -----------------------------------------------------------------------------
 
 
-def fetch_data(url, method="GET"):
+def fetch_data(url: str, method: str = "GET") -> List[Any]:
+    """
+    Fetch data from the backend API.
+
+    Parameters:
+    - url (str): Endpoint to fetch data from.
+    - method (str): HTTP method to use (default is "GET").
+
+    Returns:
+    - List: Parsed data returned from the backend or an empty list on error.
+    """
     response = internal_request(url, method)
 
     # Parse the response
@@ -42,9 +54,14 @@ def fetch_data(url, method="GET"):
     return data.get("data", [])
 
 
-def get_user():
-    response = internal_request(url_for("backend.user.get_user"), "GET")
+def get_user() -> Optional[Dict[str, Any]]:
+    """
+    Retrieve the current user's details.
 
+    Returns:
+    - Optional[Dict]: User data if authenticated, else None.
+    """
+    response = internal_request(url_for("backend.user.get_user"), "GET")
     return response.get_json()
 
 
@@ -65,7 +82,13 @@ question = Blueprint("question", __name__, url_prefix="/question")
 # Endpoint: /
 @frontend.route("/")
 @jwt_required(optional=True)
-def index():
+def index() -> ResponseReturnValue:
+    """
+    Homepage route. Redirects users based on their authentication status.
+
+    Returns:
+    - str: Rendered homepage or dashboard template.
+    """
     user = get_user()
 
     if user:
@@ -77,7 +100,13 @@ def index():
 # Endpoint: /home
 @frontend.route("/home")
 @jwt_required(optional=True)
-def home():
+def home() -> ResponseReturnValue:
+    """
+    Home route displaying user-related data.
+
+    Returns:
+    - str: Rendered home template.
+    """
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
     subjects.sort(key=lambda d: d["name"])
 
@@ -97,14 +126,26 @@ def home():
 # Endpoint: /login
 @frontend.route("/login")
 @no_token_allowed
-def login():
+def login() -> ResponseReturnValue:
+    """
+    Login route for rendering the login form.
+
+    Returns:
+    - str: Rendered login/signup template.
+    """
     return render_template("signup.html", login=True)
 
 
 # Endpoint: /signup
 @frontend.route("/signup")
 @no_token_allowed
-def signup():
+def signup() -> ResponseReturnValue:
+    """
+    Signup route that fetches majors and renders the signup form.
+
+    Returns:
+    - str: Rendered signup template.
+    """
     majors = fetch_data(url_for("backend.data.fetch_user_majors"), "GET")
     majors.sort(key=lambda d: d["name"])
 
@@ -115,7 +156,13 @@ def signup():
 
 # Endpoint: /logout
 @frontend.route("/logout")
-def logout():
+def logout() -> ResponseReturnValue:
+    """
+    Logout route that invalidates the user's session.
+
+    Returns:
+    - str: Redirect to the login page.
+    """
     response = internal_request(url_for("backend.user.logout"), method="POST")
 
     # If the backend logout was successful, clear the cookies and redirect
@@ -130,7 +177,13 @@ def logout():
 # Endpoint: /dashboard
 @frontend.route("/dashboard")
 @jwt_required(optional=True)
-def dashboard():
+def dashboard() -> ResponseReturnValue:
+    """
+    Dashboard route displaying user data and related questions.
+
+    Returns:
+    - str: Rendered dashboard template with user data.
+    """
     user = get_user()
 
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
@@ -160,21 +213,28 @@ def dashboard():
 # Endpoint: /list
 @frontend.route("/list", methods=["GET"])
 @use_args({"field": fields.Str(required=False), "text": fields.Str(required=False)})
-def question_list():
+def question_list(args: Dict[str, Optional[str]]) -> ResponseReturnValue:
+    """
+    List questions based on filter criteria.
+
+    Parameters:
+    - args (Dict): Query parameters for filtering questions.
+
+    Returns:
+    - str: Rendered question list template.
+    """
     # Trim all string values in args
     for key, value in args.items():
         if isinstance(value, str):
-            args[key] = value.strip().lowe()
+            args[key] = value.strip().lower()
 
     questions = fetch_data(url_for("backend.data.fetch_questions"), "GET")
 
-    if args["field"]:
-        field = None
-    else:
-        field = None
+    # Placeholder for filtering criteria
+    field = args["field"] if args["field"] else None
+    text = args["text"] if args["text"] else ""
 
-    text = args["field"] if args["field"] else ""
-
+    # Sort questions if necessary
     questions.sort(key=lambda d: (d["solved"], d["created_at"]))
 
     return render_template(
@@ -191,7 +251,16 @@ def question_list():
 # Endpoint: /question/<id_question>
 @question.route("/<int:id_question>")
 @jwt_required(optional=True)
-def fetch_question(id_question):
+def fetch_question(id_question: int) -> ResponseReturnValue:
+    """
+    Retrieve a specific question by ID and related data.
+
+    Parameters:
+    - id_question (int): The ID of the question.
+
+    Returns:
+    - str: Rendered question detail template or error response.
+    """
     user = get_user()
 
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
@@ -214,8 +283,8 @@ def fetch_question(id_question):
 
     question = question[0]
 
+    # Initialize variables related to the question
     is_author = False
-    made_offer = False
     offer_made = None
     offer_accepted = None
     offers = []
@@ -237,13 +306,7 @@ def fetch_question(id_question):
             url_for("backend.data.question_offer_made", id_question=id_question), "GET"
         )
 
-        if offer_made:
-            made_offer = True
-            offer_made = fetch_data(
-                url_for("backend.data.question_offer_made", id_question=id_question),
-                "GET",
-            )
-        else:
+        if not offer_made:
             offer_made = None
 
     return render_template(
