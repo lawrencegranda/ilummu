@@ -64,7 +64,9 @@ Dashboard
 
     </div>
     <div class="grid">
-      {% include 'bases/question-list.html'%}
+      {% block question_list %}
+      {{ question_list | safe}}
+      {% endblock %}
     </div>
   </div>
 </div>
