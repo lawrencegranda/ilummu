@@ -207,12 +207,35 @@ def dashboard() -> flask_typing.ResponseReturnValue:
         methods=methods,
         time_intervals=time_intervals,
         user=user,
-        question_list=question_list("", ""),
+        question_list=list_questions("", ""),
     )
 
 
+@frontend.route("/list", methods=["GET"])
 @jwt_required(optional=True)
-def question_list(field: str, search: str) -> str:
+@use_args(
+    {
+        "field": fields.Str(required=True),
+        "search": fields.Str(required=False),
+    }
+)
+def question_list(args) -> flask_typing.ResponseReturnValue:
+    """
+    List questions based on filter criteria. Route endpoint.
+
+    Parameters:
+    - field (str): Subject to filter by.
+    - search (str): Search text.
+
+    Returns:
+    - str: Rendered question list template.
+    """
+
+    return list_questions(args.get("field", ""), args.get("search", ""))
+
+
+@jwt_required(optional=True)
+def list_questions(field: str, search: str) -> str:
     """
     List questions based on filter criteria.
 
