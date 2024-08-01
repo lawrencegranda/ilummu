@@ -196,11 +196,17 @@ def get_question(id_question):
     Returns:
         JSON response with the specified question or an error if not found.
     """
+    # Query the Question model to find the question by its ID
     question = db.session.query(Question).get(id_question)
+
+    # If no question is found, return an error response
     if not question:
         return error_response("Question not found", ErrorType.NOT_FOUND)
 
+    # Convert the question object to a dictionary format suitable for JSON response
     qstn_dict = Question.to_dict_all([question])[0]
+
+    # Return the question data in JSON format with HTTP 200 OK status
     return jsonify({"data": [qstn_dict]}), HTTPStatus.OK
 
 
@@ -217,15 +223,24 @@ def is_question_author(id_question):
     Returns:
         JSON response with a boolean indicating if the user is the author or an error if not found.
     """
+    # Query the Question model to find the question by its ID
     question = db.session.query(Question).get(id_question)
+
+    # Return an error response if the question does not exist
     if not question:
         return error_response("Question not found", ErrorType.NOT_FOUND)
 
+    # Get the current user from the JWT
     user = get_current_user()
+
+    # Return an error response if the user is not found
     if not user:
         return error_response("User not found", ErrorType.USER_NOT_FOUND)
 
+    # Check if the current user is the author of the question
     is_author = question.user_id == user.id
+
+    # Return the result as a JSON response
     return jsonify({"data": [is_author]}), HTTPStatus.OK
 
 
@@ -242,23 +257,32 @@ def question_offer_made(id_question):
     Returns:
         JSON response with offer details if found or an empty list if not.
     """
+    # Query the Question model to find the question by its ID
     question = db.session.query(Question).get(id_question)
+
+    # Return an error response if the question does not exist
     if not question:
         return error_response("Question not found", ErrorType.NOT_FOUND)
 
+    # Get the current user from the JWT
     user = get_current_user()
+
+    # Return an error response if the user is not found
     if not user:
         return error_response("User not found", ErrorType.USER_NOT_FOUND)
 
+    # Query the Offer model to check if the user has made an active offer for the question
     offer_made = (
         db.session.query(Offer)
         .filter_by(question_id=question.id, user_id=user.id, active=True)
         .first()
     )
 
+    # If no offer is found, return an empty list
     if not offer_made:
         return jsonify({"data": []}), HTTPStatus.OK
 
+    # Return the found offer details in JSON format
     return jsonify({"data": [offer_made.to_dict(simplified=False)]}), HTTPStatus.OK
 
 
@@ -276,12 +300,19 @@ def offers_received(id_question):
     Returns:
         JSON response with a list of offers or an error if the user is not the author.
     """
+    # Query the Question model to find the question by its ID
     question = db.session.query(Question).get(id_question)
+
+    # Get the current user from the JWT
     user = get_current_user()
 
+    # Query the Offer model for all active offers received for the specified question
     offers = (
         db.session.query(Offer).filter_by(question_id=question.id, active=True).all()
     )
+
+    # Convert the list of offers to a dictionary format suitable for JSON response
     offers = Offer.to_dict_all(offers)
 
+    # Return the list of offers in JSON format with HTTP 200 OK status
     return jsonify({"data": offers}), HTTPStatus.OK
