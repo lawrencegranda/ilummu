@@ -1,29 +1,34 @@
+import re
+import time
+from http import HTTPStatus
+
 from flask import (
     Flask,
-    render_template,
     Blueprint,
     jsonify,
-    current_app,
-    url_for,
+    render_template,
     redirect,
     request,
+    current_app,
+    url_for,
 )
-from http import HTTPStatus
-from edify import db, bcrypt
+from flask import typing as flask_typing
 from flask_jwt_extended import (
     jwt_required,
     exceptions,
     get_jwt_identity,
     unset_jwt_cookies,
 )
-from edify.utils.decorators import no_token_allowed
-from edify.models import *
-import time
-from edify.utils.utils import internal_request, error_response
+
 from webargs import fields, validate
 from webargs.flaskparser import use_args
+
 from typing import Any, Dict, List, Optional
-from flask import typing as flask_typing
+
+from edify import db, bcrypt
+from edify.models import *
+from edify.utils.decorators import no_token_allowed
+from edify.utils.utils import internal_request, error_response
 
 # -----------------------------------------------------------------------------
 # Helper Functions
@@ -193,9 +198,6 @@ def dashboard() -> flask_typing.ResponseReturnValue:
 
     time_intervals = fetch_data(url_for("backend.data.fetch_intervals"), "GET")
 
-    questions = fetch_data(url_for("backend.data.fetch_questions"), "GET")
-    questions.sort(key=lambda d: (d["solved"], d["created_at"]))
-
     notifications = fetch_data(url_for("backend.data.fetch_user_notifications"), "GET")
     notifications.sort(key=lambda d: d["created_at"])
 
@@ -205,41 +207,102 @@ def dashboard() -> flask_typing.ResponseReturnValue:
         methods=methods,
         time_intervals=time_intervals,
         user=user,
-        questions=questions,
+        question_list=question_list("", ""),
     )
 
 
-# Endpoint: /list
-@frontend.route("/list", methods=["GET"])
-@use_args({"field": fields.Str(required=False), "text": fields.Str(required=False)})
-def question_list(args: Dict[str, Optional[str]]) -> flask_typing.ResponseReturnValue:
+@jwt_required(optional=True)
+def question_list(field: str, search: str) -> str:
     """
     List questions based on filter criteria.
 
     Parameters:
-    - args (Dict): Query parameters for filtering questions.
+    - field (str): Subject to filter by.
+    - search (str): Search text.
 
     Returns:
     - str: Rendered question list template.
     """
-    # Trim all string values in args
-    for key, value in args.items():
-        if isinstance(value, str):
-            args[key] = value.strip().lower()
-
+    # Fetch questions from the backend
     questions = fetch_data(url_for("backend.data.fetch_questions"), "GET")
 
-    # Placeholder for filtering criteria
-    field = args["field"] if args["field"] else None
-    text = args["text"] if args["text"] else ""
+    field = field.strip()
+    search = search.strip()
 
-    # Sort questions if necessary
-    questions.sort(key=lambda d: (d["solved"], d["created_at"]))
+    # Filter questions based on field/subject
+    if field:
+        questions = filter_list(questions, "subject", field)
 
-    return render_template(
-        "bases/question-list.html",
-        questions=questions,
-    )
+    # Filter questions based on search text if provided
+    if search:
+        questions_code = filter_list(questions, "course_code", search)
+        questions_course = filter_list(questions, "course_name", search)
+        questions_request = filter_list(questions, "request", search)
+
+        questions = [*questions_code, *questions_course, *questions_request]
+
+    # Get current user
+    user = get_user()
+
+    if user:
+
+        def is_author(d):
+            result = fetch_data(
+                url_for("backend.data.is_question_author", id_question=d["id"])
+            )
+            return result[0] if result else False
+
+        def made_offer(d):
+            result = fetch_data(
+                url_for("backend.data.question_offer_made", id_question=d["id"])
+            )
+            return len(result) > 0
+
+        # Sorting the 'questions' list primarily by 'solved' status, then by the
+        # author'sstatus, whether an offer was made, and finally by the creation date.
+        questions.sort(
+            key=lambda d: (
+                d["solved"],
+                not is_author(d),
+                not made_offer(d),
+                d["created_at"],
+            )
+        )
+
+    else:
+        # Sort questions by creation date, ensuring unsolved are first
+        questions.sort(key=lambda d: (d["solved"], d["created_at"]))
+
+    return render_template("bases/question-list.html", questions=questions)
+
+
+def filter_list(list: List[Dict], field: str, search: Optional[str]) -> List[Dict]:
+    """
+    Filters the list of dicts based on the provided field and search text.
+
+    Parameters:
+    - questions (List[Dict]): The list of questions to filter.
+    - field (str): The field to filter by.
+    - search (Optional[str]): The search text to filter questions.
+
+    Returns:
+    - List[Dict]: The filtered list of questions.
+    """
+    # Return all questions if no field is specified
+    if not search or not search.strip():
+        return questions
+
+    filtered_questions = []
+
+    # Split by non-alphanumeric characters and lowercase
+    search_terms = re.findall(r"\b\w+\b", search.lower())
+
+    for question in questions:
+        # Append questions that constain all the words
+        if all(term in question.get(field, "").lower() for term in search_terms):
+            filtered_questions.append(question)
+
+    return filtered_questions
 
 
 # -----------------------------------------------------------------------------
