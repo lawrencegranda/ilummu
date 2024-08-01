@@ -9,10 +9,12 @@
 
 
 	{% endblock head %}
-		
+
 	<!-- Styles -->
 	{% include 'bases/headers.jinja' %}
-	
+
+	{% block headers %}{% endblock %}
+
 	{% block javascript %}{% endblock %}
 </head>
 
@@ -25,16 +27,16 @@
 	<!-- Top Elements -->
 	{% block top %}
 	{% endblock %}
-	
+
 	<!-- Content -->
 	{% block content %}
 	{% endblock %}
-	
+
 	<!-- Footer -->
 	{% block footer %}
-		{% include 'bases/footer.jinja' %}
+	{% include 'bases/footer.jinja' %}
 	{% endblock %}
-	
+
 </body>
 
 </html>
