@@ -1,0 +1,59 @@
+{% extends "bases/layout.jinja" %}
+
+{% block title %}
+Question
+{% endblock %}
+
+{% block navbar %}
+{% include 'bases/navbar-logged.jinja' if user else 'bases/navbar-not-logged.jinja' %}
+{% endblock %}
+
+{% block top %}
+{% include 'bases/create-question.jinja'%}
+{% endblock %}
+
+{% block content %}
+{% if user %}
+<div class="container main-content logged">
+  {% else %}
+  <div class="container main-content">
+    {% endif %}
+    <div class="question-wrapper">
+      <div class="question-body">
+        <div class="question-top">
+          <div class="question-left">
+            <div id="question-user-profile">
+              <img src="https://robohash.org/{{q['user']['username']}}" alt="Avatar" class="avatar" />
+            </div>
+            <div class="question-user">
+              <p class="question-user-name">{{q['user']['username']}}</p>
+              <p class="question-user-info">{{q['user']['major']}} &#x2022; {{q['user']['year']}}</p>
+            </div>
+          </div>
+          <div class="question-right">
+            <p id="question-date">{{q['time_ago']}}</p>
+
+            <div class="question-labels">
+              <div class="question-price">${{'%.2f' % q['price']}}</div>
+              {% if q['solved'] %}
+              <p class="question-status solved">solved</p>
+              {% else %}
+              <p class="question-status unsolved">unsolved</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="question-bottom">
+          <p class="question-class">{{q['course_code']}}: {{q['course_name']}}</p>
+          <p class="question-info">{{q['solve_time']}} solve time &#x2022; {{q['method']}}</p>
+          <p class="question-text">{{q['request']}}</p>
+        </div>
+      </div>
+
+      {% if q['solved'] %} {% include "bases/question-solved.jinja" %}
+      {% else %} {% include "bases/question-not-solved.jinja" %}
+      {% endif %}
+
+    </div>
+  </div>
+  {% endblock %}
