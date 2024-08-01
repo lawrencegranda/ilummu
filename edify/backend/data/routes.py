@@ -20,6 +20,7 @@ from http import HTTPStatus
 from edify.utils.utils import internal_request, error_response
 from edify.utils.constants import ErrorType
 from edify.utils.decorators import author_required
+from flask import typing as flask_typing
 
 # -----------------------------------------------------------------------------
 # Route Blueprint
@@ -36,7 +37,7 @@ data = Blueprint("data", __name__, url_prefix="/data")
 # Endpoint: /data/subjects
 @data.route("/subjects", methods=["GET"])
 @jwt_required(optional=True)
-def fetch_user_subjects():
+def fetch_user_subjects() -> flask_typing.ResponseReturnValue:
     """
     Fetch the subjects associated with the current user if authenticated,
     otherwise fetch subjects for 'Cornell University'.
@@ -61,7 +62,7 @@ def fetch_user_subjects():
 
 # Endpoint: /data/school/<id_school>/subjects
 @data.route("/school/<int:id_school>/subjects", methods=["GET"])
-def fetch_school_subjects(id_school):
+def fetch_school_subjects(id_school) -> flask_typing.ResponseReturnValue:
     """
     Fetch all subjects for a given school ID.
 
@@ -80,7 +81,7 @@ def fetch_school_subjects(id_school):
 # Endpoint: /data/majors
 @data.route("/majors", methods=["GET"])
 @jwt_required(optional=True)
-def fetch_user_majors():
+def fetch_user_majors() -> flask_typing.ResponseReturnValue:
     """
     Fetch the majors associated with the current user if authenticated,
     otherwise fetch majors for 'Cornell University'.
@@ -105,7 +106,7 @@ def fetch_user_majors():
 
 # Endpoint: /data/school/<id_school>/majors
 @data.route("/school/<int:id_school>/majors", methods=["GET"])
-def fetch_school_majors(id_school):
+def fetch_school_majors(id_school) -> flask_typing.ResponseReturnValue:
     """
     Fetch all majors for a given school ID.
 
@@ -123,7 +124,7 @@ def fetch_school_majors(id_school):
 
 # Endpoint: /data/methods
 @data.route("/methods", methods=["GET"])
-def fetch_methods():
+def fetch_methods() -> flask_typing.ResponseReturnValue:
     """
     Fetch all supported methods.
 
@@ -138,7 +139,7 @@ def fetch_methods():
 
 # Endpoint: /data/intervals
 @data.route("/intervals", methods=["GET"])
-def fetch_intervals():
+def fetch_intervals() -> flask_typing.ResponseReturnValue:
     """
     Fetch all time intervals.
 
@@ -151,7 +152,7 @@ def fetch_intervals():
 
 # Endpoint: /data/notifications
 @data.route("/notifications", methods=["GET"])
-def fetch_user_notifications():
+def fetch_user_notifications() -> flask_typing.ResponseReturnValue:
     """
     Fetch notifications for the current user.
 
@@ -172,7 +173,7 @@ def fetch_user_notifications():
 
 # Endpoint: /data/questions
 @data.route("/questions", methods=["GET"])
-def fetch_questions():
+def fetch_questions() -> flask_typing.ResponseReturnValue:
     """
     Fetch all questions available in the system.
 
@@ -186,7 +187,7 @@ def fetch_questions():
 # Endpoint: /data/question/<id_question>
 @data.route("/question/<int:id_question>", methods=["GET"])
 @jwt_required(optional=True)
-def get_question(id_question):
+def get_question(id_question) -> flask_typing.ResponseReturnValue:
     """
     Fetch a specific question by its ID.
 
@@ -213,7 +214,7 @@ def get_question(id_question):
 # Endpoint: /data/question/<id_question>/is_author
 @data.route("/question/<int:id_question>/is_author", methods=["GET"])
 @jwt_required()
-def is_question_author(id_question):
+def is_question_author(id_question) -> flask_typing.ResponseReturnValue:
     """
     Check if the current user is the author of a specific question.
 
@@ -247,7 +248,7 @@ def is_question_author(id_question):
 # Endpoint: /data/question/<id_question>/offer_made
 @data.route("/question/<int:id_question>/offer_made", methods=["GET"])
 @jwt_required()
-def question_offer_made(id_question):
+def question_offer_made(id_question) -> flask_typing.ResponseReturnValue:
     """
     Check if the current user has made an offer for a specific question.
 
@@ -290,7 +291,7 @@ def question_offer_made(id_question):
 @data.route("/question/<int:id_question>/offers_received", methods=["GET"])
 @jwt_required()
 @author_required("id_question")
-def offers_received(id_question):
+def offers_received(id_question) -> flask_typing.ResponseReturnValue:
     """
     Fetch all offers received for a specific question.
 
