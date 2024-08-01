@@ -27,13 +27,13 @@
   </div>
 </div>
 
-{% include "bases/question-author-offer-list.html" %}
+{% include "bases/question-author-offer-list.jinja" %}
 
 
 {% else %}
 
 {% if made_offer and not accepted_offer %}
-{% import 'macros/offer-declined-macro.html' as macro %}
+{% import 'macros/offer-declined-macro.jinja' as macro %}
 {{ macro.declined_offer('You can make another offer or find another question.') }}
 {% else %}
 {% endif %}

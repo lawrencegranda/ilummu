@@ -56,7 +56,7 @@
   </div>
 
 {% elif made_offer %}
-{% import 'macros/offer-declined-macro.html' as macro %}
+{% import 'macros/offer-declined-macro.jinja' as macro %}
 {{ macro.declined_offer('You can find another question.') }}
 {% else %}
 {% endif %}

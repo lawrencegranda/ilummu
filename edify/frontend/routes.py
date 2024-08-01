@@ -120,7 +120,7 @@ def home() -> flask_typing.ResponseReturnValue:
     time_intervals = fetch_data(url_for("backend.data.fetch_intervals"), "GET")
 
     return render_template(
-        "/home.html",
+        "/home.jinja",
         subjects=subjects,
         methods=methods,
         time_intervals=time_intervals,
@@ -137,7 +137,7 @@ def login() -> flask_typing.ResponseReturnValue:
     Returns:
     - str: Rendered login/signup template.
     """
-    return render_template("signup.html", login=True)
+    return render_template("signup.jinja", login=True)
 
 
 # Endpoint: /signup
@@ -155,7 +155,7 @@ def signup() -> flask_typing.ResponseReturnValue:
 
     print(majors)
 
-    return render_template("signup.html", login=False, majors=majors)
+    return render_template("signup.jinja", login=False, majors=majors)
 
 
 # Endpoint: /logout
@@ -202,7 +202,7 @@ def dashboard() -> flask_typing.ResponseReturnValue:
     notifications.sort(key=lambda d: d["created_at"])
 
     return render_template(
-        "dashboard.html",
+        "dashboard.jinja",
         subjects=subjects,
         methods=methods,
         time_intervals=time_intervals,
@@ -258,6 +258,11 @@ def question_list(field: str, search: str) -> str:
             )
             return len(result) > 0
 
+        # Only questions not solved, or authored or made an offer.
+        questions = [
+            q for q in questions if not q["solved"] or is_author(q) or made_offer(q)
+        ]
+
         # Sorting the 'questions' list primarily by 'solved' status, then by the
         # author'sstatus, whether an offer was made, and finally by the creation date.
         questions.sort(
@@ -270,10 +275,13 @@ def question_list(field: str, search: str) -> str:
         )
 
     else:
+        # If not logged in, only unsolved
+        questions = [q for q in questions if not q["solved"]]
+
         # Sort questions by creation date, ensuring unsolved are first
         questions.sort(key=lambda d: (d["solved"], d["created_at"]))
 
-    return render_template("bases/question-list.html", questions=questions)
+    return render_template("bases/question-list.jinja", questions=questions)
 
 
 def filter_list(list: List[Dict], field: str, search: Optional[str]) -> List[Dict]:
@@ -372,7 +380,7 @@ def fetch_question(id_question: int) -> flask_typing.ResponseReturnValue:
             offer_made = None
 
     return render_template(
-        "question.html",
+        "question.jinja",
         subjects=subjects,
         methods=methods,
         time_intervals=time_intervals,
