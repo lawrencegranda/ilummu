@@ -24,7 +24,6 @@ from webargs import fields, validate
 from webargs.flaskparser import use_args
 from typing import Any, Dict, List, Optional
 from flask import typing as flask_typing
-from flask_typing import ResponseReturnValue
 
 # -----------------------------------------------------------------------------
 # Helper Functions
@@ -82,7 +81,7 @@ question = Blueprint("question", __name__, url_prefix="/question")
 # Endpoint: /
 @frontend.route("/")
 @jwt_required(optional=True)
-def index() -> ResponseReturnValue:
+def index() -> flask_typing.ResponseReturnValue:
     """
     Homepage route. Redirects users based on their authentication status.
 
@@ -100,7 +99,7 @@ def index() -> ResponseReturnValue:
 # Endpoint: /home
 @frontend.route("/home")
 @jwt_required(optional=True)
-def home() -> ResponseReturnValue:
+def home() -> flask_typing.ResponseReturnValue:
     """
     Home route displaying user-related data.
 
@@ -126,7 +125,7 @@ def home() -> ResponseReturnValue:
 # Endpoint: /login
 @frontend.route("/login")
 @no_token_allowed
-def login() -> ResponseReturnValue:
+def login() -> flask_typing.ResponseReturnValue:
     """
     Login route for rendering the login form.
 
@@ -139,7 +138,7 @@ def login() -> ResponseReturnValue:
 # Endpoint: /signup
 @frontend.route("/signup")
 @no_token_allowed
-def signup() -> ResponseReturnValue:
+def signup() -> flask_typing.ResponseReturnValue:
     """
     Signup route that fetches majors and renders the signup form.
 
@@ -156,7 +155,7 @@ def signup() -> ResponseReturnValue:
 
 # Endpoint: /logout
 @frontend.route("/logout")
-def logout() -> ResponseReturnValue:
+def logout() -> flask_typing.ResponseReturnValue:
     """
     Logout route that invalidates the user's session.
 
@@ -177,7 +176,7 @@ def logout() -> ResponseReturnValue:
 # Endpoint: /dashboard
 @frontend.route("/dashboard")
 @jwt_required(optional=True)
-def dashboard() -> ResponseReturnValue:
+def dashboard() -> flask_typing.ResponseReturnValue:
     """
     Dashboard route displaying user data and related questions.
 
@@ -213,7 +212,7 @@ def dashboard() -> ResponseReturnValue:
 # Endpoint: /list
 @frontend.route("/list", methods=["GET"])
 @use_args({"field": fields.Str(required=False), "text": fields.Str(required=False)})
-def question_list(args: Dict[str, Optional[str]]) -> ResponseReturnValue:
+def question_list(args: Dict[str, Optional[str]]) -> flask_typing.ResponseReturnValue:
     """
     List questions based on filter criteria.
 
@@ -251,7 +250,7 @@ def question_list(args: Dict[str, Optional[str]]) -> ResponseReturnValue:
 # Endpoint: /question/<id_question>
 @question.route("/<int:id_question>")
 @jwt_required(optional=True)
-def fetch_question(id_question: int) -> ResponseReturnValue:
+def fetch_question(id_question: int) -> flask_typing.ResponseReturnValue:
     """
     Retrieve a specific question by ID and related data.
 
