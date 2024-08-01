@@ -5,6 +5,7 @@ from edify.utils.constants import (
     AuthLevelEnum,
     SupportedLanguagesEnum,
     OfferStatusEnum,
+    NotificationTypeEnum,
 )
 
 
@@ -128,28 +129,14 @@ def populate_time_intervals():
 
 
 def populate_notification_types():
-    notification_types = [
-        {"name": "General", "question_required": False},
-        {"name": "Offer Accepted", "question_required": True},
-        {"name": "Offer Declined", "question_required": True},
-        {"name": "New Offer", "question_required": True},
-        {"name": "Price Change", "question_required": True},
-        {"name": "Question Solved", "question_required": True},
-        {"name": "Account Verified", "question_required": False},
-        {"name": "Password Reset", "question_required": False},
-        {"name": "Account Created", "question_required": False},
-    ]
-
     with db.session.begin():
-        for type_data in notification_types:
+        for type_name in NotificationTypeEnum.keys():
             # Check if the notification type already exists
-            existing_type = NotificationType.query.filter_by(
-                name=type_data["name"]
-            ).first()
+            existing_type = NotificationType.query.filter_by(value=type_name).first()
             if not existing_type:
                 notification_type = NotificationType(
-                    name=type_data["name"],
-                    question_required=type_data["question_required"],
+                    value=type_name,
+                    question_required=NotificationTypeEnum.requires_question(type_name),
                 )
                 db.session.add(notification_type)
 
@@ -238,17 +225,17 @@ def populate_courses():
 def populate_enums():
     with db.session.begin():
         # Populate AuthLevel table
-        for level in AuthLevelEnum.values():
+        for level in AuthLevelEnum.keys():
             if not AuthLevel.query.filter_by(value=level).first():
                 db.session.add(AuthLevel(value=level))
 
         # Populate SupportedLanguage table
-        for lang in SupportedLanguagesEnum.values():
+        for lang in SupportedLanguagesEnum.keys():
             if not SupportedLanguage.query.filter_by(value=lang).first():
                 db.session.add(SupportedLanguage(value=lang))
 
         # Populate OfferStatus table
-        for status in OfferStatusEnum.values():
+        for status in OfferStatusEnum.keys():
             if not OfferStatus.query.filter_by(value=status).first():
                 db.session.add(OfferStatus(value=status))
 

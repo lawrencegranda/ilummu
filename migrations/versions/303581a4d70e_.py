@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 875ba324aedc
+Revision ID: 303581a4d70e
 Revises: 
-Create Date: 2024-07-14 11:14:13.575097
+Create Date: 2024-07-31 19:31:48.790165
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '875ba324aedc'
+revision = '303581a4d70e'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -35,15 +35,10 @@ def upgrade():
         batch_op.create_index('ix_method_value', ['value'], unique=False)
 
     op.create_table('notification_type',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.String(length=100), nullable=False),
+    sa.Column('value', sa.String(length=100), nullable=False),
     sa.Column('question_required', sa.Boolean(), nullable=False),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('name')
+    sa.PrimaryKeyConstraint('value')
     )
-    with op.batch_alter_table('notification_type', schema=None) as batch_op:
-        batch_op.create_index('ix_notification_name', ['name'], unique=False)
-
     op.create_table('offer_status',
     sa.Column('value', sa.String(length=50), nullable=False),
     sa.PrimaryKeyConstraint('value'),
@@ -179,17 +174,17 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('message', sa.String(length=200), nullable=False),
-    sa.Column('type_id', sa.Integer(), nullable=False),
+    sa.Column('type', sa.String(length=100), nullable=False),
     sa.Column('link', sa.String(length=300), nullable=True),
     sa.Column('question_id', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['question_id'], ['question.id'], ),
-    sa.ForeignKeyConstraint(['type_id'], ['notification_type.id'], ),
+    sa.ForeignKeyConstraint(['type'], ['notification_type.value'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('notification', schema=None) as batch_op:
-        batch_op.create_index('ix_notification_type_id', ['type_id'], unique=False)
+        batch_op.create_index('ix_notification_type', ['type'], unique=False)
         batch_op.create_index('ix_notification_user_id', ['user_id'], unique=False)
 
     op.create_table('offer',
@@ -223,7 +218,7 @@ def downgrade():
     op.drop_table('offer')
     with op.batch_alter_table('notification', schema=None) as batch_op:
         batch_op.drop_index('ix_notification_user_id')
-        batch_op.drop_index('ix_notification_type_id')
+        batch_op.drop_index('ix_notification_type')
 
     op.drop_table('notification')
     with op.batch_alter_table('question', schema=None) as batch_op:
@@ -257,9 +252,6 @@ def downgrade():
 
     op.drop_table('school')
     op.drop_table('offer_status')
-    with op.batch_alter_table('notification_type', schema=None) as batch_op:
-        batch_op.drop_index('ix_notification_name')
-
     op.drop_table('notification_type')
     with op.batch_alter_table('method', schema=None) as batch_op:
         batch_op.drop_index('ix_method_value')

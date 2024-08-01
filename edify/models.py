@@ -2,6 +2,7 @@ from edify import db, jwt, bcrypt
 from edify.utils.constants import (
     AuthLevelEnum,
     SupportedLanguagesEnum,
+    NotificationTypeEnum,
     OfferStatusEnum,
     PREVIEW_LENGTH,
 )
@@ -368,6 +369,32 @@ event.listen(Question, "before_insert", Question.validator)
 event.listen(Question, "before_update", Question.validator)
 
 
+class OfferStatus(BaseModel):
+    """
+    Table that stores the status of offers/questions.
+    """
+
+    value = db.Column(db.String(50), unique=True, nullable=False, primary_key=True)
+
+    def __repr__(self):
+        return f"OfferStatus({self.value})"
+
+    def to_dict(self, simplified=True) -> Dict[str, Any]:
+        return {
+            "value": self.value,
+        }
+
+    @staticmethod
+    def validator(mapper, connection, target):
+        if not target.value in OfferStatusEnum.values():
+            raise ValueError(f'OFFER STATUS MODEL: Invalid value ("{target.value}").')
+
+
+# Attach event listeners
+event.listen(OfferStatus, "before_insert", OfferStatus.validator)
+event.listen(OfferStatus, "before_update", OfferStatus.validator)
+
+
 class Offer(BaseModel):
     """
     Table that contains offer information
@@ -465,6 +492,41 @@ event.listen(Offer, "before_insert", Offer.validator)
 event.listen(Offer, "before_update", Offer.validator)
 
 
+class NotificationType(BaseModel):
+    """
+    Table that contains notification type information
+
+    Entries are created to list available notification types.
+    """
+
+    # Notification type name
+    value = db.Column(db.String(100), primary_key=True)
+
+    # Whether the type requires a link to a question.
+    question_required = db.Column(db.Boolean, nullable=False, default=False)
+
+    def __repr__(self):
+        return f"NotificationType({self.value}, {self.question_required})"
+
+    def to_dict(self, simplified=True) -> Dict[str, Any]:
+        return {
+            "value": self.name,
+            "question_required": self.question_required,
+        }
+
+    @staticmethod
+    def validator(mapper, connection, target):
+        if not target.value in NotificationTypeEnum.values():
+            raise ValueError(
+                f'NOTIFICATION TYPE MODEL: Invalid value ("{target.value}").'
+            )
+
+
+# Attach event listeners
+event.listen(NotificationType, "before_insert", NotificationType.validator)
+event.listen(NotificationType, "before_update", NotificationType.validator)
+
+
 class Notification(BaseModel):
     """
     Table that contains notification information
@@ -474,7 +536,7 @@ class Notification(BaseModel):
 
     __table_args__ = (
         Index("ix_notification_user_id", "user_id"),
-        Index("ix_notification_type_id", "type_id"),
+        Index("ix_notification_type", "type"),
     )
 
     # Primary key that identifies the notification
@@ -489,8 +551,8 @@ class Notification(BaseModel):
     message = db.Column(db.String(200), nullable=False)
 
     # Type of notification
-    type_id = db.Column(
-        db.Integer, db.ForeignKey("notification_type.id"), nullable=False
+    type = db.Column(
+        db.String(100), db.ForeignKey("notification_type.value"), nullable=False
     )
 
     # Link to further details
@@ -511,14 +573,14 @@ class Notification(BaseModel):
             "user_id": self.user_id,
             "message": self.message,
             "link": self.link,
-            "kind": self.type_id,
+            "type": self.type,
             "created_at": self.created_at,
         }
 
     @staticmethod
     def validator(mapper, connection, target):
         notification_type = connection.execute(
-            db.select(NotificationType).filter_by(id=target.type_id)
+            db.select(NotificationType).filter_by(value=target.type)
         ).fetchone()
 
         if not notification_type:
@@ -526,7 +588,7 @@ class Notification(BaseModel):
 
         if notification_type.question_required and target.question_id is None:
             raise ValueError(
-                f'NOTIFICATION MODEL: Notification type requires a question ("{target.type_id}").'
+                f'NOTIFICATION MODEL: Notification type requires a question ("{target.type}").'
             )
 
         return
@@ -639,65 +701,6 @@ class AcademicField(BaseModel):
 # Attach event listeners
 event.listen(AcademicField.value, "set", format_lower_case, retval=True)
 event.listen(AcademicField.name, "set", format_title_case, retval=True)
-
-
-class Method(BaseModel):
-    """
-    Table that contains method information
-
-    Entries are created to list available communication methods.
-    """
-
-    __table_args__ = (Index("ix_method_value", "value"),)
-
-    # Primary key that identifies the method
-    id = db.Column(db.Integer, primary_key=True)
-
-    # Method value (e.g., method code)
-    value = db.Column(db.String(20), unique=True, nullable=False)
-
-    # Method name
-    name = db.Column(db.String(100), nullable=False)
-
-    # Whether the method is still supported
-    supported = db.Column(db.Boolean, nullable=False, default=True)
-
-    def __repr__(self):
-        return f"Method({self.id}, {self.name})"
-
-    def to_dict(self, simplified=True) -> Dict[str, Any]:
-        return {
-            "id": self.id,
-            "value": self.value,
-            "name": self.name,
-        }
-
-
-class TimeInterval(BaseModel):
-    """
-    Table that contains time interval information
-
-    Entries are created to list available time intervals.
-    """
-
-    # Time interval value (in minutes)
-    value = db.Column(db.Integer, unique=True, nullable=False, primary_key=True)
-
-    # Time interval name
-    name = db.Column(db.String(100), nullable=False)
-
-    # Short name for the time interval
-    shortname = db.Column(db.String(20), nullable=False)
-
-    def __repr__(self):
-        return f"TimeInterval({self.value})"
-
-    def to_dict(self, simplified=True) -> Dict[str, Any]:
-        return {
-            "value": self.value,
-            "name": self.name,
-            "shortname": self.shortname,
-        }
 
 
 class Course(BaseModel):
@@ -821,37 +824,63 @@ event.listen(School.state, "set", format_title_case, retval=True)
 event.listen(School.email_postfix, "set", format_lower_case, retval=True)
 
 
-class NotificationType(BaseModel):
+class Method(BaseModel):
     """
-    Table that contains notification type information
+    Table that contains method information
 
-    Entries are created to list available notification types.
+    Entries are created to list available communication methods.
     """
 
-    __table_args__ = (Index("ix_notification_name", "name"),)
+    __table_args__ = (Index("ix_method_value", "value"),)
 
-    # Primary key that identifies the notification type
+    # Primary key that identifies the method
     id = db.Column(db.Integer, primary_key=True)
 
-    # Notification type name
-    name = db.Column(db.String(100), nullable=False, unique=True)
+    # Method value (e.g., method code)
+    value = db.Column(db.String(20), unique=True, nullable=False)
 
-    # Whether the type requires a link to a question.
-    question_required = db.Column(db.Boolean, nullable=False, default=False)
+    # Method name
+    name = db.Column(db.String(100), nullable=False)
+
+    # Whether the method is still supported
+    supported = db.Column(db.Boolean, nullable=False, default=True)
 
     def __repr__(self):
-        return f"NotificationType({self.id}, {self.name})"
+        return f"Method({self.id}, {self.name})"
 
     def to_dict(self, simplified=True) -> Dict[str, Any]:
         return {
             "id": self.id,
+            "value": self.value,
             "name": self.name,
-            "question_required": self.question_required,
         }
 
 
-# Attach event listeners
-event.listen(NotificationType.name, "set", format_title_case, retval=True)
+class TimeInterval(BaseModel):
+    """
+    Table that contains time interval information
+
+    Entries are created to list available time intervals.
+    """
+
+    # Time interval value (in minutes)
+    value = db.Column(db.Integer, unique=True, nullable=False, primary_key=True)
+
+    # Time interval name
+    name = db.Column(db.String(100), nullable=False)
+
+    # Short name for the time interval
+    shortname = db.Column(db.String(20), nullable=False)
+
+    def __repr__(self):
+        return f"TimeInterval({self.value})"
+
+    def to_dict(self, simplified=True) -> Dict[str, Any]:
+        return {
+            "value": self.value,
+            "name": self.name,
+            "shortname": self.shortname,
+        }
 
 
 class AuthLevel(BaseModel):
@@ -869,6 +898,16 @@ class AuthLevel(BaseModel):
             "value": self.value,
         }
 
+    @staticmethod
+    def validator(mapper, connection, target):
+        if not target.value in AuthLevelEnum.values():
+            raise ValueError(f'AUTHLEVEL MODEL: Invalid value ("{target.value}").')
+
+
+# Attach event listeners
+event.listen(AuthLevel, "before_insert", AuthLevel.validator)
+event.listen(AuthLevel, "before_update", AuthLevel.validator)
+
 
 class SupportedLanguage(BaseModel):
     """
@@ -885,18 +924,14 @@ class SupportedLanguage(BaseModel):
             "value": self.value,
         }
 
+    @staticmethod
+    def validator(mapper, connection, target):
+        if not target.value in SupportedLanguagesEnum.values():
+            raise ValueError(
+                f'SUPPORTED LANGUAGE MODEL: Invalid value ("{target.value}").'
+            )
 
-class OfferStatus(BaseModel):
-    """
-    Table that stores the status of offers/questions.
-    """
 
-    value = db.Column(db.String(50), unique=True, nullable=False, primary_key=True)
-
-    def __repr__(self):
-        return f"OfferStatus({self.value})"
-
-    def to_dict(self, simplified=True) -> Dict[str, Any]:
-        return {
-            "value": self.value,
-        }
+# Attach event listeners
+event.listen(SupportedLanguage, "before_insert", SupportedLanguage.validator)
+event.listen(SupportedLanguage, "before_update", SupportedLanguage.validator)

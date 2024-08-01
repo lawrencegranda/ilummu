@@ -9,7 +9,12 @@ from flask_jwt_extended import (
 from flask_login import UserMixin
 from webargs import fields, validate
 from webargs.flaskparser import use_args
-from edify.utils.constants import ErrorType, AuthLevelEnum, SupportedLanguagesEnum
+from edify.utils.constants import (
+    ErrorType,
+    AuthLevelEnum,
+    SupportedLanguagesEnum,
+    NotificationTypeEnum,
+)
 from edify.utils.utils import (
     error_response,
     validate_date,
@@ -259,9 +264,9 @@ def new_user(args) -> flask_typing.ResponseReturnValue:
     else:
         language = SupportedLanguagesEnum.ENGLISH
 
-    if language not in SupportedLanguagesEnum.values():
+    if language not in SupportedLanguagesEnum.keys():
         return error_response(
-            f"Invalid language: {language} is not one of {' '.join(SupportedLanguagesEnum.values())}",
+            f"Invalid language: {language} is not one of {' '.join(SupportedLanguagesEnum.keys())}",
             ErrorType.BAD_REQUEST,
         )
 
@@ -327,7 +332,7 @@ def new_user(args) -> flask_typing.ResponseReturnValue:
 
     # Create a notification for the new user
     notif = Notification(
-        type_id=NotificationType.query.filter_by(name="Account Created").first().id,
+        type=NotificationTypeEnum.ACCOUNT_CREATED,
         message=f"Welcome {username}!",
         user_id=user.id,
     )

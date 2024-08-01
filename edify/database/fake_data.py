@@ -121,7 +121,7 @@ def generate_fake_offers(num_offers):
     for _ in range(num_offers):
         user_id = choice(users).id
         question_id = choice(questions).id
-        status = choice(OfferStatusEnum.values())
+        status = choice(OfferStatusEnum.keys())
         active = not (status in OfferStatusEnum.inactive)
 
         while (
@@ -131,7 +131,7 @@ def generate_fake_offers(num_offers):
         ):
             user_id = choice(users).id
             question_id = choice(questions).id
-            status = choice(OfferStatusEnum.values())
+            status = choice(OfferStatusEnum.keys())
             active = not (status in OfferStatusEnum.inactive)
 
         offer = Offer(
@@ -161,7 +161,7 @@ def generate_fake_notifications(num_notifications):
         notification = Notification(
             user_id=choice(users).id,
             message=fake.text(max_nb_chars=200),
-            type_id=notification_type.id,
+            type=notification_type.value,
             question_id=question_id,
             link=fake.url(),
         )
