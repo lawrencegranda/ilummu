@@ -1,5 +1,6 @@
 # Standard Library imports
 from http import HTTPStatus
+import traceback
 
 # Third-Party Framework imports
 from flask import Flask, request, jsonify, session, url_for, redirect, current_app
@@ -98,6 +99,8 @@ def create_app(config_class):
     @frontend.errorhandler(Exception)
     def handle_error(e):
         print(f"{type(e)}: {e}")
+        print(traceback.format_exc())
+
         return (
             jsonify("An unexpected error occurred."),
             HTTPStatus.INTERNAL_SERVER_ERROR,
