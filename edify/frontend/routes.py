@@ -71,6 +71,35 @@ def get_user() -> Optional[Dict[str, Any]]:
     return response.get_json()
 
 
+def filter_list(list: List[Dict], field: str, search: Optional[str]) -> List[Dict]:
+    """
+    Filters the list of dicts based on the provided field and search text.
+
+    Parameters:
+        questions (List[Dict]): The list of questions to filter.
+        field (str): The field to filter by.
+        search (Optional[str]): The search text to filter questions.
+
+    Returns:
+        List[Dict]: The filtered list of questions.
+    """
+    # Return all questions if no field is specified
+    if not search or not search.strip():
+        return questions
+
+    filtered_questions = []
+
+    # Split by non-alphanumeric characters and lowercase
+    search_terms = re.findall(r"\b\w+\b", search.lower())
+
+    for question in questions:
+        # Append questions that constain all the words
+        if all(term in question.get(field, "").lower() for term in search_terms):
+            filtered_questions.append(question)
+
+    return filtered_questions
+
+
 # -----------------------------------------------------------------------------
 # Route Blueprint
 # -----------------------------------------------------------------------------
@@ -296,35 +325,6 @@ def list_questions(field: str, search: str) -> str:
         questions.sort(key=lambda d: (d["solved"], d["created_at"]))
 
     return render_template("bases/question-list.jinja", questions=questions)
-
-
-def filter_list(list: List[Dict], field: str, search: Optional[str]) -> List[Dict]:
-    """
-    Filters the list of dicts based on the provided field and search text.
-
-    Parameters:
-        questions (List[Dict]): The list of questions to filter.
-        field (str): The field to filter by.
-        search (Optional[str]): The search text to filter questions.
-
-    Returns:
-        List[Dict]: The filtered list of questions.
-    """
-    # Return all questions if no field is specified
-    if not search or not search.strip():
-        return questions
-
-    filtered_questions = []
-
-    # Split by non-alphanumeric characters and lowercase
-    search_terms = re.findall(r"\b\w+\b", search.lower())
-
-    for question in questions:
-        # Append questions that constain all the words
-        if all(term in question.get(field, "").lower() for term in search_terms):
-            filtered_questions.append(question)
-
-    return filtered_questions
 
 
 # -----------------------------------------------------------------------------
