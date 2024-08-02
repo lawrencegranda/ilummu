@@ -1,13 +1,18 @@
+# Standard Library Imports
 from functools import wraps
-from flask import jsonify, current_app, redirect, url_for
 from http import HTTPStatus
 from typing import Callable, List, Union
+
+# Third-Party Framework Imports
+from flask import jsonify, current_app, redirect, url_for
+from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity, current_user
 from flask_login import UserMixin
+
+# Local Application Imports
 from edify import jwt, db
 from edify.models import User, Question
 from edify.utils.constants import AuthLevelEnum, ErrorType
 from edify.utils.utils import error_response
-from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity, current_user
 
 
 @jwt.user_lookup_loader
