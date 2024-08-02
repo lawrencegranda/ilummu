@@ -42,11 +42,11 @@ def fetch_data(url: str, method: str = "GET") -> List[Any]:
     Fetch data from the backend API.
 
     Parameters:
-    - url (str): Endpoint to fetch data from.
-    - method (str): HTTP method to use (default is "GET").
+        url (str): Endpoint to fetch data from.
+        method (str): HTTP method to use (default is "GET").
 
     Returns:
-    - List: Parsed data returned from the backend or an empty list on error.
+        List: Parsed data returned from the backend or an empty list on error.
     """
     response = internal_request(url, method)
 
@@ -65,7 +65,7 @@ def get_user() -> Optional[Dict[str, Any]]:
     Retrieve the current user's details.
 
     Returns:
-    - Optional[Dict]: User data if authenticated, else None.
+        Optional[Dict]: User data if authenticated, else None.
     """
     response = internal_request(url_for("backend.user.get_user"), "GET")
     return response.get_json()
@@ -93,7 +93,7 @@ def index() -> flask_typing.ResponseReturnValue:
     Homepage route. Redirects users based on their authentication status.
 
     Returns:
-    - str: Rendered homepage or dashboard template.
+        str: Rendered homepage or dashboard template.
     """
     user = get_user()
 
@@ -111,7 +111,7 @@ def home() -> flask_typing.ResponseReturnValue:
     Home route displaying user-related data.
 
     Returns:
-    - str: Rendered home template.
+        str: Rendered home template.
     """
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
     subjects.sort(key=lambda d: d["name"])
@@ -137,7 +137,7 @@ def login() -> flask_typing.ResponseReturnValue:
     Login route for rendering the login form.
 
     Returns:
-    - str: Rendered login/signup template.
+        str: Rendered login/signup template.
     """
     return render_template("signup.jinja", login=True)
 
@@ -150,7 +150,7 @@ def signup() -> flask_typing.ResponseReturnValue:
     Signup route that fetches majors and renders the signup form.
 
     Returns:
-    - str: Rendered signup template.
+        str: Rendered signup template.
     """
     majors = fetch_data(url_for("backend.data.fetch_user_majors"), "GET")
     majors.sort(key=lambda d: d["name"])
@@ -167,7 +167,7 @@ def logout() -> flask_typing.ResponseReturnValue:
     Logout route that invalidates the user's session.
 
     Returns:
-    - str: Redirect to the login page.
+        str: Redirect to the login page.
     """
     response = internal_request(url_for("backend.user.logout"), method="POST")
 
@@ -188,7 +188,7 @@ def dashboard() -> flask_typing.ResponseReturnValue:
     Dashboard route displaying user data and related questions.
 
     Returns:
-    - str: Rendered dashboard template with user data.
+        str: Rendered dashboard template with user data.
     """
     user = get_user()
 
@@ -226,11 +226,11 @@ def question_list(args) -> flask_typing.ResponseReturnValue:
     List questions based on filter criteria. Route endpoint.
 
     Parameters:
-    - field (str): Subject to filter by.
-    - search (str): Search text.
+        field (str): Subject to filter by.
+        search (str): Search text.
 
     Returns:
-    - str: Rendered question list template.
+        str: Rendered question list template.
     """
 
     return list_questions(args.get("field", ""), args.get("search", ""))
@@ -242,11 +242,11 @@ def list_questions(field: str, search: str) -> str:
     List questions based on filter criteria.
 
     Parameters:
-    - field (str): Subject to filter by.
-    - search (str): Search text.
+        field (str): Subject to filter by.
+        search (str): Search text.
 
     Returns:
-    - str: Rendered question list template.
+        str: Rendered question list template.
     """
     # Fetch questions from the backend
     questions = fetch_data(url_for("backend.data.fetch_questions"), "GET")
@@ -314,12 +314,12 @@ def filter_list(list: List[Dict], field: str, search: Optional[str]) -> List[Dic
     Filters the list of dicts based on the provided field and search text.
 
     Parameters:
-    - questions (List[Dict]): The list of questions to filter.
-    - field (str): The field to filter by.
-    - search (Optional[str]): The search text to filter questions.
+        questions (List[Dict]): The list of questions to filter.
+        field (str): The field to filter by.
+        search (Optional[str]): The search text to filter questions.
 
     Returns:
-    - List[Dict]: The filtered list of questions.
+        List[Dict]: The filtered list of questions.
     """
     # Return all questions if no field is specified
     if not search or not search.strip():
@@ -351,10 +351,10 @@ def fetch_question(id_question: int) -> flask_typing.ResponseReturnValue:
     Retrieve a specific question by ID and related data.
 
     Parameters:
-    - id_question (int): The ID of the question.
+        id_question (int): The ID of the question.
 
     Returns:
-    - str: Rendered question detail template or error response.
+        str: Rendered question detail template or error response.
     """
     user = get_user()
 

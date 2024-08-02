@@ -131,13 +131,13 @@ class NotificationTypeEnum(EnumBase):
         Determines whether a given notification type requires a question.
 
         Args:
-        - notification_type (str): The type of notification to check.
+            notification_type (str): The type of notification to check.
 
         Raises:
-        - ValueError: If the provided notification_type is not valid.
+            ValueError: If the provided notification_type is not valid.
 
         Returns:
-        - bool: True if the notification type requires a question, False otherwise.
+            bool: True if the notification type requires a question, False otherwise.
         """
 
         if (
