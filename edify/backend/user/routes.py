@@ -46,51 +46,11 @@ from edify.utils.utils import (
     generate_funny_username,
     format_phone,
 )
-
-
-# -----------------------------------------------------------------------------
-# Helper Functions
-# -----------------------------------------------------------------------------
-
-
-def get_current_user() -> Optional[User]:
-    """
-    Helper function to get the current user.
-
-    Returns:
-        Optional[User]: The current user if authenticated, otherwise None.
-    """
-    return current_user if isinstance(current_user, UserMixin) else None
-
-
-def generate_access_token(user: User) -> str:
-    """
-    Generate an access token for the user and update the user's token information.
-
-    Args:
-        user (User): The user for whom the access token is generated.
-
-    Returns:
-        str: The generated access token.
-    """
-    access_token = user.get_reset_token()
-    user.token = access_token
-    user.token_last_refresh = datetime.utcnow()
-    return access_token
-
-
-def generate_refresh_token(user: User) -> str:
-    """
-    Generate a refresh token for the user.
-
-    Args:
-        user (User): The user for whom the refresh token is generated.
-
-    Returns:
-        str: The generated refresh token.
-    """
-    refresh_token = user.get_refresh_token()
-    return refresh_token
+from edify.backend.user.utils import (
+    get_current_user,
+    generate_access_token,
+    generate_refresh_token,
+)
 
 
 # -----------------------------------------------------------------------------
