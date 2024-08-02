@@ -1,5 +1,8 @@
+# Standard Library imports
+from http import HTTPStatus
+
+# Third-Party Framework imports
 from flask import Flask, request, jsonify, session, url_for, redirect, current_app
-from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import (
     JWTManager,
@@ -12,10 +15,13 @@ from flask_jwt_extended import (
 )
 from flask_jwt_extended.exceptions import UserLookupError
 from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
 from werkzeug.exceptions import HTTPException
-from http import HTTPStatus
 from jwt.exceptions import ExpiredSignatureError
+
+# Local Application imports
 from edify.utils.utils import internal_request, get_request_cookie, get_access_header
+
 
 # Initialize extensions
 db = SQLAlchemy()

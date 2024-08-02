@@ -1,34 +1,38 @@
+# Standard Library imports
+from abc import ABCMeta, ABC, abstractmethod
+from collections import OrderedDict, defaultdict
+from datetime import datetime, timedelta
+from functools import wraps
+from http import HTTPStatus
+from typing import Optional, Dict, Any, List
+
+# Third-Party Framework imports
+from flask import current_app, jsonify
+from flask_jwt_extended import create_access_token, decode_token, create_refresh_token
+from flask_login import UserMixin
+from sqlalchemy import Index, UniqueConstraint, event
+
+# Local Application imports
 from edify import db, jwt, bcrypt
 from edify.utils.constants import (
     AuthLevelEnum,
-    SupportedLanguagesEnum,
     NotificationTypeEnum,
     OfferStatusEnum,
     PREVIEW_LENGTH,
+    SupportedLanguagesEnum,
 )
 from edify.utils.utils import (
-    validate_email,
-    validate_email_postfix,
-    validate_phone,
+    format_lower_case,
     format_phone,
     format_title_case,
-    format_lower_case,
     format_upper_case,
     get_college_year,
     get_time_ago,
     trim_text,
+    validate_email,
+    validate_email_postfix,
+    validate_phone,
 )
-from abc import ABCMeta, ABC, abstractmethod
-from sqlalchemy import Index, UniqueConstraint, event
-from flask_login import UserMixin
-from flask_jwt_extended import create_access_token, decode_token, create_refresh_token
-from datetime import datetime, timedelta
-from flask import current_app, jsonify
-from collections import OrderedDict, defaultdict
-from functools import wraps
-from http import HTTPStatus
-from typing import Optional, Dict, Any, List
-import re
 
 
 # Custom metaclass combining the metaclasses of SQLAlchemy's Model and ABCMeta
