@@ -1,5 +1,6 @@
 # Standard Library imports
 from typing import Optional
+from datetime import datetime
 
 # Third-Party Framework imports
 from flask_jwt_extended import current_user
@@ -49,7 +50,7 @@ def generate_refresh_token(user: User) -> str:
     return refresh_token
 
 
-def is_author(id_user: int, id_question: int) -> bool:
+def check_author(id_user: int, id_question: int) -> bool:
     """
     Check if the user is the author of a specific question.
 

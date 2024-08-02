@@ -1,42 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
+    <head>
+        <meta name="description"
+              content="Edify - Get help and help others wiith their homework.">
+        <meta name="keywords"
+              content="edify, homework, cornell, university, chegg, quizlet, brainly">
 
-<head>
-	{% block head %}
+        {% block head %}
+            <meta charset="utf-8" />
+            <title>Edify:
 
-	<meta charset="utf-8" />
-	<title>Edify: {% block title %}{% endblock %}</title>
+                {% block title %}
+                {% endblock title %}
 
+            </title>
+        {% endblock head %}
 
-	{% endblock head %}
+        <!-- Styles -->
+        {% include "bases/headers.jinja" %}
 
-	<!-- Styles -->
-	{% include 'bases/headers.jinja' %}
+        {% block headers %}
+        {% endblock headers %}
 
-	{% block headers %}{% endblock %}
+        {% block javascript %}
+        {% endblock javascript %}
 
-	{% block javascript %}{% endblock %}
-</head>
+    </head>
+    <body>
+        <!-- Navbar -->
 
+        {% block navbar %}
+        {% endblock navbar %}
 
-<body>
-	<!-- Navbar -->
-	{% block navbar %}
-	{% endblock %}
+        <!-- Top Elements -->
 
-	<!-- Top Elements -->
-	{% block top %}
-	{% endblock %}
+        {% block top %}
+        {% endblock top %}
 
-	<!-- Content -->
-	{% block content %}
-	{% endblock %}
+        <!-- Content -->
 
-	<!-- Footer -->
-	{% block footer %}
-	{% include 'bases/footer.jinja' %}
-	{% endblock %}
+        {% block content %}
+        {% endblock content %}
 
-</body>
+        <!-- Footer -->
 
+        {% block footer %}
+            {% include "bases/footer.jinja" %}
+        {% endblock footer %}
+
+    </body>
 </html>

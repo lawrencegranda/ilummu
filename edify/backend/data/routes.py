@@ -1,5 +1,6 @@
 # Standard Library imports
 from http import HTTPStatus
+from typing import Any, Dict, List, Optional
 
 # Third-Party Framework imports
 from flask import Blueprint, current_app, jsonify, redirect, url_for
@@ -8,7 +9,7 @@ from flask_jwt_extended import jwt_required, current_user
 
 # Local Application imports
 from edify import db
-from edify.backend.user.routes import get_current_user
+from edify.backend.user.utils import get_current_user, check_author
 from edify.models import (
     AcademicField,
     Course,
@@ -22,7 +23,7 @@ from edify.models import (
     TimeInterval,
     User,
 )
-from edify.utils.constants import ErrorType
+from edify.utils.constants import ErrorType, OfferStatusEnum
 from edify.utils.decorators import author_required
 from edify.utils.utils import error_response, internal_request
 
@@ -67,7 +68,7 @@ def fetch_user_subjects() -> flask_typing.ResponseReturnValue:
 
 # Endpoint: /data/school/<id_school>/subjects
 @data.route("/school/<int:id_school>/subjects", methods=["GET"])
-def fetch_school_subjects(id_school) -> flask_typing.ResponseReturnValue:
+def fetch_school_subjects(id_school: int) -> flask_typing.ResponseReturnValue:
     """
     Fetch all subjects for a given school ID.
 
@@ -111,7 +112,7 @@ def fetch_user_majors() -> flask_typing.ResponseReturnValue:
 
 # Endpoint: /data/school/<id_school>/majors
 @data.route("/school/<int:id_school>/majors", methods=["GET"])
-def fetch_school_majors(id_school) -> flask_typing.ResponseReturnValue:
+def fetch_school_majors(id_school: int) -> flask_typing.ResponseReturnValue:
     """
     Fetch all majors for a given school ID.
 
@@ -178,6 +179,7 @@ def fetch_user_notifications() -> flask_typing.ResponseReturnValue:
 
 # Endpoint: /data/questions
 @data.route("/questions", methods=["GET"])
+@jwt_required(optional=True)
 def fetch_questions() -> flask_typing.ResponseReturnValue:
     """
     Fetch all questions available in the system.
@@ -185,14 +187,20 @@ def fetch_questions() -> flask_typing.ResponseReturnValue:
     Returns:
         JSON response with all questions.
     """
+    # Get the current user from the JWT
+    user = get_current_user()
+    user_id = user.id if user else None
+
     questions = Question.to_dict_all(db.session.query(Question).all())
+    questions = [question_dictionary(user_id, q) for q in questions]
+
     return jsonify({"data": questions}), HTTPStatus.OK
 
 
 # Endpoint: /data/question/<id_question>
 @data.route("/question/<int:id_question>", methods=["GET"])
 @jwt_required(optional=True)
-def get_question(id_question) -> flask_typing.ResponseReturnValue:
+def get_question(id_question: int) -> flask_typing.ResponseReturnValue:
     """
     Fetch a specific question by its ID.
 
@@ -209,8 +217,12 @@ def get_question(id_question) -> flask_typing.ResponseReturnValue:
     if not question:
         return error_response("Question not found", ErrorType.NOT_FOUND)
 
+    # Get the current user from the JWT
+    user = get_current_user()
+    user_id = user.id if user else None
+
     # Convert the question object to a dictionary format suitable for JSON response
-    qstn_dict = Question.to_dict_all([question])[0]
+    qstn_dict = question_dictionary(user_id, question.to_dict(simplified=False))
 
     # Return the question data in JSON format with HTTP 200 OK status
     return jsonify({"data": [qstn_dict]}), HTTPStatus.OK
@@ -219,7 +231,7 @@ def get_question(id_question) -> flask_typing.ResponseReturnValue:
 # Endpoint: /data/question/<id_question>/is_author
 @data.route("/question/<int:id_question>/is_author", methods=["GET"])
 @jwt_required()
-def is_question_author(id_question) -> flask_typing.ResponseReturnValue:
+def is_question_author(id_question: int) -> flask_typing.ResponseReturnValue:
     """
     Check if the current user is the author of a specific question.
 
@@ -244,7 +256,7 @@ def is_question_author(id_question) -> flask_typing.ResponseReturnValue:
         return error_response("User not found", ErrorType.USER_NOT_FOUND)
 
     # Check if the current user is the author of the question
-    is_author = question.user_id == user.id
+    is_author = check_author(user.id, question.id)
 
     # Return the result as a JSON response
     return jsonify({"data": [is_author]}), HTTPStatus.OK
@@ -253,7 +265,7 @@ def is_question_author(id_question) -> flask_typing.ResponseReturnValue:
 # Endpoint: /data/question/<id_question>/offer_made
 @data.route("/question/<int:id_question>/offer_made", methods=["GET"])
 @jwt_required()
-def question_offer_made(id_question) -> flask_typing.ResponseReturnValue:
+def question_offer_made(id_question: int) -> flask_typing.ResponseReturnValue:
     """
     Check if the current user has made an offer for a specific question.
 
@@ -296,7 +308,7 @@ def question_offer_made(id_question) -> flask_typing.ResponseReturnValue:
 @data.route("/question/<int:id_question>/offers_received", methods=["GET"])
 @jwt_required()
 @author_required("id_question")
-def offers_received(id_question) -> flask_typing.ResponseReturnValue:
+def offers_received(id_question: int) -> flask_typing.ResponseReturnValue:
     """
     Fetch all offers received for a specific question.
 
@@ -309,9 +321,6 @@ def offers_received(id_question) -> flask_typing.ResponseReturnValue:
     # Query the Question model to find the question by its ID
     question = db.session.query(Question).get(id_question)
 
-    # Get the current user from the JWT
-    user = get_current_user()
-
     # Query the Offer model for all active offers received for the specified question
     offers = (
         db.session.query(Offer).filter_by(question_id=question.id, active=True).all()
@@ -322,3 +331,57 @@ def offers_received(id_question) -> flask_typing.ResponseReturnValue:
 
     # Return the list of offers in JSON format with HTTP 200 OK status
     return jsonify({"data": offers}), HTTPStatus.OK
+
+
+def question_dictionary(
+    user_id: Optional[int], question_dict: Dict[str, Any]
+) -> Dict[str, Any]:
+    """
+    Completes the given question dictionary with author status, offers,
+    and offer statuses based on the user's ID.
+
+    Args:
+        user_id (Optional[int]): The ID of the user.
+        question_dict (Dict[str, Any]): The dictionary containing question data.
+
+    Returns:
+        Dict[str, Any]: The updated question dictionary with additional information.
+    """
+    is_author = check_author(user_id, question_dict["id"])
+
+    # Initialize offer-related variables
+    offers = []
+    offer_made = None
+    offer_accepted = None
+
+    if user_id:
+        if is_author:
+            # Fetch all active offers for the author's question
+            offers = Offer.query.filter_by(
+                question_id=question_dict["id"], active=True
+            ).all()
+            offers = Offer.to_dict_all(offers)
+
+            # Attempt to get the accepted offer, if it exists
+            offer_accepted = Offer.query.filter_by(
+                question_id=question_dict["id"],
+                active=True,
+                status=OfferStatusEnum.ACCEPTED,
+            ).one_or_none()
+            offer_accepted = (
+                offer_accepted.to_dict(simplified=False) if offer_accepted else None
+            )
+        else:
+            # Fetch the made offer if the user is not the author
+            offer_made = Offer.query.filter_by(
+                question_id=question_dict["id"], user_id=user_id, active=True
+            ).first()
+            offer_made = offer_made.to_dict(simplified=False) if offer_made else None
+
+    # Update the question dictionary with computed values
+    question_dict["is_author"] = is_author
+    question_dict["offers"] = offers
+    question_dict["offer_made"] = offer_made
+    question_dict["offer_accepted"] = offer_accepted
+
+    return question_dict

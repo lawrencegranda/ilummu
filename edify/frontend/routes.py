@@ -270,38 +270,27 @@ def list_questions(field: str, search: str) -> str:
     user = get_user()
 
     if user:
-
-        def is_author(d):
-            result = fetch_data(
-                url_for("backend.data.is_question_author", id_question=d["id"])
-            )
-            return result[0] if result else False
-
-        def made_offer(d):
-            result = fetch_data(
-                url_for("backend.data.question_offer_made", id_question=d["id"])
-            )
-            return len(result) > 0
-
         # Only questions not solved, or authored or made an offer.
         questions = [
-            q for q in questions if not q["solved"] or is_author(q) or made_offer(q)
+            d
+            for d in questions
+            if not d["solved"] or d["is_author"] or (d["offer_made"] is not None)
         ]
 
         # Sorting the 'questions' list primarily by 'solved' status, then by the
-        # author'sstatus, whether an offer was made, and finally by the creation date.
+        # author's status, whether an offer was made, and finally by the creation date.
         questions.sort(
             key=lambda d: (
                 d["solved"],
-                not is_author(d),
-                not made_offer(d),
+                not d["is_author"],
+                not (d["offer_made"] is not None),
                 d["created_at"],
             )
         )
 
     else:
         # If not logged in, only unsolved
-        questions = [q for q in questions if not q["solved"]]
+        questions = [d for d in questions if not d["solved"]]
 
         # Sort questions by creation date, ensuring unsolved are first
         questions.sort(key=lambda d: (d["solved"], d["created_at"]))
@@ -378,32 +367,6 @@ def fetch_question(id_question: int) -> flask_typing.ResponseReturnValue:
 
     question = question[0]
 
-    # Initialize variables related to the question
-    is_author = False
-    offer_made = None
-    offer_accepted = None
-    offers = []
-
-    if user:
-        is_author = fetch_data(
-            url_for("backend.data.is_question_author", id_question=id_question), "GET"
-        )[0]
-
-        if is_author:
-            offers = fetch_data(
-                url_for("backend.data.offers_received", id_question=id_question), "GET"
-            )
-            for offer in offers:
-                if offer["status"] == OfferStatusEnum.ACCEPTED:
-                    offer_accepted = offer
-
-        offer_made = fetch_data(
-            url_for("backend.data.question_offer_made", id_question=id_question), "GET"
-        )
-
-        if not offer_made:
-            offer_made = None
-
     return render_template(
         "question.jinja",
         subjects=subjects,
@@ -412,10 +375,6 @@ def fetch_question(id_question: int) -> flask_typing.ResponseReturnValue:
         notifications=notifications,
         user=user,
         question=question,
-        is_author=is_author,
-        offer_made=offer_made,
-        offer_accepted=offer_accepted,
-        offers=offers,
     )
 
 

@@ -1,34 +1,52 @@
 <div class="question-comments">
+
   {% if not q['solved'] %}
-  <div class="comments-bar-container">
-    <input type="text" id="comment-box" placeholder="Type a comment..." name="text" autocomplete="off"/>
-    <button class="btn btn-primary" type="button">Submit</button>
-  </div>
-  {% endif %}
-  <div class="comments-list">
-    {% for c in comments recursive %}
-    <div class="comment-container">
-      <div class="comment-wrapper">
-        <div class="comment-body">
-          <p class="comment-text">
-            <b>{{c['user']['username']}}:</b> {{c['message']}}
-          </p>
-          <button class="btn btn-reply" type="button">reply</button>
-        </div>
-      </div>
-      <div class="comment-area" style="display: none">
-        <textarea class="comment-textbox" rows="5"></textarea>
-        <div class="comment-area-button-container">
-          <button class="btn btn-dark btn-cancel-comment" type="button">Cancel</button>
-          <button class="btn btn-primary btn-submit-comment" type="button">Comment</button>
-        </div>
-      </div>
-      <div class="replies-wrapper">
-        {% if c['children'] %}
-        {{ loop(c['children']) }}
-        {% endif %}
-      </div>
+    <div class="comments-bar-container">
+      <input type="text"
+             id="comment-box"
+             placeholder="Type a comment..."
+             name="text"
+             autocomplete="off" />
+      <button class="btn btn-primary" type="button">
+        Submit
+      </button>
     </div>
+  {% endif %}
+
+  <div class="comments-list">
+
+    {% for c in comments recursive %}
+      <div class="comment-container">
+        <div class="comment-wrapper">
+          <div class="comment-body">
+            <p class="comment-text">
+              <b>{{ c['user']['username'] }}:</b> {{ c['message'] }}
+            </p>
+            <button class="btn btn-reply" type="button">
+              reply
+            </button>
+          </div>
+        </div>
+        <div class="comment-area" style="display: none">
+          <textarea class="comment-textbox" rows="5"></textarea>
+          <div class="comment-area-button-container">
+            <button class="btn btn-dark btn-cancel-comment" type="button">
+              Cancel
+            </button>
+            <button class="btn btn-primary btn-submit-comment" type="button">
+              Comment
+            </button>
+          </div>
+        </div>
+        <div class="replies-wrapper">
+
+          {% if c['children'] %}
+            {{ loop(c['children']) }}
+          {% endif %}
+
+        </div>
+      </div>
     {% endfor %}
+
   </div>
 </div>
