@@ -131,7 +131,13 @@
             </div>
           {% else %}
 
-            {% if not question.solved %}
+            {% if question.solved %}
+              <div class="separator">
+              </div>
+              <p class="question-statement">
+                No offers received.
+              </p>
+            {% else %}
               <div class="bid-wrapper">
                 <div class="bid-body">
                   <p id="question-wait-header" class="offer-title">

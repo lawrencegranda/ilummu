@@ -4,53 +4,61 @@
   </p>
   <div class="offer-list">
 
-    {% for offer in offers %}
-      <div class="offer">
-        <div class="offer-left">
-          <div class="offer-user-profile">
-            <img src="https://robohash.org/{{ offer['user']['username'] }}"
-                 alt="Avatar"
-                 class="avatar"
-                 width="auto"
-                 height="auto" />
+    {% if not offers or offers|length == 0 %}
+      <p class="question-statement">
+        No offers available.
+      </p>
+    {% else %}
+
+      {% for offer in offers %}
+        <div class="offer">
+          <div class="offer-left">
+            <div class="offer-user-profile">
+              <img src="https://robohash.org/{{ offer['user']['username'] }}"
+                   alt="Avatar"
+                   class="avatar"
+                   width="auto"
+                   height="auto" />
+            </div>
+            <div class="question-user">
+              <p class="question-user-name">
+                {{ offer['user']['username'] }}
+                &nbsp;
+                <span class="rating">
+
+                  {% if offer['rating'] is not number %}
+                  {% elif offer['rating'] >= 3 %}
+                    {{ '%.1f' % offer['rating'] }}
+                    <span class="glyphicon glyphicon-star"></span>
+                  {% else %}
+                    {{ '%.1f' % offer['rating'] }}
+                    <span class="glyphicon glyphicon-star-empty"></span>
+                  {% endif %}
+
+                </span>
+              </p>
+              <p class="question-user-info">
+                {{ offer['user']['major'] }} • {{ offer['user']['year'] }}
+              </p>
+            </div>
           </div>
-          <div class="question-user">
-            <p class="question-user-name">
-              {{ offer['user']['username'] }}
-              &nbsp;
-              <span class="rating">
-
-                {% if offer['rating'] is not number %}
-                {% elif offer['rating'] >= 3 %}
-                  {{ '%.1f' % offer['rating'] }}
-                  <span class="glyphicon glyphicon-star"></span>
-                {% else %}
-                  {{ '%.1f' % offer['rating'] }}
-                  <span class="glyphicon glyphicon-star-empty"></span>
-                {% endif %}
-
-              </span>
-            </p>
-            <p class="question-user-info">
-              {{ offer['user']['major'] }} • {{ offer['user']['year'] }}
-            </p>
+          <div class="offer-right">
+            <div class="question-price">
+              ${{ '%.2f' % offer['amount'] }}
+            </div>
+            <div class="offer-buttons">
+              <button id="btn-accept-offer" class="btn btn-my-offer" type="button">
+                accept
+              </button>
+              <button id="btn-decline-offer" class="btn btn-my-offer" type="button">
+                decline
+              </button>
+            </div>
           </div>
         </div>
-        <div class="offer-right">
-          <div class="question-price">
-            ${{ '%.2f' % offer['amount'] }}
-          </div>
-          <div class="offer-buttons">
-            <button id="btn-accept-offer" class="btn btn-my-offer" type="button">
-              accept
-            </button>
-            <button id="btn-decline-offer" class="btn btn-my-offer" type="button">
-              decline
-            </button>
-          </div>
-        </div>
-      </div>
-    {% endfor %}
+      {% endfor %}
+
+    {% endif %}
 
   </div>
 </div>
