@@ -1,14 +1,19 @@
-from edify.utils.constants import ErrorType
+# Standard Library imports
+import json
+import random
 import re
 from datetime import datetime, timedelta
-import random
-import json
-import phonenumbers
+from typing import Any, Optional
+
+# Third-Party Framework Imports
 import flask
-from flask import jsonify, current_app, url_for, request
-from werkzeug.test import EnvironBuilder
-from typing import Optional, Any
+import phonenumbers
+from flask import current_app, jsonify, request, url_for
 from flask import typing as flask_typing
+from werkzeug.test import EnvironBuilder
+
+# Local Application imports
+from edify.utils.constants import ErrorType
 
 
 # Extracts the access token from the request headers
