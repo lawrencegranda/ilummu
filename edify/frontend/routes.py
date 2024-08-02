@@ -1,34 +1,36 @@
+# Standard Library imports
 import re
 import time
 from http import HTTPStatus
+from typing import Any, Dict, List, Optional
 
+# Third-Party Framework imports
 from flask import (
-    Flask,
     Blueprint,
-    jsonify,
-    render_template,
-    redirect,
-    request,
+    Flask,
     current_app,
+    jsonify,
+    redirect,
+    render_template,
+    request,
     url_for,
 )
 from flask import typing as flask_typing
 from flask_jwt_extended import (
-    jwt_required,
     exceptions,
     get_jwt_identity,
+    jwt_required,
     unset_jwt_cookies,
 )
-
 from webargs import fields, validate
 from webargs.flaskparser import use_args
 
-from typing import Any, Dict, List, Optional
-
-from edify import db, bcrypt
+# Local Application imports
+from edify import bcrypt, db
 from edify.models import *
 from edify.utils.decorators import no_token_allowed
-from edify.utils.utils import internal_request, error_response
+from edify.utils.utils import error_response, internal_request
+
 
 # -----------------------------------------------------------------------------
 # Helper Functions

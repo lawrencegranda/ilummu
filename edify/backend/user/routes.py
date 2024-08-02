@@ -1,4 +1,11 @@
+# Standard Library imports
+from datetime import datetime, timedelta
+from http import HTTPStatus
+from typing import Optional, Any, Tuple
+
+# Third-Party Framework imports
 from flask import Blueprint, url_for, jsonify, current_app, request
+from flask import typing as flask_typing
 from flask_jwt_extended import (
     jwt_required,
     current_user,
@@ -9,6 +16,22 @@ from flask_jwt_extended import (
 from flask_login import UserMixin
 from webargs import fields, validate
 from webargs.flaskparser import use_args
+
+# Local Application imports
+from edify import db
+from edify.models import (
+    Notification,
+    AcademicField,
+    Method,
+    TimeInterval,
+    Course,
+    School,
+    Major,
+    User,
+    Question,
+    Offer,
+    NotificationType,
+)
 from edify.utils.constants import (
     ErrorType,
     AuthLevelEnum,
@@ -23,24 +46,6 @@ from edify.utils.utils import (
     generate_funny_username,
     format_phone,
 )
-from datetime import datetime, timedelta
-from edify.models import (
-    User,
-    Question,
-    Offer,
-    Notification,
-    AcademicField,
-    Method,
-    TimeInterval,
-    Course,
-    School,
-    NotificationType,
-    Major,
-)
-from edify import db
-from http import HTTPStatus
-from typing import Optional, Any, Tuple
-from flask import typing as flask_typing
 
 
 # -----------------------------------------------------------------------------

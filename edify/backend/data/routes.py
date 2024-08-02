@@ -1,26 +1,31 @@
-from flask import Blueprint, url_for, jsonify, current_app, redirect
+# Standard Library imports
+from http import HTTPStatus
+
+# Third-Party Framework imports
+from flask import Blueprint, current_app, jsonify, redirect, url_for
+from flask import typing as flask_typing
 from flask_jwt_extended import jwt_required, current_user
+
+# Local Application imports
+from edify import db
 from edify.backend.user.routes import get_current_user
 from edify.models import (
-    User,
-    Notification,
     AcademicField,
-    Method,
-    TimeInterval,
     Course,
-    School,
-    NotificationType,
     Major,
-    Question,
+    Method,
     Notification,
+    NotificationType,
     Offer,
+    Question,
+    School,
+    TimeInterval,
+    User,
 )
-from edify import db
-from http import HTTPStatus
-from edify.utils.utils import internal_request, error_response
 from edify.utils.constants import ErrorType
 from edify.utils.decorators import author_required
-from flask import typing as flask_typing
+from edify.utils.utils import error_response, internal_request
+
 
 # -----------------------------------------------------------------------------
 # Route Blueprint

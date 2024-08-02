@@ -1,22 +1,22 @@
-from edify import create_app
-from edify.config import Config
-from edify.models import (
-    User,
-    Question,
-    Offer,
-    Notification,
-    Major,
-    AcademicField,
-    Method,
-    TimeInterval,
-    Course,
-    School,
-    NotificationType,
-)
-from edify.database.populate import populate_constants
-from edify.database.fake_data import populate_fake
-from edify import db
+# Local Application imports
 from app import app
+from edify import create_app, db
+from edify.config import Config
+from edify.database.fake_data import populate_fake
+from edify.database.populate import populate_constants
+from edify.models import (
+    AcademicField,
+    Course,
+    Major,
+    Method,
+    Notification,
+    NotificationType,
+    Offer,
+    Question,
+    School,
+    TimeInterval,
+    User,
+)
 
 
 # Run the Flask app

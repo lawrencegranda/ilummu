@@ -1,22 +1,27 @@
-from faker import Faker
+# Standard Library imports
+import string
 from random import choice, randint, choices
+
+# Third-Party Framework imports
+from faker import Faker
+
+# Local Application imports
 from edify import db
 from edify.models import (
-    User,
-    Question,
-    Offer,
-    Notification,
     AcademicField,
-    Method,
-    TimeInterval,
     Course,
-    School,
-    NotificationType,
     Major,
+    Notification,
+    NotificationType,
+    Offer,
+    Question,
+    School,
+    TimeInterval,
+    User,
 )
-from edify.utils.constants import SupportedLanguagesEnum, AuthLevelEnum, OfferStatusEnum
+from edify.utils.constants import AuthLevelEnum, OfferStatusEnum, SupportedLanguagesEnum
 from edify.utils.utils import validate_phone
-import string
+
 
 # Initialize Faker for generating fake data
 fake = Faker()
