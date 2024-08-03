@@ -31,7 +31,7 @@ from edify.utils.utils import error_response, internal_request
 # -----------------------------------------------------------------------------
 # Route Blueprint
 # -----------------------------------------------------------------------------
-# Endpoint: /data/
+# Endpoint: /backend/data/
 data = Blueprint("data", __name__, url_prefix="/data")
 
 
@@ -40,7 +40,7 @@ data = Blueprint("data", __name__, url_prefix="/data")
 # -----------------------------------------------------------------------------
 
 
-# Endpoint: /data/subjects
+# Endpoint: /backend/data/subjects
 @data.route("/subjects", methods=["GET"])
 @jwt_required(optional=True)
 def fetch_user_subjects() -> flask_typing.ResponseReturnValue:
@@ -66,7 +66,7 @@ def fetch_user_subjects() -> flask_typing.ResponseReturnValue:
     return response
 
 
-# Endpoint: /data/school/<id_school>/subjects
+# Endpoint: /backend/data/school/<id_school>/subjects
 @data.route("/school/<int:id_school>/subjects", methods=["GET"])
 def fetch_school_subjects(id_school: int) -> flask_typing.ResponseReturnValue:
     """
@@ -84,7 +84,7 @@ def fetch_school_subjects(id_school: int) -> flask_typing.ResponseReturnValue:
     return jsonify({"data": subjects}), HTTPStatus.OK
 
 
-# Endpoint: /data/majors
+# Endpoint: /backend/data/majors
 @data.route("/majors", methods=["GET"])
 @jwt_required(optional=True)
 def fetch_user_majors() -> flask_typing.ResponseReturnValue:
@@ -110,7 +110,7 @@ def fetch_user_majors() -> flask_typing.ResponseReturnValue:
     return response
 
 
-# Endpoint: /data/school/<id_school>/majors
+# Endpoint: /backend/data/school/<id_school>/majors
 @data.route("/school/<int:id_school>/majors", methods=["GET"])
 def fetch_school_majors(id_school: int) -> flask_typing.ResponseReturnValue:
     """
@@ -128,7 +128,7 @@ def fetch_school_majors(id_school: int) -> flask_typing.ResponseReturnValue:
     return jsonify({"data": majors}), HTTPStatus.OK
 
 
-# Endpoint: /data/methods
+# Endpoint: /backend/data/methods
 @data.route("/methods", methods=["GET"])
 def fetch_methods() -> flask_typing.ResponseReturnValue:
     """
@@ -143,7 +143,7 @@ def fetch_methods() -> flask_typing.ResponseReturnValue:
     return jsonify({"data": methods}), HTTPStatus.OK
 
 
-# Endpoint: /data/intervals
+# Endpoint: /backend/data/intervals
 @data.route("/intervals", methods=["GET"])
 def fetch_intervals() -> flask_typing.ResponseReturnValue:
     """
@@ -156,7 +156,7 @@ def fetch_intervals() -> flask_typing.ResponseReturnValue:
     return jsonify({"data": time_intervals}), HTTPStatus.OK
 
 
-# Endpoint: /data/notifications
+# Endpoint: /backend/data/notifications
 @data.route("/notifications", methods=["GET"])
 def fetch_user_notifications() -> flask_typing.ResponseReturnValue:
     """
@@ -177,7 +177,7 @@ def fetch_user_notifications() -> flask_typing.ResponseReturnValue:
     return jsonify({"data": notifications}), HTTPStatus.OK
 
 
-# Endpoint: /data/questions
+# Endpoint: /backend/data/questions
 @data.route("/questions", methods=["GET"])
 @jwt_required(optional=True)
 def fetch_questions() -> flask_typing.ResponseReturnValue:
@@ -197,7 +197,7 @@ def fetch_questions() -> flask_typing.ResponseReturnValue:
     return jsonify({"data": questions}), HTTPStatus.OK
 
 
-# Endpoint: /data/question/<id_question>
+# Endpoint: /backend/data/question/<id_question>
 @data.route("/question/<int:id_question>", methods=["GET"])
 @jwt_required(optional=True)
 def get_question(id_question: int) -> flask_typing.ResponseReturnValue:
@@ -228,7 +228,7 @@ def get_question(id_question: int) -> flask_typing.ResponseReturnValue:
     return jsonify({"data": [qstn_dict]}), HTTPStatus.OK
 
 
-# Endpoint: /data/question/<id_question>/is_author
+# Endpoint: /backend/data/question/<id_question>/is_author
 @data.route("/question/<int:id_question>/is_author", methods=["GET"])
 @jwt_required()
 def is_question_author(id_question: int) -> flask_typing.ResponseReturnValue:
@@ -262,7 +262,7 @@ def is_question_author(id_question: int) -> flask_typing.ResponseReturnValue:
     return jsonify({"data": [is_author]}), HTTPStatus.OK
 
 
-# Endpoint: /data/question/<id_question>/offer_made
+# Endpoint: /backend/data/question/<id_question>/offer_made
 @data.route("/question/<int:id_question>/offer_made", methods=["GET"])
 @jwt_required()
 def question_offer_made(id_question: int) -> flask_typing.ResponseReturnValue:
@@ -304,7 +304,7 @@ def question_offer_made(id_question: int) -> flask_typing.ResponseReturnValue:
     return jsonify({"data": [offer_made.to_dict(simplified=False)]}), HTTPStatus.OK
 
 
-# Endpoint: /data/question/<id_question>/offers_received
+# Endpoint: /backend/data/question/<id_question>/offers_received
 @data.route("/question/<int:id_question>/offers_received", methods=["GET"])
 @jwt_required()
 @author_required("id_question")

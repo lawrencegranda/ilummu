@@ -32,7 +32,7 @@ offer = Blueprint("offer", __name__, url_prefix="/offer")
 # -----------------------------------------------------------------------------
 
 
-# Endpoint: /new
+# Endpoint: /backend/offer/new
 @offer.route("/new", methods=["POST"])
 @jwt_required()
 @use_args(
@@ -41,7 +41,7 @@ offer = Blueprint("offer", __name__, url_prefix="/offer")
         "price": fields.Float(required=False),
     }
 )
-def new_offer(args) -> flask_typing.ResponseReturnValue:
+def create_offer(args) -> flask_typing.ResponseReturnValue:
     """
     Make a new offer and post it in the databse
 

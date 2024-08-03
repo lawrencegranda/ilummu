@@ -54,7 +54,7 @@
       };
 
       $.ajax({
-          url: '/list',
+          url: '{{url_for("frontend.question_list")}}',
           method: 'GET',
           data: data,
           traditional: true, // Ensures proper handling of arrays
