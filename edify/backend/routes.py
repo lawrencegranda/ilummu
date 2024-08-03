@@ -10,8 +10,8 @@ from edify.backend.offer.routes import offer
 # -----------------------------------------------------------------------------
 # Route Blueprint
 # -----------------------------------------------------------------------------
-# Endpoint: /
-backend = Blueprint("backend", __name__, url_prefix="/")
+# Endpoint: /backend
+backend = Blueprint("backend", __name__, url_prefix="/backend")
 
 
 # -----------------------------------------------------------------------------

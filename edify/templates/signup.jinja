@@ -121,7 +121,7 @@
 
       // Send the data via AJAX POST request
       $.ajax({
-        url: '/user/new',
+        url: '{{url_for("backend.user.signup")}}',
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(data),
@@ -185,7 +185,7 @@
 
       // Send the data via AJAX POST request
       $.ajax({
-        url: '/user/login',
+        url: '{{url_for("backend.user.login")}}',
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(data),

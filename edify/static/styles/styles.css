@@ -715,13 +715,14 @@ strong:hover {
     top: 0;
     border-radius: 40px;
     height: fit-content;
-    padding: 30px;
+    padding: 20px;
     background-color: var(--neutral--300);
     align-items: self-start;
     display: flex;
     flex-wrap: wrap;
     flex-direction: column;
     row-gap: 12px;
+    overflow: hidden;
 }
 
 .dashboard-menu-container-small {
@@ -775,7 +776,7 @@ button.category:focus {
     width: fit-content;
     max-width: none;
     min-width: 0;
-    font-size: 18px;
+    font-size: 17px;
     font-weight: normal;
     background-color: transparent;
     color: black;

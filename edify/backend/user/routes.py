@@ -56,7 +56,7 @@ from edify.backend.user.utils import (
 # -----------------------------------------------------------------------------
 # Route Blueprint
 # -----------------------------------------------------------------------------
-# Endpoint: /user/
+# Endpoint: /backend/user/
 user = Blueprint("user", __name__, url_prefix="/user")
 
 
@@ -65,7 +65,7 @@ user = Blueprint("user", __name__, url_prefix="/user")
 # -----------------------------------------------------------------------------
 
 
-# Endpoint: /user/logout
+# Endpoint: /backend/user/logout
 @user.route("/logout", methods=["POST"])
 def logout() -> flask_typing.ResponseReturnValue:
     """
@@ -79,7 +79,7 @@ def logout() -> flask_typing.ResponseReturnValue:
     return (response, HTTPStatus.OK)
 
 
-# Endpoint: /user/refresh
+# Endpoint: /backend/user/refresh
 @user.route("/refresh", methods=["GET", "POST"])
 @jwt_required(refresh=True)
 def refresh() -> flask_typing.ResponseReturnValue:
@@ -98,7 +98,7 @@ def refresh() -> flask_typing.ResponseReturnValue:
     return (response, HTTPStatus.OK)
 
 
-# Endpoint: /user
+# Endpoint: /backend/user
 @user.route("/", methods=["GET"])
 @jwt_required(optional=True)
 def get_user() -> flask_typing.ResponseReturnValue:
@@ -114,7 +114,7 @@ def get_user() -> flask_typing.ResponseReturnValue:
     return jsonify(None), HTTPStatus.NOT_FOUND
 
 
-# Endpoint: /user/login
+# Endpoint: /backend/user/login
 @user.route("/login", methods=["POST"])
 @use_args(
     {
@@ -171,7 +171,7 @@ def login(args) -> flask_typing.ResponseReturnValue:
     return (response, HTTPStatus.OK)
 
 
-# Endpoint: /user/new
+# Endpoint: /backend/user/new
 @user.route("/new", methods=["POST"])
 @use_args(
     {
@@ -189,7 +189,7 @@ def login(args) -> flask_typing.ResponseReturnValue:
         "remember": fields.Boolean(required=False),
     }
 )
-def new_user(args) -> flask_typing.ResponseReturnValue:
+def signup(args) -> flask_typing.ResponseReturnValue:
     """
     Endpoint to create a new user.
 
