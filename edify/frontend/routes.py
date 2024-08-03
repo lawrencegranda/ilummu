@@ -71,33 +71,33 @@ def get_user() -> Optional[Dict[str, Any]]:
     return response.get_json()
 
 
-def filter_list(list: List[Dict], field: str, search: Optional[str]) -> List[Dict]:
+def filter_list(dlist: List[Dict], field: str, search: Optional[str]) -> List[Dict]:
     """
     Filters the list of dicts based on the provided field and search text.
 
     Parameters:
-        questions (List[Dict]): The list of questions to filter.
+        dlist (List[Dict]): The list to filter.
         field (str): The field to filter by.
-        search (Optional[str]): The search text to filter questions.
+        search (Optional[str]): The search text to filter list.
 
     Returns:
         List[Dict]: The filtered list of questions.
     """
     # Return all questions if no field is specified
     if not search or not search.strip():
-        return questions
+        return dlist
 
-    filtered_questions = []
+    filtered_list = []
 
     # Split by non-alphanumeric characters and lowercase
     search_terms = re.findall(r"\b\w+\b", search.lower())
 
-    for question in questions:
+    for d in dlist:
         # Append questions that constain all the words
-        if all(term in question.get(field, "").lower() for term in search_terms):
-            filtered_questions.append(question)
+        if all(term in d.get(field, "").lower() for term in search_terms):
+            filtered_list.append(d)
 
-    return filtered_questions
+    return filtered_list
 
 
 # -----------------------------------------------------------------------------
@@ -238,35 +238,36 @@ def dashboard() -> flask_typing.ResponseReturnValue:
         methods=methods,
         time_intervals=time_intervals,
         user=user,
-        question_list=list_questions("", ""),
+        question_list=list_questions([], ""),
     )
 
 
+# Endpoint: /list
 @frontend.route("/list", methods=["GET"])
 @jwt_required(optional=True)
 @use_args(
     {
-        "field": fields.Str(required=True),
+        "fields": fields.List(fields.Str(), required=False),
         "search": fields.Str(required=False),
-    }
+    },
+    location="query",
 )
 def question_list(args) -> flask_typing.ResponseReturnValue:
     """
     List questions based on filter criteria. Route endpoint.
 
     Parameters:
-        field (str): Subject to filter by.
+        fields (List[str]): Subjects to filter by.
         search (str): Search text.
 
     Returns:
         str: Rendered question list template.
     """
-
-    return list_questions(args.get("field", ""), args.get("search", ""))
+    return list_questions(args.get("fields", []), args.get("search", ""))
 
 
 @jwt_required(optional=True)
-def list_questions(field: str, search: str) -> str:
+def list_questions(fields: List[str], search: str) -> str:
     """
     List questions based on filter criteria.
 
@@ -278,14 +279,19 @@ def list_questions(field: str, search: str) -> str:
         str: Rendered question list template.
     """
     # Fetch questions from the backend
-    questions = fetch_data(url_for("backend.data.fetch_questions"), "GET")
-
-    field = field.strip()
+    qtns = fetch_data(url_for("backend.data.fetch_questions"), "GET")
     search = search.strip()
 
+    # Initialize the questions slide
+    questions = []
+
+    # Get all if empty
+    if not fields:
+        questions = qtns
+
     # Filter questions based on field/subject
-    if field:
-        questions = filter_list(questions, "subject", field)
+    for field in fields:
+        questions.extend(filter_list(qtns, "subject_code", field.strip()))
 
     # Filter questions based on search text if provided
     if search:
@@ -294,6 +300,9 @@ def list_questions(field: str, search: str) -> str:
         questions_request = filter_list(questions, "request", search)
 
         questions = [*questions_code, *questions_course, *questions_request]
+
+    # Remove duplicates
+    questions = {q["id"]: q for q in questions}.values()
 
     # Get current user
     user = get_user()

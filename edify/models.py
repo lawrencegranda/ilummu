@@ -334,6 +334,7 @@ class Question(BaseModel):
         if simplified == False:
             result["user"] = self.user.to_dict(simplified=False)
             result["subject"] = self.course.academic_field.name
+            result["subject_code"] = self.course.academic_field.value
             result["course_code"] = self.course.code
             result["course_name"] = self.course.name
             result["time_ago"] = get_time_ago(self.created_at)
