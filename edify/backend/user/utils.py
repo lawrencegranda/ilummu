@@ -62,11 +62,11 @@ def check_author(id_user: int, id_question: int) -> bool:
         bool: Wheter the user is the author of that question
     """
     # Abort if the user is not found
-    if not User.query.get(id_user):
+    if not db.session.get(User, id_user):
         return False
 
     # Query the Question model to find the question by its ID
-    question = Question.query.get(id_question)
+    question = db.session.get(Question, id_question)
 
     # Abort if the question does not exist
     if not question:

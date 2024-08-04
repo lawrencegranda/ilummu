@@ -32,8 +32,14 @@ flask-migrate = "^4.0.7"
 mysql-connector = "^2.2.9"
 phonenumbers = "^8.13.40"
 djlint = "^1.34.1"
+pytest = "^8.3.2"
 
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+pythonpath = [
+    "."
+]

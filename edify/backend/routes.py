@@ -5,6 +5,7 @@ from flask import Blueprint, Flask, jsonify, render_template, request
 from edify.backend.data.routes import data
 from edify.backend.user.routes import user
 from edify.backend.offer.routes import offer
+from edify.backend.question.routes import question
 
 
 # -----------------------------------------------------------------------------
@@ -19,4 +20,5 @@ backend = Blueprint("backend", __name__, url_prefix="/backend")
 # -----------------------------------------------------------------------------
 backend.register_blueprint(user)
 backend.register_blueprint(offer)
+backend.register_blueprint(question)
 backend.register_blueprint(data)
