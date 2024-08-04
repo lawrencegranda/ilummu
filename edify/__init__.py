@@ -1,19 +1,28 @@
-from flask import Flask, request, jsonify, session, url_for, redirect
-from flask_sqlalchemy import SQLAlchemy
+# Standard Library imports
+from http import HTTPStatus
+import traceback
+
+# Third-Party Framework imports
+from flask import Flask, request, jsonify, session, url_for, redirect, current_app
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import (
     JWTManager,
     unset_jwt_cookies,
+    unset_access_cookies,
     jwt_required,
     get_jwt_identity,
+    verify_jwt_in_request,
     set_access_cookies,
 )
 from flask_jwt_extended.exceptions import UserLookupError
 from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
 from werkzeug.exceptions import HTTPException
-from http import HTTPStatus
 from jwt.exceptions import ExpiredSignatureError
-from edify.utils.utils import internal_request
+
+# Local Application imports
+from edify.utils.utils import internal_request, get_request_cookie, get_access_header
+
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -44,25 +53,32 @@ def create_app(config_class):
     def before_request_func():
         id = get_jwt_identity()
 
-        if id and "access_token_cookie" not in request.cookies:
-            print(request.cookies)
-            response = internal_request(url_for("backend.user.refresh"))
+        if id and (
+            "access_token_cookie" not in request.cookies
+            or not verify_jwt_in_request(optional=True)
+        ):
+            refresh = internal_request(url_for("backend.user.refresh"))
 
             # Parse the response
-            data, status = response.get_json(), response.status_code
+            data, status = refresh.get_json(), refresh.status_code
 
-            if status != HTTPStatus.OK:
-                response = redirect(url_for("frontend.login"))
-                unset_jwt_cookies(response)
-                return response
+            if status == HTTPStatus.OK:
+                # Modify the request headers to include the new access token
+                request.environ["HTTP_AUTHORIZATION"] = (
+                    f'Bearer {data["access_token"].strip()}'
+                )
 
-            # Modify the request to include the new access token cookie
-            request.environ["HTTP_COOKIE"] = (
-                f"access_token_cookie={data['access_token']}; {request.environ.get('HTTP_COOKIE', '')}"
+    @frontend.after_request
+    def after_request_func(response):
+        token = get_access_header(request)
+        if token:
+            # Modify the response to include the new access token cookie
+            set_access_cookies(
+                response,
+                token,
             )
 
-            print(request.cookies)
-            print(request.environ["HTTP_COOKIE"])
+        return response
 
     # -----------------------------------------------------------------------------
     # Error Handlers
@@ -74,33 +90,17 @@ def create_app(config_class):
         return redirect(url_for("frontend.logout"))
 
     @frontend.errorhandler(ExpiredSignatureError)
-    @jwt_required(optional=True, refresh=True)
     def expired_jwt(e):
-        id = get_jwt_identity()
-
-        if not id:
-            response = redirect(url_for("frontend.login"))
-            unset_jwt_cookies(response)
-            return response
-
-        response = internal_request(url_for("backend.user.refresh"))
-
-        # Parse the response
-        data, status = response.get_json(), response.status_code
-
-        if status != HTTPStatus.OK:
-            response = redirect(url_for("frontend.login"))
-            unset_jwt_cookies(response)
-            return response
-
-        response = redirect(url_for("frontend.dashboard"))
-        set_access_cookies(response, data["access_token"])
+        response = redirect(url_for("frontend.logout"))
+        unset_jwt_cookies(response)
 
         return response
 
     @frontend.errorhandler(Exception)
     def handle_error(e):
         print(f"{type(e)}: {e}")
+        print(traceback.format_exc())
+
         return (
             jsonify("An unexpected error occurred."),
             HTTPStatus.INTERNAL_SERVER_ERROR,

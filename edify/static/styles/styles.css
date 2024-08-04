@@ -9,6 +9,7 @@
 }
 
 :root {
+    --red: #B31B1B;
     --blue--base: #3eacf3;
     --blue--light: #91cef7;
     --neutral--100: #f9f9fb;
@@ -116,7 +117,6 @@ h1 {
     font-weight: 700;
     letter-spacing: -.02em;
     line-height: 1.2;
-
 }
 
 h2 {
@@ -125,7 +125,6 @@ h2 {
     font-weight: 700;
     letter-spacing: -.02em;
     line-height: 1.2;
-
 }
 
 h3 {
@@ -134,7 +133,6 @@ h3 {
     font-weight: 700;
     letter-spacing: -.02em;
     line-height: 1.2;
-
 }
 
 h4 {
@@ -143,7 +141,6 @@ h4 {
     font-weight: 700;
     letter-spacing: -.02em;
     line-height: 1.4;
-
 }
 
 h5 {
@@ -253,7 +250,6 @@ strong:hover {
     min-width: 150px;
     width: 30%;
     margin-left: 20px;
-
 }
 
 .navigation-button-wrap {
@@ -345,7 +341,6 @@ strong:hover {
     .brand-name {
         font-size: 22px;
     }
-
 
     .bell {
         height: 22px !important;
@@ -471,7 +466,6 @@ strong:hover {
     font-weight: 600;
 }
 
-
 .container-regular {
     display: flex;
     flex-direction: column;
@@ -548,13 +542,11 @@ strong:hover {
     align-items: center;
 }
 
-
 .footer-section {
     align-items: center;
     max-width: 1300px;
     width: 100%;
 }
-
 
 .row-flex {
     align-items: center;
@@ -566,7 +558,6 @@ strong:hover {
 .full {
     width: 100%;
 }
-
 
 @media only screen and (min-width: 801px) and (max-width: 1250px) {
     h1 {
@@ -596,7 +587,6 @@ strong:hover {
     p {
         font-size: 20px;
     }
-
 }
 
 @media only screen and (min-width: 501px) and (max-width: 800px) {
@@ -627,7 +617,6 @@ strong:hover {
     p {
         font-size: 19px;
     }
-
 }
 
 @media only screen and (min-width: 0px) and (max-width: 1200px) {
@@ -635,7 +624,6 @@ strong:hover {
         height: 0;
     }
 }
-
 
 @media only screen and (min-width: 0px) and (max-width: 500px) {
     h1 {
@@ -677,7 +665,6 @@ strong:hover {
     .container-regular {
         grid-row-gap: 20px;
     }
-
 }
 
 @media only screen and (min-width: 0px) and (max-width: 900px) {
@@ -715,7 +702,6 @@ strong:hover {
     justify-content: space-between;
 }
 
-
 .dashboard-menu-container {
     position: relative;
     align-self: flex-start;
@@ -729,13 +715,14 @@ strong:hover {
     top: 0;
     border-radius: 40px;
     height: fit-content;
-    padding: 30px;
+    padding: 20px;
     background-color: var(--neutral--300);
     align-items: self-start;
     display: flex;
     flex-wrap: wrap;
     flex-direction: column;
     row-gap: 12px;
+    overflow: hidden;
 }
 
 .dashboard-menu-container-small {
@@ -768,7 +755,6 @@ strong:hover {
     width: 100%;
 }
 
-
 .method-selector-container>#method-selector {
     font-size: 17px;
 }
@@ -790,13 +776,12 @@ button.category:focus {
     width: fit-content;
     max-width: none;
     min-width: 0;
-    font-size: 18px;
+    font-size: 17px;
     font-weight: normal;
     background-color: transparent;
     color: black;
     border: none;
     transition: 300ms;
-
 }
 
 button.category.selected {
@@ -818,7 +803,6 @@ button.category:hover {
     border: none;
     font-weight: 600;
 }
-
 
 .grid {
     align-self: flex-end;
@@ -848,7 +832,6 @@ button.category:hover {
 }
 
 @media only screen and (min-width: 0px) and (max-width: 1064px) {
-
     .dashboard-menu-container {
         display: none;
     }
@@ -987,7 +970,6 @@ button.category:hover {
 .unsolved {
     border-left: 10px solid var(--blue--base);
     border-bottom: 7px solid var(--blue--base);
-
 }
 
 .solved {
@@ -1022,7 +1004,6 @@ button.category:hover {
     .question-preview-button {
         font-size: 13px;
     }
-
 }
 
 @media only screen and (min-width: 0px) and (max-width: 550px) {
@@ -1174,7 +1155,6 @@ img.image-preview {
     filter: invert(62%) sepia(29%) saturate(1717%) hue-rotate(176deg) brightness(94%) contrast(104%);
 }
 
-
 .add-button:visited>p,
 .add-button:active>p,
 .add-button:hover>p {
@@ -1200,12 +1180,10 @@ img.image-preview {
     padding: 20px;
     -webkit-tap-highlight-color: transparent !important;
 }
-
 .minimize-symbol {
     max-width: 100%;
     max-height: 100%;
 }
-
 .minimize-button:visited,
 .minimize-button:focus,
 .minimize-button:active,
@@ -1213,13 +1191,11 @@ img.image-preview {
     background-color: transparent !important;
     border: none !important;
 }
-
 .minimize-button:visited .minimize-symbol,
 .minimize-button:active .minimize-symbol,
 .minimize-button:hover .minimize-symbol {
     filter: invert(62%) sepia(29%) saturate(1717%) hue-rotate(176deg) brightness(94%) contrast(104%);
 } */
-
 .question-wrapper {
     position: relative;
     background-color: white;
@@ -1445,7 +1421,6 @@ p.question-text {
     .question-wrapper {
         padding: 20px;
     }
-
 }
 
 p.question-statement {
@@ -1493,7 +1468,6 @@ p.comment-text {
     font-size: 17px;
     margin: 0;
 }
-
 
 #comment-box {
     height: 38px;
@@ -1551,7 +1525,6 @@ textarea.form-control {
 .btn-submit-comment {
     font-size: 12px;
 }
-
 
 button.btn-reply,
 button.btn-reply:focus {
@@ -1721,7 +1694,6 @@ button.btn-reply:hover {
         justify-content: space-between;
         flex-wrap: wrap;
         height: fit-content;
-
     }
 
     #offer-comment-text {
@@ -1750,7 +1722,6 @@ button.btn-reply:hover {
         margin-left: auto;
         margin-right: auto;
     }
-
 }
 
 #notification {
@@ -1845,8 +1816,6 @@ button.btn-reply:hover {
     }
 }
 
-
-
 .notification-background {
     background-color: var(--neutral--300);
     border: 3px solid rgb(255, 255, 255);
@@ -1859,7 +1828,7 @@ button.btn-reply:hover {
     flex-direction: column;
     justify-content: flex-start;
     row-gap: 10px;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 
 .notification {
@@ -2312,7 +2281,6 @@ p.create-question-title {
     background-color: var(--blue--base);
 }
 
-
 .bid-wrapper {
     border-top: 2px solid var(--neutral--300);
     margin-top: 30px;
@@ -2547,7 +2515,6 @@ p.create-question-title {
     .accepted-offer-message {
         font-size: 14px;
     }
-
 }
 
 .rating {
@@ -2598,7 +2565,6 @@ p.create-question-title {
     .declined-offer-message {
         font-size: 16px;
     }
-
 }
 
 #declined-offer-browser {
@@ -2615,11 +2581,12 @@ p.create-question-title {
 }
 
 .signup-wrapper {
-    position: fixed;
+    position: relative;
     top: 0;
     bottom: 0;
     left: 0;
     right: 0;
+    min-height: 100vh;
     background-color: var(--blue--base);
     display: flex;
     flex-direction: column;
@@ -2749,6 +2716,8 @@ input#signup-email {
 .signup-login {
     font-size: 15px;
     text-align: center;
+    line-height: 1.8;
+    margin-top: 20px;
 }
 
 .signup-remember,
@@ -2882,7 +2851,6 @@ p.made-students {
     color: red;
 }
 
-
 .two-sides {
     position: relative;
     display: flex;
@@ -2939,13 +2907,11 @@ p.made-students {
     }
 }
 
-
 .instructions-text {
     margin-top: 10px;
     min-height: 73px;
     color: black;
 }
-
 
 @media only screen and (min-width: 0px) and (max-width: 1100px) {
     .two-sides {
@@ -2973,19 +2939,15 @@ p.made-students {
 #home-create-wrapper {
     margin-top: 160px;
     margin-bottom: 20px;
-
     width: 100%;
-
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
-
 }
 
 .home-background {
     z-index: -1;
-
     fill: var(--blue--base);
     background-color: var(--neutral--300);
     opacity: 0.07;
@@ -2995,23 +2957,18 @@ p.made-students {
     position: absolute;
     top: -100px;
     bottom: 0;
-
     left: -100vh;
     right: -100vh;
     margin-left: auto;
     margin-right: auto;
     width: 100vw;
-
 }
 
 .home-background2 {
     background-color: transparent !important;
-
-
     position: absolute;
     top: -150px;
     height: 100px;
-
     left: -100vh;
     right: -100vh;
     margin-left: auto;
@@ -3023,7 +2980,6 @@ p.made-students {
     position: absolute;
     top: calc(-150px + 100px);
     bottom: -110px;
-
     left: -100vh;
     right: -100vh;
     margin-left: auto;
@@ -3034,7 +2990,6 @@ p.made-students {
 .home-svg {
     height: 100%;
     width: 100%;
-
 }
 
 .home-svg1 {
@@ -3045,8 +3000,6 @@ p.made-students {
     display: none;
 }
 
-
-
 /* .center-baseline {
     display: flex;
     flex-direction: row;
@@ -3055,12 +3008,10 @@ p.made-students {
     min-height: 60px;
     column-gap: 20px;
 }
-
 #home-user-profile {
     width: 60px;
     height: 60px;
 }
-
 .home-convo {
     font-size: 16px;
     padding: 15px 30px;
@@ -3068,14 +3019,12 @@ p.made-students {
     border: 3px solid var(--blue--base);
     text-align: center;
 }
-
 .home-offer {
     font-weight: 600;
     font-size: 20px;
     text-align: right;
     margin: 7px 0;
 } */
-
 .footer-link {
     font-size: 15px !important;
 }

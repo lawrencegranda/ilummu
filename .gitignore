@@ -1,6 +1,4 @@
 .DS_store
-env.local.sh
 requirements.txt
 **/__pycache__/
-env.test.sh
-env.sh
+*.sh

@@ -1,5 +1,8 @@
+# Standard Library imports
 from enum import Enum
 from http import HTTPStatus
+from typing import List, Tuple
+
 
 # Number of characters to show in the question request preview.
 PREVIEW_LENGTH: int = 127
@@ -7,12 +10,6 @@ PREVIEW_LENGTH: int = 127
 
 class ErrorType(Enum):
     """Different Error Types"""
-
-    # USER_NOT_AUTHENTICATED = "USER_NOT_AUTHENTICATED"
-    # USER_NOT_VERIFIED = "USER_NOT_VERIFIED"
-    # INCORRECT_CREDENTIALS = "INCORRECT_CREDENTIALS"
-    # ACCESS_FORBIDDEN = "ACCESS_FORBIDDEN"
-    # MAINTENANCE = "MAINTENANCE"
 
     USER_NOT_AUTHENTICATED = HTTPStatus.UNAUTHORIZED
     USER_NOT_VERIFIED = HTTPStatus.UNAUTHORIZED
@@ -42,9 +39,28 @@ class EdifyEnvironments(Enum):
 
 class EnumBase:
     @classmethod
-    def values(cls):
+    def keys(cls) -> List[str]:
+        """Returns a list of all the keys in the Enum class."""
+        return [
+            key
+            for key, value in vars(cls).items()
+            if not key.startswith("_") and key == key.upper()
+        ]
+
+    @classmethod
+    def values(cls) -> List[str]:
+        """Returns a list of all the values in the Enum class."""
         return [
             value
+            for key, value in vars(cls).items()
+            if not key.startswith("_") and key == key.upper()
+        ]
+
+    @classmethod
+    def items(cls) -> List[Tuple[str, str]]:
+        """Returns a list of all the key-value pairs in the Enum class."""
+        return [
+            (key, value)
             for key, value in vars(cls).items()
             if not key.startswith("_") and key == key.upper()
         ]
@@ -80,4 +96,53 @@ class OfferStatusEnum(EnumBase):
     EDITED = "EDITED"
     REMOVED = "REMOVED"
 
-    inactive = [DECLINED, REMOVED]
+    inactive = [REMOVED]
+
+
+class NotificationTypeEnum(EnumBase):
+    """List of notification types."""
+
+    GENERAL = "GENERAL"
+    OFFER_ACCEPTED = "OFFER_ACCEPTED"
+    OFFER_DECLINED = "OFFER_DECLINED"
+    NEW_OFFER = "NEW_OFFER"
+    PRICE_CHANGE = "PRICE_CHANGE"
+    QUESTION_SOLVED = "QUESTION_SOLVED"
+    ACCOUNT_VERIFIED = "ACCOUNT_VERIFIED"
+    PASSWORD_RESET = "PASSWORD_RESET"
+    ACCOUNT_CREATED = "ACCOUNT_CREATED"
+
+    # Metadata to store additional information
+    question_required = {
+        "GENERAL": False,
+        "OFFER_ACCEPTED": True,
+        "OFFER_DECLINED": True,
+        "NEW_OFFER": True,
+        "PRICE_CHANGE": True,
+        "QUESTION_SOLVED": True,
+        "ACCOUNT_VERIFIED": False,
+        "PASSWORD_RESET": False,
+        "ACCOUNT_CREATED": False,
+    }
+
+    @classmethod
+    def requires_question(cls, notification_type: str) -> bool:
+        """
+        Determines whether a given notification type requires a question.
+
+        Args:
+            notification_type (str): The type of notification to check.
+
+        Raises:
+            ValueError: If the provided notification_type is not valid.
+
+        Returns:
+            bool: True if the notification type requires a question, False otherwise.
+        """
+
+        if (
+            notification_type in cls.keys()
+            and notification_type in cls.question_required.keys()
+        ):
+            return cls.question_required[notification_type]
+        raise ValueError(f"{notification_type} is not a valid notification type.")

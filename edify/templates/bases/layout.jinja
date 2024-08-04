@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta name="description"
+              content="Edify - Get help and help others wiith their homework.">
+        <meta name="keywords"
+              content="edify, homework, cornell, university, chegg, quizlet, brainly">
+
+        {% block head %}
+            <meta charset="utf-8" />
+            <title>Edify:
+
+                {% block title %}
+                {% endblock title %}
+
+            </title>
+        {% endblock head %}
+
+        <!-- Styles -->
+        {% include "bases/headers.jinja" %}
+
+        {% block headers %}
+        {% endblock headers %}
+
+        {% block javascript %}
+        {% endblock javascript %}
+
+    </head>
+    <body>
+        <!-- Navbar -->
+
+        {% block navbar %}
+        {% endblock navbar %}
+
+        <!-- Top Elements -->
+
+        {% block top %}
+        {% endblock top %}
+
+        <!-- Content -->
+
+        {% block content %}
+        {% endblock content %}
+
+        <!-- Footer -->
+
+        {% block footer %}
+            {% include "bases/footer.jinja" %}
+        {% endblock footer %}
+
+    </body>
+</html>

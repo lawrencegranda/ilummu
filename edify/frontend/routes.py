@@ -1,35 +1,53 @@
-from flask import (
-    Flask,
-    render_template,
-    Blueprint,
-    jsonify,
-    current_app,
-    url_for,
-    redirect,
-    request,
-)
+# Standard Library imports
+import re
+import time
 from http import HTTPStatus
-from edify import db, bcrypt
-from typing import Any
+from typing import Any, Dict, List, Optional
+
+# Third-Party Framework imports
+from flask import (
+    Blueprint,
+    Flask,
+    current_app,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
+from flask import typing as flask_typing
 from flask_jwt_extended import (
-    jwt_required,
     exceptions,
     get_jwt_identity,
+    jwt_required,
     unset_jwt_cookies,
 )
-from edify.utils.decorators import no_token_allowed
-from edify.models import *
-import time
-from edify.utils.utils import internal_request, error_response
 from webargs import fields, validate
 from webargs.flaskparser import use_args
+
+# Local Application imports
+from edify import bcrypt, db
+from edify.models import *
+from edify.utils.decorators import no_token_allowed
+from edify.utils.utils import error_response, internal_request
+
 
 # -----------------------------------------------------------------------------
 # Helper Functions
 # -----------------------------------------------------------------------------
 
 
-def fetch_data(url, method="GET"):
+def fetch_data(url: str, method: str = "GET") -> List[Any]:
+    """
+    Fetch data from the backend API.
+
+    Parameters:
+        url (str): Endpoint to fetch data from.
+        method (str): HTTP method to use (default is "GET").
+
+    Returns:
+        List: Parsed data returned from the backend or an empty list on error.
+    """
     response = internal_request(url, method)
 
     # Parse the response
@@ -42,10 +60,44 @@ def fetch_data(url, method="GET"):
     return data.get("data", [])
 
 
-def get_user():
-    response = internal_request(url_for("backend.user.get_user"), "GET")
+def get_user() -> Optional[Dict[str, Any]]:
+    """
+    Retrieve the current user's details.
 
+    Returns:
+        Optional[Dict]: User data if authenticated, else None.
+    """
+    response = internal_request(url_for("backend.user.get_user"), "GET")
     return response.get_json()
+
+
+def filter_list(dlist: List[Dict], field: str, search: Optional[str]) -> List[Dict]:
+    """
+    Filters the list of dicts based on the provided field and search text.
+
+    Parameters:
+        dlist (List[Dict]): The list to filter.
+        field (str): The field to filter by.
+        search (Optional[str]): The search text to filter list.
+
+    Returns:
+        List[Dict]: The filtered list of questions.
+    """
+    # Return all questions if no field is specified
+    if not search or not search.strip():
+        return dlist
+
+    filtered_list = []
+
+    # Split by non-alphanumeric characters and lowercase
+    search_terms = re.findall(r"\b\w+\b", search.lower())
+
+    for d in dlist:
+        # Append questions that constain all the words
+        if all(term in d.get(field, "").lower() for term in search_terms):
+            filtered_list.append(d)
+
+    return filtered_list
 
 
 # -----------------------------------------------------------------------------
@@ -65,7 +117,13 @@ question = Blueprint("question", __name__, url_prefix="/question")
 # Endpoint: /
 @frontend.route("/")
 @jwt_required(optional=True)
-def index():
+def index() -> flask_typing.ResponseReturnValue:
+    """
+    Homepage route. Redirects users based on their authentication status.
+
+    Returns:
+        str: Rendered homepage or dashboard template.
+    """
     user = get_user()
 
     if user:
@@ -77,7 +135,13 @@ def index():
 # Endpoint: /home
 @frontend.route("/home")
 @jwt_required(optional=True)
-def home():
+def home() -> flask_typing.ResponseReturnValue:
+    """
+    Home route displaying user-related data.
+
+    Returns:
+        str: Rendered home template.
+    """
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
     subjects.sort(key=lambda d: d["name"])
 
@@ -87,7 +151,7 @@ def home():
     time_intervals = fetch_data(url_for("backend.data.fetch_intervals"), "GET")
 
     return render_template(
-        "/home.html",
+        "/home.jinja",
         subjects=subjects,
         methods=methods,
         time_intervals=time_intervals,
@@ -97,26 +161,43 @@ def home():
 # Endpoint: /login
 @frontend.route("/login")
 @no_token_allowed
-def login():
-    return render_template("signup.html", login=True)
+def login() -> flask_typing.ResponseReturnValue:
+    """
+    Login route for rendering the login form.
+
+    Returns:
+        str: Rendered login/signup template.
+    """
+    return render_template("signup.jinja", login=True)
 
 
 # Endpoint: /signup
 @frontend.route("/signup")
 @no_token_allowed
-def signup():
+def signup() -> flask_typing.ResponseReturnValue:
+    """
+    Signup route that fetches majors and renders the signup form.
+
+    Returns:
+        str: Rendered signup template.
+    """
     majors = fetch_data(url_for("backend.data.fetch_user_majors"), "GET")
     majors.sort(key=lambda d: d["name"])
 
     print(majors)
 
-    return render_template("signup.html", login=False, majors=majors)
+    return render_template("signup.jinja", login=False, majors=majors)
 
 
 # Endpoint: /logout
 @frontend.route("/logout")
-@jwt_required(optional=True)
-def logout():
+def logout() -> flask_typing.ResponseReturnValue:
+    """
+    Logout route that invalidates the user's session.
+
+    Returns:
+        str: Redirect to the login page.
+    """
     response = internal_request(url_for("backend.user.logout"), method="POST")
 
     # If the backend logout was successful, clear the cookies and redirect
@@ -131,7 +212,13 @@ def logout():
 # Endpoint: /dashboard
 @frontend.route("/dashboard")
 @jwt_required(optional=True)
-def dashboard():
+def dashboard() -> flask_typing.ResponseReturnValue:
+    """
+    Dashboard route displaying user data and related questions.
+
+    Returns:
+        str: Rendered dashboard template with user data.
+    """
     user = get_user()
 
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
@@ -142,46 +229,111 @@ def dashboard():
 
     time_intervals = fetch_data(url_for("backend.data.fetch_intervals"), "GET")
 
-    questions = fetch_data(url_for("backend.data.fetch_questions"), "GET")
-    questions.sort(key=lambda d: (d["solved"], d["created_at"]))
-
     notifications = fetch_data(url_for("backend.data.fetch_user_notifications"), "GET")
     notifications.sort(key=lambda d: d["created_at"])
 
     return render_template(
-        "dashboard.html",
+        "dashboard.jinja",
         subjects=subjects,
         methods=methods,
         time_intervals=time_intervals,
         user=user,
-        questions=questions,
+        question_list=list_questions([], ""),
     )
 
 
 # Endpoint: /list
 @frontend.route("/list", methods=["GET"])
-@use_args({"field": fields.Str(required=False), "text": fields.Str(required=False)})
-def question_list():
-    # Trim all string values in args
-    for key, value in args.items():
-        if isinstance(value, str):
-            args[key] = value.strip().lowe()
+@jwt_required(optional=True)
+@use_args(
+    {
+        "fields": fields.List(fields.Str(), required=False),
+        "search": fields.Str(required=False),
+    },
+    location="query",
+)
+def question_list(args) -> flask_typing.ResponseReturnValue:
+    """
+    List questions based on filter criteria. Route endpoint.
 
-    questions = fetch_data(url_for("backend.data.fetch_questions"), "GET")
+    Parameters:
+        fields (List[str]): Subjects to filter by.
+        search (str): Search text.
 
-    if args["field"]:
-        field = None
+    Returns:
+        str: Rendered question list template.
+    """
+    return list_questions(args.get("fields", []), args.get("search", ""))
+
+
+@jwt_required(optional=True)
+def list_questions(fields: List[str], search: str) -> str:
+    """
+    List questions based on filter criteria.
+
+    Parameters:
+        field (str): Subject to filter by.
+        search (str): Search text.
+
+    Returns:
+        str: Rendered question list template.
+    """
+    # Fetch questions from the backend
+    qtns = fetch_data(url_for("backend.data.fetch_questions"), "GET")
+    search = search.strip()
+
+    # Initialize the questions slide
+    questions = []
+
+    # Get all if empty
+    if not fields:
+        questions = qtns
+
+    # Filter questions based on field/subject
+    for field in fields:
+        questions.extend(filter_list(qtns, "subject_code", field.strip()))
+
+    # Filter questions based on search text if provided
+    if search:
+        questions_code = filter_list(questions, "course_code", search)
+        questions_course = filter_list(questions, "course_name", search)
+        questions_request = filter_list(questions, "request", search)
+
+        questions = [*questions_code, *questions_course, *questions_request]
+
+    # Remove duplicates
+    questions = {q["id"]: q for q in questions}.values()
+
+    # Get current user
+    user = get_user()
+
+    if user:
+        # Only questions not solved, or authored or made an offer.
+        questions = [
+            d
+            for d in questions
+            if not d["solved"] or d["is_author"] or (d["offer_made"] is not None)
+        ]
+
+        # Sorting the 'questions' list primarily by 'solved' status, then by the
+        # author's status, whether an offer was made, and finally by the creation date.
+        questions.sort(
+            key=lambda d: (
+                d["solved"],
+                not d["is_author"],
+                not (d["offer_made"] is not None),
+                d["created_at"],
+            )
+        )
+
     else:
-        field = None
+        # If not logged in, only unsolved
+        questions = [d for d in questions if not d["solved"]]
 
-    text = args["field"] if args["field"] else ""
+        # Sort questions by creation date, ensuring unsolved are first
+        questions.sort(key=lambda d: (d["solved"], d["created_at"]))
 
-    questions.sort(key=lambda d: (d["solved"], d["created_at"]))
-
-    return render_template(
-        "bases/question-list.html",
-        questions=questions,
-    )
+    return render_template("bases/question-list.jinja", questions=questions)
 
 
 # -----------------------------------------------------------------------------
@@ -192,7 +344,16 @@ def question_list():
 # Endpoint: /question/<id_question>
 @question.route("/<int:id_question>")
 @jwt_required(optional=True)
-def fetch_question(id_question):
+def fetch_question(id_question: int) -> flask_typing.ResponseReturnValue:
+    """
+    Retrieve a specific question by ID and related data.
+
+    Parameters:
+        id_question (int): The ID of the question.
+
+    Returns:
+        str: Rendered question detail template or error response.
+    """
     user = get_user()
 
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
@@ -215,50 +376,14 @@ def fetch_question(id_question):
 
     question = question[0]
 
-    is_author = False
-    made_offer = False
-    offer_made = None
-    offer_accepted = None
-    offers = []
-
-    if user:
-        is_author = fetch_data(
-            url_for("backend.data.is_question_author", id_question=id_question), "GET"
-        )[0]
-
-        if is_author:
-            offers = fetch_data(
-                url_for("backend.data.offers_received", id_question=id_question), "GET"
-            )
-            for offer in offers:
-                if offer["status"] == OfferStatusEnum.ACCEPTED:
-                    offer_accepted = offer
-
-        offer_made = fetch_data(
-            url_for("backend.data.question_offer_made", id_question=id_question), "GET"
-        )
-
-        if offer_made:
-            made_offer = True
-            offer_made = fetch_data(
-                url_for("backend.data.question_offer_made", id_question=id_question),
-                "GET",
-            )
-        else:
-            offer_made = None
-
     return render_template(
-        "question.html",
+        "question.jinja",
         subjects=subjects,
         methods=methods,
         time_intervals=time_intervals,
         notifications=notifications,
         user=user,
         question=question,
-        is_author=is_author,
-        offer_made=offer_made,
-        offer_accepted=offer_accepted,
-        offers=offers,
     )
 
 
