@@ -10,6 +10,7 @@ from flask_jwt_extended import create_access_token
 import pytest
 
 # Local Application imports
+from edify.database.populate import populate_constants
 from edify.models import *
 from edify import db
 from tests.test_app import create_test_app
@@ -44,6 +45,15 @@ def client_with_db(client):
     db.create_all()
     yield client
     db.drop_all()
+
+
+@pytest.fixture
+def client_with_data(client_with_db):
+    """
+    A fixture to set up constants.
+    """
+    populate_constants()
+    return client_with_db
 
 
 @pytest.fixture
