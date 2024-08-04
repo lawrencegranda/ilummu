@@ -1,6 +1,9 @@
-import os
-from edify.utils.constants import EdifyEnvironments
+# Standard Library imports
 from datetime import timedelta
+import os
+
+# Local Application imports
+from edify.utils.constants import EdifyEnvironments
 
 
 class Config:
@@ -38,8 +41,7 @@ class Config:
     JWT_SESSION_COOKIE = True
 
     # Control expiration time in seconds
-    JWT_ACCESS_TOKEN_EXPIRES: int = int(timedelta(minutes=30).total_seconds())
-    JWT_REFRESH_TOKEN_EXPIRES: int = int(timedelta(days=60).total_seconds())
+    JWT_REFRESH_TOKEN_EXPIRES: int = int(timedelta(days=90).total_seconds())
 
     # Cookies should only be sent with requests from the same site, providing maximum
     # CSRF protection.

@@ -1,0 +1,17 @@
+{% macro declined_offer(message) %}
+  <div class="separator">
+  </div>
+  <div class="declined-offer-wrapper">
+    <p class="declined-offer-statement">
+      Student did not accept your offer
+    </p>
+    <p class="declined-offer-message">
+      ** {{ message }} **
+    </p>
+    <button id="declined-offer-browser"
+            class="btn btn-primary"
+            onclick="location.href='/dashboard';">
+      Go back to browser
+    </button>
+  </div>
+{% endmacro %}

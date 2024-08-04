@@ -1,0 +1,37 @@
+{% for q in questions %}
+  <div class="element-box {{ 'solved' if q.solved else 'unsolved' }}">
+    <div class="element-content-wrapper"
+         onclick="location.href='/question/{{ q.id }}';">
+      <div class="element-content">
+        <p class="question-preview-class">
+          {{ q.course_code }}: {{ q.course_name }}
+        </p>
+        <p class="question-preview-info">
+          {{ q.solve_time }} solve time • {{ q.method }}
+        </p>
+        <p class="question-preview-description">
+          {{ q.preview }}
+        </p>
+      </div>
+      <div class="question-preview-side">
+        <p class="question-preview-time">
+          {{ q.time_ago }}
+        </p>
+        <div class="question-preview-price">
+          ${{ '%.2f' % q.price | float }}
+        </div>
+
+        {% if q.solved %}
+          <button class="btn question-preview-button disabled">
+            SOLVED
+          </button>
+        {% else %}
+          <button class="btn question-preview-button">
+            ANSWER
+          </button>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+{% endfor %}

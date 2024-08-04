@@ -91,7 +91,6 @@ $(document).ready(function () {
   });
 
   $(".create-question-wrapper-background").on("click", function () {
-    console.log('kkk')
     let element = $(".create-question-wrapper-dimensions");
 
     element.hide();

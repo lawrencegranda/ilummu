@@ -1,0 +1,151 @@
+{% extends "bases/layout.jinja" %}
+
+{% block title %}
+  Dashboard
+{% endblock title %}
+
+{% block navbar %}
+  {% include "bases/navbar-logged.jinja" if user else "bases/navbar-not-logged.jinja" %}
+  <style>
+  input#search-box {
+      display: initial !important;
+      pointer-events: initial !important;
+  }
+  </style>
+{% endblock navbar %}
+
+{% block top %}
+  {% include "bases/add-button.jinja" %}
+  {% include "bases/create-question.jinja" %}
+{% endblock top %}
+
+{% block javascript %}
+  {{ super() }}
+  <script>
+  function getSelectedCategoryCountAndValues() {
+      const container = $('.dashboard-menu-container');
+      let selectedCount = 0;
+      const selectedValues = [];
+
+      if (container.length === 0 || container.css('display') === 'none') {
+          // Get the option value from id="category-selector"
+          const selector = $('#category-selector');
+          if (selector.length > 0) {
+              selectedCount++;
+              selectedValues.push(selector.val());
+          }
+      } else {
+          // Select all buttons with the 'category' class
+          $('.category').each(function() {
+              if ($(this).hasClass('selected') && !$(this).is(':disabled')) {
+                  selectedCount++;
+                  selectedValues.push($(this).val());
+              }
+          });
+      }
+      return selectedValues;
+  }
+
+  function loadQuestions(selectedValues, searchInput) {
+      // Define the data to be sent in the request
+      const data = {
+          fields: selectedValues,
+          search: searchInput,
+      };
+
+      $.ajax({
+          url: '{{url_for("frontend.question_list")}}',
+          method: 'GET',
+          data: data,
+          traditional: true, // Ensures proper handling of arrays
+          success: function(response) {
+              // Process the response and update the question_list
+              $('#question_list').html(response);
+          },
+          error: function(xhr, status, error) {
+              console.error('Error fetching questions:', error);
+          }
+      });
+  }
+
+
+  $(document).ready(function() {
+      $('button.category').on('click', function() {
+          const values = getSelectedCategoryCountAndValues();
+          const inputValue = $('#search-box').val(); // Get the value of the input field
+          loadQuestions(values, inputValue); // Pass both values and inputValue to the AJAX function
+      });
+
+      $('#search-box').on('input', function() {
+          const values = getSelectedCategoryCountAndValues();
+          const inputValue = $(this).val(); // Get the value of the input field
+          loadQuestions(values, inputValue); // Pass both values and inputValue to the AJAX function
+      });
+
+  });
+  </script>
+{% endblock javascript %}
+
+{% block content %}
+  <div class="{{ 'container main-content logged' if user else 'container main-content' }}">
+    <div class="dashboard-container">
+      <div class="dashboard-menu-container">
+        <div class="dashboard-menu">
+          {#
+          <div class="method-selector-container">
+            <select name="method-selector" id="method-selector">
+              <option value="any-method">Any Method</option>
+              {% for method in methods %}
+              <option value="{{method['value']}}">{{method['name']}}</option>
+              {% endfor %}
+            </select>
+          </div>
+#}
+          <button class="btn category all-subjects selected">
+            All Questions
+          </button>
+
+          {% for subject in subjects %}
+            <button class="btn category" value="{{ subject['value'] }}">
+              {{ subject['name'] }}
+            </button>
+          {% endfor %}
+
+        </div>
+      </div>
+      <div class="dashboard-menu-container-small">
+        <div class="dashboard-menu-small">
+          <select name="category-selector" id="category-selector">
+            <option value="all-subjects">
+              All Questions
+            </option>
+
+            {% for subject in subjects %}
+              <option value="{{ subject['value'] }}">
+                {{ subject['name'] }}
+              </option>
+            {% endfor %}
+
+          </select>
+        </div>
+        {#
+        <div class="dashboard-menu-small">
+          <select name="method-selector" id="method-selector">
+            <option value="any-method">Any Method</option>
+            {% for method in methods %}
+            <option value="{{method['value']}}">{{method['name']}}</option>
+            {% endfor %}
+          </select>
+        </div>
+#}
+      </div>
+      <div id="question_list" class="grid">
+
+        {% block question_list %}
+          {{ question_list | safe }}
+        {% endblock question_list %}
+
+      </div>
+    </div>
+  </div>
+{% endblock content %}
