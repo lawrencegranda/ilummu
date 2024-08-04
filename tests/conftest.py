@@ -57,16 +57,19 @@ def client_with_data(client_with_db):
 
 
 @pytest.fixture
-def jwt_headers(client):
+def user_jwt(client):
+    school = db.session.query(School).filter_by(name="Cornell University").first()
+    major = db.session.query(Major).first()
+
     user = User(
         username="testuser",
         email="test@example.com",
-        password="hashed_password",
+        password="password",
         firstname="Test",
         lastname="User",
         phone="+1 9363638567",
-        school_id=1,
-        major_id=1,
+        school_id=school.id,
+        major_id=major.id,
         graduation=fake.future_date(end_date="+4y"),
     )
     db.session.add(user)
@@ -75,4 +78,4 @@ def jwt_headers(client):
     # Create and return a JWT token for the user
     access_token = create_access_token(identity=user.id)
 
-    return {"Authorization": f"Bearer {access_token}"}
+    return user, {"Authorization": f"Bearer {access_token}"}
