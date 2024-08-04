@@ -189,7 +189,7 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
             user_id = decode_token(token)["sub"]
         except Exception:
             return None
-        return User.query.get(user_id)
+        return db.session.get(User, user_id)
 
     def __repr__(self):
         return f"({self.id}, {self.username}, {self.email}\n"

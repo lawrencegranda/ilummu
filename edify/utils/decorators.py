@@ -27,7 +27,7 @@ def user_lookup_callback(_jwt_header, jwt_data) -> "User":
     lookup failed (for example, if the user has been deleted from the database).
     """
     identity = jwt_data["sub"]
-    return User.query.get(int(identity))
+    return db.session.get(User, int(identity))
 
 
 def manager_required(minimum_manager_level: AuthLevelEnum) -> Callable:
@@ -111,7 +111,7 @@ def no_token_allowed(f):
             return f(*args, **kwargs)
 
         # If user is authenticated, redirect to the dashboard
-        if User.query.get(user_id):
+        if db.session.get(User, user_id):
             return redirect(url_for("frontend.dashboard"))
 
         # Otherwise, call the original function
@@ -148,7 +148,7 @@ def author_required(arg_name: str):
 
             # Get the user ID from the token
             user_id = get_jwt_identity()
-            if not user_id or not User.query.get(user_id):
+            if not user_id or not db.session.get(User, user_id):
                 return error_response("User not found", ErrorType.USER_NOT_FOUND)
 
             # Retrieve the question by ID

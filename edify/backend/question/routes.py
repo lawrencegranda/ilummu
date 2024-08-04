@@ -29,7 +29,7 @@ question = Blueprint("question", __name__, url_prefix="/question")
 
 
 # Endpoint: /backend/question/new
-@offer.route("/new", methods=["POST"])
+@question.route("/new", methods=["POST"])
 @jwt_required()
 @use_args(
     {
@@ -64,7 +64,7 @@ def create_question(args):
         return error_response("User not found", ErrorType.USER_NOT_FOUND)
 
     # Fetch the method. Return error if invalid
-    method = Method.query.get(args.get("method_id"))
+    method = db.session.get(Method, args.get("method_id"))
     if method is None:
         return error_response("Invalid method ID", ErrorType.BAD_REQUEST)
 

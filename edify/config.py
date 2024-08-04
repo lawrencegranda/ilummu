@@ -22,6 +22,7 @@ class Config:
     elif ENV == EdifyEnvironments.LOCAL.value:
         SQLALCHEMY_DATABASE_URI = os.environ["DB_URL"]
     elif ENV == EdifyEnvironments.TEST.value:
+        TESTING = True
         SQLALCHEMY_DATABASE_URI = "sqlite:///site.db"
 
     # Configure all the ways you want to allow JWTs to be sent.
