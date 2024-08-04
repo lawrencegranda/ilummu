@@ -79,6 +79,12 @@ def create_question(args):
             ErrorType.BAD_REQUEST,
         )
 
+    # Format code to uppercase
+    args["class_code"] = args["class_code"].upper()
+
+    # Format name to titlecase
+    args["class_name"] = args["class_name"].title()
+
     # Attempt to find the course matching the provided class code and academic field
     course = Course.query.filter_by(
         code=args["class_code"],
