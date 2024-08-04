@@ -323,7 +323,7 @@ class Question(BaseModel):
             "user_id": self.user_id,
             "course_id": self.course_id,
             "request": self.request,
-            "solve_time": self.solve_time,
+            "solve_time_min": self.solve_time,
             "price": self.price,
             "method_id": self.method_id,
             "solved": self.solved,
@@ -341,6 +341,7 @@ class Question(BaseModel):
             result["method"] = self.method.name
             result["preview"] = trim_text(self.request, PREVIEW_LENGTH)
             result["solve_time"] = self.time_interval.shortname
+            result["academic_field"] = self.course.academic_field.value
 
         return result
 
