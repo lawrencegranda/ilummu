@@ -18,6 +18,7 @@ from edify.models import (
     School,
     TimeInterval,
     User,
+    Method
 )
 from edify.utils.constants import AuthLevelEnum, OfferStatusEnum, SupportedLanguagesEnum
 from edify.utils.utils import validate_phone
