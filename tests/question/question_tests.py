@@ -17,7 +17,7 @@ fake = Faker()
 
 
 @pytest.fixture
-def setup_data(client_with_db, jwt_headers):
+def setup_data(client_with_data, jwt_headers):
     """
     A fixture to set up necessary data for tests.
     """
@@ -38,11 +38,11 @@ def setup_data(client_with_db, jwt_headers):
 
 class TestCreateQuestion:
 
-    def test_create_question_success(self, client_with_db, jwt_headers, setup_data):
+    def test_create_question_success(self, client_with_data, jwt_headers, setup_data):
         """
         Test creating a question successfully.
         """
-        response = client_with_db.post(
+        response = client_with_data.post(
             url_for("backend.question.create_question"),
             json={
                 "class_code": setup_data["class_code"],
@@ -58,11 +58,11 @@ class TestCreateQuestion:
         assert response.status_code == HTTPStatus.CREATED, response.json
         assert "id" in response.get_json()
 
-    def test_create_question_user_not_found(self, client_with_db, setup_data):
+    def test_create_question_user_not_found(self, client_with_data, setup_data):
         """
         Test creating a question without a user (Unauthorized).
         """
-        response = client_with_db.post(
+        response = client_with_data.post(
             url_for("backend.question.create_question"),
             json={
                 "class_code": setup_data["class_code"],
@@ -78,13 +78,13 @@ class TestCreateQuestion:
         assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json
 
     def test_create_question_invalid_method(
-        self, client_with_db, jwt_headers, setup_data
+        self, client_with_data, jwt_headers, setup_data
     ):
         """
         Test creating a question with an invalid method ID.
         """
         invalid_method_id = 999  # Assuming this method does not exist
-        response = client_with_db.post(
+        response = client_with_data.post(
             url_for("backend.question.create_question"),
             json={
                 "class_code": setup_data["class_code"],
@@ -101,12 +101,12 @@ class TestCreateQuestion:
         assert response.get_json()["error"] == "Invalid method ID"
 
     def test_create_question_invalid_academic_field(
-        self, client_with_db, jwt_headers, setup_data
+        self, client_with_data, jwt_headers, setup_data
     ):
         """
         Test creating a question with an invalid academic field.
         """
-        response = client_with_db.post(
+        response = client_with_data.post(
             url_for("backend.question.create_question"),
             json={
                 "class_code": setup_data["class_code"],
