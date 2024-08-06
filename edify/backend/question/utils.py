@@ -42,7 +42,7 @@ def question_dictionary(
                 question_id=question_dict["id"],
                 active=True,
                 status=OfferStatusEnum.ACCEPTED,
-            ).one_or_none()
+            ).first()
             offer_accepted = (
                 offer_accepted.to_dict(simplified=False) if offer_accepted else None
             )
