@@ -328,7 +328,7 @@ def list_questions(fields: List[str], search: str) -> str:
                 d["solved"],
                 not d["is_author"],
                 not (d["offer_made"] is not None),
-                d["created_at"],
+                d["seconds_ago"],
             )
         )
 
