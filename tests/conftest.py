@@ -43,7 +43,9 @@ def client(app):
 @pytest.fixture
 def client_with_db(client):
     db.create_all()
+    
     yield client
+    
     db.drop_all()
 
 
@@ -57,7 +59,7 @@ def client_with_data(client_with_db):
 
 
 @pytest.fixture
-def user_jwt(client):
+def user_jwt(client_with_data):
     school = db.session.query(School).filter_by(name="Cornell University").first()
     major = db.session.query(Major).first()
 
