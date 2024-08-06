@@ -339,6 +339,7 @@ class Question(BaseModel):
             result["course_name"] = self.course.name
             result["time_ago"] = get_time_ago(self.created_at)
             result["method"] = self.method.name
+            result["method_value"] = self.method.value
             result["preview"] = trim_text(self.request, PREVIEW_LENGTH)
             result["solve_time"] = self.time_interval.shortname
             result["academic_field"] = self.course.academic_field.value
