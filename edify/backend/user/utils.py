@@ -7,6 +7,7 @@ from flask_jwt_extended import current_user
 from flask_login import UserMixin
 
 # Local Application imports
+from edify import db
 from edify.models import User, Question
 
 
