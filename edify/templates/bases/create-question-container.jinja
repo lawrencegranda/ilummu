@@ -4,6 +4,34 @@
         font-size: 16px;
     }
 </style>
+<script>
+  $(document).ready(function () {
+    $("#create-question-price").on("change", function () {
+      let value = parseFloat($(this).val()).toFixed(2);
+      if (isNaN(value)) {
+        console.log();
+        value = "";
+        $(this).attr("placeholder", "Invalid. Try again.");
+      }
+      $(this).val(value);
+    });
+    
+    $("#create-question-file").on("change", function () {
+      let file = $(this).prop("files")[0]["name"];
+
+      if (file.length > 33) {
+        file =
+          file.substring(0, 15) +
+          "..." +
+          file.substring(file.length - 15, file.length);
+      }
+
+      $("#file-selected").text(file);
+    });
+
+  });
+  
+</script>
 <div class="create-question-container">
   <form id="create-question-form" method="post" enctype="multipart/form-data">
     <div class="create-question-body">
