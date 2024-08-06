@@ -469,6 +469,12 @@ class Offer(BaseModel):
 
     @staticmethod
     def validator(mapper, connection, target: "Offer"):
+        # Fill in default values
+        if target.active is None:
+            target.active = True
+        if target.status is None:
+            target.status = OfferStatusEnum.SENT
+            
         if target.amount <= 0:
             raise ValueError(
                 f'OFFER MODEL: Amount must be a positive value ("{target.amount}").'
@@ -478,11 +484,6 @@ class Offer(BaseModel):
             raise ValueError(
                 f'OFFER MODEL: Creation ("{target.created_at}") must be before update ("{target.updated_at}").'
             )
-          
-        if target.active is None:
-            target.active = True
-        if target.status is None:
-            target.status = OfferStatusEnum.SENT
 
         if target.status in OfferStatusEnum.inactive and target.active:
             raise ValueError(
