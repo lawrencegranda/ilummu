@@ -3,7 +3,7 @@ from http import HTTPStatus
 from typing import Optional, Any, Tuple
 
 # Third-Party Framework imports
-from flask import Blueprint, Flask, jsonify
+from flask import Blueprint, Flask, jsonify, redirect, url_for
 from flask import typing as flask_typing
 from flask_jwt_extended import jwt_required
 from webargs import fields, validate
@@ -60,7 +60,12 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
 @offer.route("/<int:offer_id>", methods=["GET"])
 @jwt_required()
 def get_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
-    offer = Offer.query.get_or_404(offer_id)
+    offer = Offer.query.get_or_none(offer_id)
+
+    # If no offer is found, return an error response
+    if not offer:
+        return error_response("Offer not found", ErrorType.NOT_FOUND)
+
     return jsonify(offer.to_dict()), HTTPStatus.OK
 
 
@@ -75,7 +80,12 @@ def get_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     }
 )
 def update_offer(args, offer_id: int) -> flask_typing.ResponseReturnValue:
-    offer = Offer.query.get_or_404(offer_id)
+    offer = Offer.query.get_or_none(offer_id)
+
+    # If no offer is found, return an error response
+    if not offer:
+        return error_response("Offer not found", ErrorType.NOT_FOUND)
+    
     # Update offer fields from args
     offer.amount = args["amount"]
     if "status" in args:
@@ -90,7 +100,12 @@ def update_offer(args, offer_id: int) -> flask_typing.ResponseReturnValue:
 @offer.route("/<int:offer_id>", methods=["DELETE"])
 @jwt_required()
 def delete_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
-    offer = Offer.query.get_or_404(offer_id)
+    offer = Offer.query.get_or_none(offer_id)
+
+    # If no offer is found, return an error response
+    if not offer:
+        return error_response("Offer not found", ErrorType.NOT_FOUND)
+    
     db.session.delete(offer)
     db.session.commit()
     return jsonify({"message": "Offer deleted"}), HTTPStatus.NO_CONTENT
@@ -100,8 +115,7 @@ def delete_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
 @offer.route("/question/<int:question_id>", methods=["GET"])
 @jwt_required()
 def get_offers_by_question(question_id: int) -> flask_typing.ResponseReturnValue:
-    offers = Offer.query.filter_by(question_id=question_id).all()
-    return jsonify(Offer.to_dict_all(offers)), HTTPStatus.OK
+    return redirect(url_for('operation'), code=307)
 
 
 # Endpoint: /backend/offer/user/<int:user_id>
