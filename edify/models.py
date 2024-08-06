@@ -28,6 +28,7 @@ from edify.utils.utils import (
     format_upper_case,
     get_college_year,
     get_time_ago,
+    get_seconds_ago,
     trim_text,
     validate_email,
     validate_email_postfix,
@@ -338,6 +339,7 @@ class Question(BaseModel):
             result["course_code"] = self.course.code
             result["course_name"] = self.course.name
             result["time_ago"] = get_time_ago(self.created_at)
+            result["seconds_ago"] = get_seconds_ago(self.updated_at)
             result["method"] = self.method.name
             result["method_value"] = self.method.value
             result["preview"] = trim_text(self.request, PREVIEW_LENGTH)

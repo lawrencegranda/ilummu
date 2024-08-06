@@ -345,6 +345,23 @@ def get_time_ago(date: datetime) -> str:
         years = diff.days // 365
         return f"{years} year{'s' if years > 1 else ''} ago"
 
+# Returns a int from the given date to now
+def get_seconds_ago(date: datetime) -> int:
+    """
+    Returns the seconds difference from the given date to now.
+
+    Args:
+        date (datetime): The date to calculate the time difference from.
+
+    Returns:
+        int: The time difference in seconds.
+    """
+    current = datetime.utcnow()
+    diff = current - date
+
+    return int(diff.total_seconds())
+
+
 
 # Trims a string to a specified length and appends ellipsis if the string exceeds the length
 def trim_text(string: str, length: int) -> str:
