@@ -29,7 +29,7 @@
 
   // Function to display error messages
   const showError = (msg) => {
-    print(msg)
+    console.log(msg);
     errorMsg.text(msg);
     errorMsg.show();
   };
@@ -114,8 +114,8 @@
         return;
       }
 
-      var remember = $("#signup-remember-box").prop("checked")
-      console.log(remember)
+      var remember = $("#signup-remember-box").prop("checked");
+      console.log(remember);
 
       // If validation passes, format the data
       var data = {
