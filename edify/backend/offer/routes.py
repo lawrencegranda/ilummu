@@ -95,7 +95,13 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
     )
     
     db.session.add(offer)
-    db.session.commit()
+    
+    # Commit and roll back if there's a database error
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return error_response("Failed to create offer.", ErrorType.BAD_REQUEST)
     
     response = jsonify({"offer": offer.to_dict(simplified = True)})
     return (response, HTTPStatus.CREATED)
@@ -151,21 +157,19 @@ def delete_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     if not offer:
         return error_response("Offer not found", ErrorType.NOT_FOUND)
     
-    db.session.delete(offer)
+    # Set offer status to REMOVED (i think)
     db.session.commit()
     return jsonify({"message": "Offer deleted"}), HTTPStatus.NO_CONTENT
-
-
-# Endpoint: /backend/offer/question/<int:question_id>
-@offer.route("/question/<int:question_id>", methods=["GET"])
-@jwt_required()
-def get_offers_by_question(question_id: int) -> flask_typing.ResponseReturnValue:
-    return redirect(url_for('operation'), code=307)
 
 
 # Endpoint: /backend/offer/user/<int:user_id>
 @offer.route("/user/<int:user_id>", methods=["GET"])
 @jwt_required()
 def get_offers_by_user(user_id: int) -> flask_typing.ResponseReturnValue:
+    user = get_current_user()
+    # Check if user exists
+    if not user:
+        return error_response("User does not exist", ErrorType.USER_NOT_FOUND)
+    
     offers = Offer.query.filter_by(user_id=user_id).all()
     return jsonify(Offer.to_dict_all(offers)), HTTPStatus.OK
