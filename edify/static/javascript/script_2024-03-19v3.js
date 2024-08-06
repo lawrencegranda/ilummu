@@ -95,51 +95,6 @@ $(document).ready(function () {
     element.hide();
   });
 
-  $("#create-question-form").on("submit", function (event) {
-    var correct = true;
-
-    var school = $("#create-question-category").val();
-    if (!school) {
-      event.preventDefault();
-      correct = false;
-    }
-
-    var method = $("#create-question-method").val();
-    if (!method) {
-      event.preventDefault();
-      correct = false;
-    }
-
-    if (correct) {
-      let element = $(".create-question-wrapper-dimensions");
-
-      if (element.is(":visible"))
-        setTimeout(function () {
-          element.hide();
-        }, 300);
-      else element.show();
-    }
-  });
-
-  // $('#offer-taken-class').on("click", function () {
-  //   console.log(this.checked)
-  //   if (this.checked) {
-  //     $('.btn-offer').removeClass('disabled');
-  //   } else {
-  //     $('.btn-offer').removeClass('disabled').addClass('disabled');
-  //   }
-  // });
-
-  $("#create-question-price").on("change", function () {
-    let value = parseFloat($(this).val()).toFixed(2);
-    if (isNaN(value)) {
-      console.log();
-      value = "";
-      $(this).attr("placeholder", "Invalid. Try again.");
-    }
-    $(this).val(value);
-  });
-
   $("#btn-bid-raise").on("click", function () {
     console.log($("#bid-value").val());
     // $('#bid-value').val('$' + (parseFloat($('#bid-value').val()) + 2).toFixed(2));
@@ -152,16 +107,5 @@ $(document).ready(function () {
     );
   });
 
-  $("#create-question-file").on("change", function () {
-    let file = $(this).prop("files")[0]["name"];
 
-    if (file.length > 33) {
-      file =
-        file.substring(0, 15) +
-        "..." +
-        file.substring(file.length - 15, file.length);
-    }
-
-    $("#file-selected").text(file);
-  });
 });
