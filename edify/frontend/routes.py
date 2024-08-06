@@ -229,8 +229,14 @@ def dashboard() -> flask_typing.ResponseReturnValue:
 
     time_intervals = fetch_data(url_for("backend.data.fetch_intervals"), "GET")
 
-    notifications = fetch_data(url_for("backend.data.fetch_user_notifications"), "GET")
-    notifications.sort(key=lambda d: d["created_at"])
+    # If the user is logged in, fetch their notifications
+    if user:
+        notifications = fetch_data(
+            url_for("backend.data.fetch_user_notifications"), "GET"
+        )
+        notifications.sort(key=lambda d: d["created_at"])
+    else:
+        notifications = []
 
     return render_template(
         "dashboard.jinja",
@@ -279,7 +285,7 @@ def list_questions(fields: List[str], search: str) -> str:
         str: Rendered question list template.
     """
     # Fetch questions from the backend
-    qtns = fetch_data(url_for("backend.data.fetch_questions"), "GET")
+    qtns = fetch_data(url_for("backend.question.all"), "GET")
     search = search.strip()
 
     # Initialize the questions slide

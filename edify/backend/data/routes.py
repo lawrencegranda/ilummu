@@ -178,26 +178,6 @@ def fetch_user_notifications() -> flask_typing.ResponseReturnValue:
     return jsonify({"data": notifications}), HTTPStatus.OK
 
 
-# Endpoint: /backend/data/questions
-@data.route("/questions", methods=["GET"])
-@jwt_required(optional=True)
-def fetch_questions() -> flask_typing.ResponseReturnValue:
-    """
-    Fetch all questions available in the system.
-
-    Returns:
-        JSON response with all questions.
-    """
-    # Get the current user from the JWT
-    user = get_current_user()
-    user_id = user.id if user else None
-
-    questions = Question.to_dict_all(db.session.query(Question).all())
-    questions = [question_dictionary(user_id, q) for q in questions]
-
-    return jsonify({"data": questions}), HTTPStatus.OK
-
-
 # Endpoint: /backend/data/question/<id_question>
 @data.route("/question/<int:id_question>", methods=["GET"])
 @jwt_required(optional=True)

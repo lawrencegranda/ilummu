@@ -12,6 +12,7 @@ from webargs.flaskparser import use_args
 
 # Local Application imports
 from edify import db
+from edify.backend.question.utils import question_dictionary
 from edify.backend.user.utils import get_current_user
 from edify.models import AcademicField, Course, Method, Question, User
 from edify.utils.constants import ErrorType
@@ -132,3 +133,26 @@ def create_question(args):
 
     # Return the created question as a JSON response with status 201 (Created)
     return jsonify(question.to_dict(simplified=True)), HTTPStatus.CREATED
+
+
+# Endpoint: /backend/question/all
+@question.route("/all", methods=["GET"])
+@jwt_required(optional=True)
+def all() -> flask_typing.ResponseReturnValue:
+    """
+    Fetch all questions available in the system.
+
+    Returns:
+        JSON response with all questions.
+    """
+    # Get the current user from the JWT
+    user = get_current_user()
+    user_id = user.id if user else None
+
+    # Get all questions and
+    questions = Question.to_dict_all(
+        db.session.query(Question).filter_by(visible=True).all()
+    )
+    questions = [question_dictionary(user_id, q) for q in questions]
+
+    return jsonify({"data": questions}), HTTPStatus.OK
