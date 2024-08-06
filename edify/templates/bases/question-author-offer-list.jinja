@@ -4,13 +4,13 @@
   </p>
   <div class="offer-list">
 
-    {% if not offers or offers|length == 0 %}
+    {% if not question or not question.offers or question.offers | length == 0 %}
       <p class="question-statement">
         No offers available.
       </p>
     {% else %}
 
-      {% for offer in offers %}
+      {% for offer in question.offers %}
         <div class="offer">
           <div class="offer-left">
             <div class="offer-user-profile">
