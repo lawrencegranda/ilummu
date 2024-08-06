@@ -59,6 +59,7 @@ class TestCreateQuestion:
         # Find the question in the database
         question = db.session.get(Question, question["id"])
         assert question, "Question not in database"
+        assert question.visible == True, "Question is not visible"
 
         # Convert to dict
         question = question.to_dict(simplified=False)
@@ -85,7 +86,7 @@ class TestCreateQuestion:
         assert (
             question["solved"] == False
         ), f"Question should be unsolved {question['solved']}"
-
+        
         assert (
             question["course_id"] == course.id
         ), f"Course ID does not match {question['course_id']}"
@@ -145,6 +146,7 @@ class TestCreateQuestion:
         # Find the question in the database
         question = db.session.get(Question, question["id"])
         assert question, "Question not in database"
+        assert question.visible == True, "Question is not visible"
 
         # Convert to dict
         question = question.to_dict(simplified=False)
