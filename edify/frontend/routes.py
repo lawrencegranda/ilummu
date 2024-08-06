@@ -374,7 +374,7 @@ def fetch_question(id_question: int) -> flask_typing.ResponseReturnValue:
     notifications.sort(key=lambda d: d["created_at"])
 
     question = fetch_data(
-        url_for("backend.data.get_question", id_question=id_question), "GET"
+        url_for("backend.question.get", id_question=id_question), "GET"
     )
 
     if not question:
