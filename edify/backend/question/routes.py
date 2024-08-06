@@ -178,7 +178,11 @@ def get(id_question: int) -> flask_typing.ResponseReturnValue:
     # If no question is found, return an error response
     if not question:
         return error_response("Question not found", ErrorType.NOT_FOUND)
-
+    
+    # If question is not visible, return an error response
+    if not question.visible:
+        return error_response("Question is hidden", ErrorType.UNAUTHORIZED)
+    
     # Get the current user from the JWT
     user = get_current_user()
     user_id = user.id if user else None
@@ -210,6 +214,10 @@ def is_author(id_question: int) -> flask_typing.ResponseReturnValue:
     if not question:
         return error_response("Question not found", ErrorType.NOT_FOUND)
 
+    # If question is not visible, return an error response
+    if not question.visible:
+        return error_response("Question is hidden", ErrorType.UNAUTHORIZED)
+    
     # Get the current user from the JWT
     user = get_current_user()
 
@@ -244,6 +252,10 @@ def offer(id_question: int) -> flask_typing.ResponseReturnValue:
     if not question:
         return error_response("Question not found", ErrorType.NOT_FOUND)
 
+    # If question is not visible, return an error response
+    if not question.visible:
+        return error_response("Question is hidden", ErrorType.UNAUTHORIZED)
+    
     # Get the current user from the JWT
     user = get_current_user()
 
@@ -283,6 +295,10 @@ def offers(id_question: int) -> flask_typing.ResponseReturnValue:
     # Query the Question model to find the question by its ID
     question = db.session.query(Question).get(id_question)
 
+    # If question is not visible, return an error response
+    if not question.visible:
+        return error_response("Question is hidden", ErrorType.UNAUTHORIZED)
+    
     # Query the Offer model for all active offers received for the specified question
     offers = (
         db.session.query(Offer).filter_by(question_id=question.id, active=True).all()
