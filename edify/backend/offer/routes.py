@@ -60,7 +60,7 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
 @offer.route("/<int:offer_id>", methods=["GET"])
 @jwt_required()
 def get_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
-    offer = Offer.query.get_or_none(offer_id)
+    offer = db.session.query(Offer).filter_by(id=offer_id).first()
 
     # If no offer is found, return an error response
     if not offer:
@@ -80,7 +80,7 @@ def get_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     }
 )
 def update_offer(args, offer_id: int) -> flask_typing.ResponseReturnValue:
-    offer = Offer.query.get_or_none(offer_id)
+    offer = db.session.query(Offer).filter_by(id=offer_id).first()
 
     # If no offer is found, return an error response
     if not offer:
@@ -100,7 +100,7 @@ def update_offer(args, offer_id: int) -> flask_typing.ResponseReturnValue:
 @offer.route("/<int:offer_id>", methods=["DELETE"])
 @jwt_required()
 def delete_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
-    offer = Offer.query.get_or_none(offer_id)
+    offer = db.session.query(Offer).filter_by(id=offer_id).first()
 
     # If no offer is found, return an error response
     if not offer:

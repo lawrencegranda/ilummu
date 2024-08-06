@@ -173,7 +173,7 @@ def get(id_question: int) -> flask_typing.ResponseReturnValue:
         JSON response with the specified question or an error if not found.
     """
     # Query the Question model to find the question by its ID
-    question = Question.query.get_or_none(id_question)
+    question = db.session.query(Question).filter_by(id=id_question).first()
 
     # If no question is found, return an error response
     if not question:
@@ -208,7 +208,7 @@ def is_author(id_question: int) -> flask_typing.ResponseReturnValue:
         JSON response with a boolean indicating if the user is the author or an error if not found.
     """
     # Query the Question model to find the question by its ID
-    question = Question.query.get_or_none(id_question)
+    question = db.session.query(Question).filter_by(id=id_question).first()
 
     # Return an error response if the question does not exist
     if not question:
@@ -246,7 +246,7 @@ def offer(id_question: int) -> flask_typing.ResponseReturnValue:
         JSON response with offer details if found or an empty list if not.
     """
     # Query the Question model to find the question by its ID
-    question = Question.query.get_or_none(id_question)
+    question = db.session.query(Question).filter_by(id=id_question).first()
 
     # Return an error response if the question does not exist
     if not question:
@@ -293,7 +293,7 @@ def offers(id_question: int) -> flask_typing.ResponseReturnValue:
         JSON response with a list of offers or an error if the user is not the author.
     """
     # Query the Question model to find the question by its ID
-    question = Question.query.get_or_none(id_question)
+    question = db.session.query(Question).filter_by(id=id_question).first()
     
     # Return an error response if the question does not exist
     if not question:
