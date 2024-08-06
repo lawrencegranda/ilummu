@@ -150,7 +150,7 @@ def all() -> flask_typing.ResponseReturnValue:
     user = get_current_user()
     user_id = user.id if user else None
 
-    # Get all questions and
+    # Get all questions
     questions = Question.to_dict_all(
         db.session.query(Question).filter_by(visible=True).all()
     )
