@@ -26,7 +26,7 @@ from edify.models import (
 )
 from edify.utils.constants import ErrorType
 from edify.utils.decorators import author_required
-from edify.utils.utils import error_response, internal_request
+from edify.utils.utils import error_response, internal_request, data_response
 
 
 # -----------------------------------------------------------------------------
@@ -82,7 +82,7 @@ def fetch_school_subjects(id_school: int) -> flask_typing.ResponseReturnValue:
     subjects = AcademicField.to_dict_all(
         db.session.query(AcademicField).filter_by(school_id=id_school).all()
     )
-    return jsonify({"data": subjects}), HTTPStatus.OK
+    return data_response(subjects)
 
 
 # Endpoint: /backend/data/majors
@@ -126,7 +126,7 @@ def fetch_school_majors(id_school: int) -> flask_typing.ResponseReturnValue:
     majors = Major.to_dict_all(
         db.session.query(Major).filter_by(school_id=id_school).all()
     )
-    return jsonify({"data": majors}), HTTPStatus.OK
+    return data_response(majors)
 
 
 # Endpoint: /backend/data/methods
@@ -141,7 +141,7 @@ def fetch_methods() -> flask_typing.ResponseReturnValue:
     methods = Method.to_dict_all(
         db.session.query(Method).filter_by(supported=True).all()
     )
-    return jsonify({"data": methods}), HTTPStatus.OK
+    return data_response(methods)
 
 
 # Endpoint: /backend/data/intervals
@@ -154,7 +154,7 @@ def fetch_intervals() -> flask_typing.ResponseReturnValue:
         JSON response with the time intervals.
     """
     time_intervals = TimeInterval.to_dict_all(db.session.query(TimeInterval).all())
-    return jsonify({"data": time_intervals}), HTTPStatus.OK
+    return data_response(time_intervals)
 
 
 # Endpoint: /backend/data/notifications
@@ -175,140 +175,4 @@ def fetch_user_notifications() -> flask_typing.ResponseReturnValue:
     if user:
         notifications = Notification.to_dict_all(user.notifications)
 
-    return jsonify({"data": notifications}), HTTPStatus.OK
-
-
-# Endpoint: /backend/data/question/<id_question>
-@data.route("/question/<int:id_question>", methods=["GET"])
-@jwt_required(optional=True)
-def get_question(id_question: int) -> flask_typing.ResponseReturnValue:
-    """
-    Fetch a specific question by its ID.
-
-    Args:
-        id_question (int): The ID of the question to fetch.
-
-    Returns:
-        JSON response with the specified question or an error if not found.
-    """
-    # Query the Question model to find the question by its ID
-    question = db.session.query(Question).get(id_question)
-
-    # If no question is found, return an error response
-    if not question:
-        return error_response("Question not found", ErrorType.NOT_FOUND)
-
-    # Get the current user from the JWT
-    user = get_current_user()
-    user_id = user.id if user else None
-
-    # Convert the question object to a dictionary format suitable for JSON response
-    qstn_dict = question_dictionary(user_id, question.to_dict(simplified=False))
-
-    # Return the question data in JSON format with HTTP 200 OK status
-    return jsonify({"data": [qstn_dict]}), HTTPStatus.OK
-
-
-# Endpoint: /backend/data/question/<id_question>/is_author
-@data.route("/question/<int:id_question>/is_author", methods=["GET"])
-@jwt_required()
-def is_question_author(id_question: int) -> flask_typing.ResponseReturnValue:
-    """
-    Check if the current user is the author of a specific question.
-
-    Args:
-        id_question (int): The ID of the question to check.
-
-    Returns:
-        JSON response with a boolean indicating if the user is the author or an error if not found.
-    """
-    # Query the Question model to find the question by its ID
-    question = db.session.query(Question).get(id_question)
-
-    # Return an error response if the question does not exist
-    if not question:
-        return error_response("Question not found", ErrorType.NOT_FOUND)
-
-    # Get the current user from the JWT
-    user = get_current_user()
-
-    # Return an error response if the user is not found
-    if not user:
-        return error_response("User not found", ErrorType.USER_NOT_FOUND)
-
-    # Check if the current user is the author of the question
-    is_author = check_author(user.id, question.id)
-
-    # Return the result as a JSON response
-    return jsonify({"data": [is_author]}), HTTPStatus.OK
-
-
-# Endpoint: /backend/data/question/<id_question>/offer_made
-@data.route("/question/<int:id_question>/offer_made", methods=["GET"])
-@jwt_required()
-def question_offer_made(id_question: int) -> flask_typing.ResponseReturnValue:
-    """
-    Check if the current user has made an offer for a specific question.
-
-    Args:
-        id_question (int): The ID of the question to check for an offer.
-
-    Returns:
-        JSON response with offer details if found or an empty list if not.
-    """
-    # Query the Question model to find the question by its ID
-    question = db.session.query(Question).get(id_question)
-
-    # Return an error response if the question does not exist
-    if not question:
-        return error_response("Question not found", ErrorType.NOT_FOUND)
-
-    # Get the current user from the JWT
-    user = get_current_user()
-
-    # Return an error response if the user is not found
-    if not user:
-        return error_response("User not found", ErrorType.USER_NOT_FOUND)
-
-    # Query the Offer model to check if the user has made an active offer for the question
-    offer_made = (
-        db.session.query(Offer)
-        .filter_by(question_id=question.id, user_id=user.id, active=True)
-        .first()
-    )
-
-    # If no offer is found, return an empty list
-    if not offer_made:
-        return jsonify({"data": []}), HTTPStatus.OK
-
-    # Return the found offer details in JSON format
-    return jsonify({"data": [offer_made.to_dict(simplified=False)]}), HTTPStatus.OK
-
-
-# Endpoint: /backend/data/question/<id_question>/offers_received
-@data.route("/question/<int:id_question>/offers_received", methods=["GET"])
-@jwt_required()
-@author_required("id_question")
-def offers_received(id_question: int) -> flask_typing.ResponseReturnValue:
-    """
-    Fetch all offers received for a specific question.
-
-    Args:
-        id_question (int): The ID of the question to fetch offers for.
-
-    Returns:
-        JSON response with a list of offers or an error if the user is not the author.
-    """
-    # Query the Question model to find the question by its ID
-    question = db.session.query(Question).get(id_question)
-
-    # Query the Offer model for all active offers received for the specified question
-    offers = (
-        db.session.query(Offer).filter_by(question_id=question.id, active=True).all()
-    )
-
-    # Convert the list of offers to a dictionary format suitable for JSON response
-    offers = Offer.to_dict_all(offers)
-
-    # Return the list of offers in JSON format with HTTP 200 OK status
-    return jsonify({"data": offers}), HTTPStatus.OK
+    return data_response(notifications)

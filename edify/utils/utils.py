@@ -1,4 +1,5 @@
 # Standard Library imports
+from http import HTTPStatus
 import json
 import random
 import re
@@ -94,6 +95,24 @@ def internal_request(url: str, method: str = "GET") -> flask_typing.ResponseRetu
         response = current_app.full_dispatch_request()
 
     return response
+
+
+# Format a response to pass data
+def data_response(data: Any = []) -> tuple:
+    """
+    Helper function to pass data as JSON.
+
+    Args:
+        data (Any): The data to return.
+
+    Returns:
+        tuple: A tuple containing the JSON response and the HTTP status code.
+    """
+    # Make a list if not already one
+    if not isinstance(data, list):
+        data = [data]
+
+    return jsonify({"data": data}), HTTPStatus.OK
 
 
 # Returns a JSON response with an error message and error type
