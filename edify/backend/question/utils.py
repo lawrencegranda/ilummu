@@ -67,6 +67,7 @@ def get_offers_from_question(id_question: str, id_user: int):
 
     Args:
         id_question (int): The ID of the question to fetch offers for.
+        id_user (int): The ID of the user to fetch offers for.
 
     Returns:
         JSON response with a list of offers or an error if the user is not the author.
