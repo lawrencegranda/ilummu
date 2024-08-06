@@ -434,7 +434,7 @@ class Offer(BaseModel):
     # Amount offered
     amount = db.Column(db.Float, nullable=False)
 
-    # Wether the offer is active
+    # Whether the offer is active
     active = db.Column(db.Boolean, nullable=False, default=True)
 
     # Status of the offer
@@ -473,6 +473,12 @@ class Offer(BaseModel):
 
     @staticmethod
     def validator(mapper, connection, target: "Offer"):
+        # Fill in default values
+        if target.active is None:
+            target.active = True
+        if target.status is None:
+            target.status = OfferStatusEnum.SENT
+            
         if target.amount <= 0:
             raise ValueError(
                 f'OFFER MODEL: Amount must be a positive value ("{target.amount}").'
@@ -488,7 +494,7 @@ class Offer(BaseModel):
                 f'OFFER MODEL: Offer status is inactive ("{target.status}") but still active).'
             )
 
-        if not target.active and not target.status in OfferStatusEnum.inactive:
+        if not target.active and not (target.status in OfferStatusEnum.inactive):
             raise ValueError(
                 f'OFFER MODEL: Offer is not active but status is not inactive ("{target.status}").'
             )
