@@ -42,7 +42,7 @@ class TestCreateQuestion:
                 "class_code": course_code,
                 "class_name": course_name,
                 "academic_field": academic_field.value,
-                "method_id": method.id,
+                "method": method.value,
                 "solve_time": solve_time,
                 "price": price,
                 "request_message": request,
@@ -80,8 +80,8 @@ class TestCreateQuestion:
         assert question["price"] == price, f"Price does not match {question['price']}"
 
         assert (
-            question["method_id"] == method.id
-        ), f"Method ID does not match {question['method_id']}"
+            question["method_value"] == method.value
+        ), f"Methods do not match {question['method']}"
 
         assert (
             question["solved"] == False
@@ -129,7 +129,7 @@ class TestCreateQuestion:
                 "class_code": course_code,
                 "class_name": course_name,
                 "academic_field": academic_field.value,
-                "method_id": method.id,
+                "method": method.value,
                 "solve_time": solve_time,
                 "price": price,
                 "request_message": request,
@@ -167,8 +167,8 @@ class TestCreateQuestion:
         assert question["price"] == price, f"Price does not match {question['price']}"
 
         assert (
-            question["method_id"] == method.id
-        ), f"Method ID does not match {question['method_id']}"
+            question["method_value"] == method.value
+        ), f"Methods do not match {question['method']}"
 
         assert (
             question["solved"] == False
@@ -203,7 +203,7 @@ class TestCreateQuestion:
                 "class_code": course.code,
                 "class_name": course.name,
                 "academic_field": academic_field.value,
-                "method_id": method.id,
+                "method": method.value,
                 "solve_time": 30,
                 "price": 10.0,
                 "request_message": "What is Python?",
@@ -218,7 +218,7 @@ class TestCreateQuestion:
         """
         user, jwt = user_jwt
 
-        invalid_method_id = 999  # Assuming this method does not exist
+        invalid_method = "none"  # Assuming this method does not exist
 
         course = db.session.query(Course).filter_by(school_id=user.school_id).first()
         academic_field = course.academic_field
@@ -229,7 +229,7 @@ class TestCreateQuestion:
                 "class_code": course.code,
                 "class_name": course.name,
                 "academic_field": academic_field.value,
-                "method_id": invalid_method_id,
+                "method": invalid_method,
                 "solve_time": 30,
                 "price": 10.0,
                 "request_message": "What is Python?",
@@ -237,7 +237,7 @@ class TestCreateQuestion:
             headers=jwt,
         )
         assert response.status_code == HTTPStatus.BAD_REQUEST, response.json
-        assert "Invalid method ID" in response.get_json()["msg"]
+        assert "Invalid method" in response.get_json()["msg"]
 
     def test_create_question_invalid_academic_field(self, client_with_data, user_jwt):
         """
@@ -256,7 +256,7 @@ class TestCreateQuestion:
                 "class_code": course.code,
                 "class_name": course.name,
                 "academic_field": invalid_academic_field,
-                "method_id": method.id,
+                "method": method.value,
                 "solve_time": 30,
                 "price": 10.0,
                 "request_message": "What is Python?",
