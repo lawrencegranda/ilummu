@@ -60,3 +60,32 @@ def question_dictionary(
     question_dict["offer_accepted"] = offer_accepted
 
     return question_dict
+
+def get_offers_from_question(id_question: str, id_user: int):
+    """
+    Fetch all offers received for a specific question.
+
+    Args:
+        id_question (int): The ID of the question to fetch offers for.
+        id_user (int): The ID of the user to fetch offers for.
+
+    Returns:
+        JSON response with a list of offers or an error if the user is not the author.
+    """
+    # Query the Question model to find the question by its ID
+    question = db.session.query(Question).get(id_question)
+
+    # If question is not visible, return an error response
+    if not question.visible:
+        return error_response("Question is hidden", ErrorType.UNAUTHORIZED)
+    
+    # Query the Offer model for all active offers received for the specified question
+    offers = (
+        db.session.query(Offer).filter_by(question_id=question.id, active=True).all()
+    )
+
+    # Convert the list of offers to a dictionary format suitable for JSON response
+    offers = Offer.to_dict_all(offers)
+
+    # Return the list of offers in JSON format with HTTP 200 OK status
+    return data_response(offers)
