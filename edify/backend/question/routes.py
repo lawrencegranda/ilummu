@@ -39,7 +39,7 @@ question = Blueprint("question", __name__, url_prefix="/question")
         "class_code": fields.Str(required=True, validate=validate.Length(min=4)),
         "class_name": fields.Str(required=True, validate=validate.Length(min=1)),
         "academic_field": fields.Str(required=True, validate=validate.Length(min=1)),
-        "method_id": fields.Int(required=True),
+        "method": fields.Str(required=True),
         "solve_time": fields.Int(required=True, validate=validate.Range(min=1)),
         "price": fields.Float(required=True, validate=validate.Range(min=0)),
         "request_message": fields.Str(required=True, validate=validate.Length(min=1)),
@@ -67,9 +67,9 @@ def create_question(args):
         return error_response("User not found", ErrorType.USER_NOT_FOUND)
 
     # Fetch the method. Return error if invalid
-    method = db.session.get(Method, args.get("method_id"))
+    method = db.session.query(Method).filter_by(value=args.get("method")).one_or_none()
     if method is None:
-        return error_response("Invalid method ID", ErrorType.BAD_REQUEST)
+        return error_response("Invalid method", ErrorType.BAD_REQUEST)
 
     # Fetch the academic field. Return error if invalid
     academic_field = AcademicField.query.filter_by(
@@ -119,7 +119,7 @@ def create_question(args):
         request=args["request_message"],
         solve_time=args["solve_time"],
         price=args["price"],
-        method_id=args["method_id"],
+        method_id=method.id,
         solved=False,  # Question is initially unsolved
     )
 
