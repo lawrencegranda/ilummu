@@ -48,18 +48,6 @@ $(document).ready(function () {
     else $("#notification-wrapper").show();
   });
 
-  $(".category")
-    .not(".all-subjects")
-    .on("click", function () {
-      $(".all-subjects").removeClass("selected");
-      $(this).toggleClass("selected");
-    });
-
-  $(".all-subjects").on("click", function () {
-    $(".category").removeClass("selected");
-    $(this).toggleClass("selected");
-  });
-
   // $(".btn-reply").on("click", function () {
   //   let element = $(this).closest('.comment-container').children('.comment-area').first();
 
@@ -106,6 +94,4 @@ $(document).ready(function () {
       "Offer $" + parseFloat($(this).val()).toFixed(2)
     );
   });
-
-
 });
