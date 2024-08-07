@@ -22,27 +22,31 @@
 {% block javascript %}
   {{ super() }}
   <script>
+      var lastValues = []
+
       function getSelectedCategoryCountAndValues() {
           const container = $('.dashboard-menu-container');
-          let selectedCount = 0;
           const selectedValues = [];
+
+          console.log(container)
 
           if (container.length === 0 || container.css('display') === 'none') {
               // Get the option value from id="category-selector"
               const selector = $('#category-selector');
               if (selector.length > 0) {
-                  selectedCount++;
                   selectedValues.push(selector.val());
               }
           } else {
               // Select all buttons with the 'category' class
               $('.category').each(function() {
                   if ($(this).hasClass('selected') && !$(this).is(':disabled')) {
-                      selectedCount++;
                       selectedValues.push($(this).val());
                   }
               });
           }
+
+          console.log(selectedValues)
+
           return selectedValues;
       }
 
@@ -68,20 +72,75 @@
           });
       }
 
+      function arraysAreEqual(arr1, arr2) {
+          // Convert arrays to Sets
+          const set1 = new Set(arr1);
+          const set2 = new Set(arr2);
 
-      $(document).ready(function() {
-          $('button.category').on('click', function() {
-              const values = getSelectedCategoryCountAndValues();
-              const inputValue = $('#search-box').val(); // Get the value of the input field
-              loadQuestions(values, inputValue); // Pass both values and inputValue to the AJAX function
+          // Check if the sizes of the sets are equal
+          if (set1.size !== set2.size) {
+              return false;
+          }
+
+          // Check if all elements in set1 are in set2
+          for (const item of set1) {
+              if (!set2.has(item)) {
+                  return false;
+              }
+          }
+
+          return true;
+      }
+
+
+      $(document).ready(function () {
+          $(".category").not(".all-subjects").on("click", function () {
+              // Toggle the selected class on the clicked category
+              $(this).toggleClass("selected");
+
+              // Remove the selected class from .all-subjects
+              $(".all-subjects").removeClass("selected");
+
+              // Select all elements with the .category class
+              const categories = $(".category").not(".all-subjects");
+    
+              // Check if every .category element has the .selected class
+              const selected = categories.filter(".selected");
+              if (selected.length === categories.length) {
+                  $(".category").removeClass("selected");
+              }
+
+              // Add the selected class to .all-subjects if no categories are selected
+              const values = $(".category").filter(".selected")
+              if (values.length === 0) {
+                  $(".all-subjects").addClass("selected");
+              }
           });
 
-          $('#search-box').on('input', function() {
-              const values = getSelectedCategoryCountAndValues();
-              const inputValue = $(this).val(); // Get the value of the input field
-              loadQuestions(values, inputValue); // Pass both values and inputValue to the AJAX function
+          $(".all-subjects").on("click", function () {
+              $(".category").removeClass("selected");
+              $(this).toggleClass("selected");
           });
 
+          // Function to handle the common logic for all events
+          function handleUpdate() {
+              const values = getSelectedCategoryCountAndValues();
+
+              // Get the value of the input field
+              const inputValue = $('#search-box').val();
+
+              if (!arraysAreEqual(values, lastValues)) {
+                  // Pass both values and inputValue to the AJAX function
+                  loadQuestions(values, inputValue);
+                  lastValues = values;
+              }
+          }
+
+          // Attach event handlers
+          $('button.category').on('click', handleUpdate);
+          $('#category-selector').on('change', handleUpdate);
+          $('#search-box').on('input', handleUpdate);
+      
       });
   </script>
 {% endblock javascript %}
@@ -101,7 +160,7 @@
             </select>
           </div>
 #}
-          <button class="btn category all-subjects selected">
+          <button class="btn category all-subjects selected" value="">
             All Questions
           </button>
 
@@ -116,7 +175,7 @@
       <div class="dashboard-menu-container-small">
         <div class="dashboard-menu-small">
           <select name="category-selector" id="category-selector">
-            <option value="all-subjects">
+            <option value="">
               All Questions
             </option>
 
