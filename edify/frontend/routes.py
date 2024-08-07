@@ -337,7 +337,7 @@ def list_questions(fields: List[str], search: str) -> str:
         questions = [d for d in questions if not d["solved"]]
 
         # Sort questions by creation date, ensuring unsolved are first
-        questions.sort(key=lambda d: (d["solved"], d["created_at"]))
+        questions.sort(key=lambda d: (d["solved"], d["seconds_ago"]))
 
     return render_template("bases/question-list.jinja", questions=questions)
 
