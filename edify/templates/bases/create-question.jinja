@@ -39,7 +39,7 @@
         return;
       }
 
-      var class_name = $("#create-question-class-name").val().replace(/\s+/g, '').trim();
+      var class_name = $("#create-question-class-name").val().replace(/\s+/g, ' ').trim();
       if (!class_name) {
         showError("Class name is required.");
         return;
