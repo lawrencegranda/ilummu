@@ -375,4 +375,4 @@ def trim_text(string: str, length: int) -> str:
     Returns:
         str: The trimmed string with ellipsis if it exceeds the length.
     """
-    return string[0:length] + "..." if len(string) > length + 3 else string
+    return string[0:length].strip() + "..." if len(string) > length + 3 else string
