@@ -107,11 +107,11 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
     return (response, HTTPStatus.CREATED)
 
 
-# Endpoint: /backend/offer/<int:offer_id>
-@offer.route("/<int:offer_id>", methods=["GET"])
+# Endpoint: /backend/offer/<int:id_offer>
+@offer.route("/<int:id_offer>", methods=["GET"])
 @jwt_required()
-def get_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
-    offer = db.session.query(Offer).filter_by(id=offer_id).first()
+def get_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
+    offer = db.session.query(Offer).filter_by(id=id_offer).first()
 
     # If no offer is found, return an error response
     if not offer:
@@ -120,8 +120,8 @@ def get_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     return jsonify(offer.to_dict()), HTTPStatus.OK
 
 
-# Endpoint: /backend/offer/<int:offer_id>
-@offer.route("/<int:offer_id>", methods=["PUT"])
+# Endpoint: /backend/offer/<int:id_offer>
+@offer.route("/<int:id_offer>", methods=["PUT"])
 @jwt_required()
 @use_args(
     {
@@ -130,8 +130,8 @@ def get_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
         "active": fields.Boolean(required=False),
     }
 )
-def update_offer(args, offer_id: int) -> flask_typing.ResponseReturnValue:
-    offer = db.session.query(Offer).filter_by(id=offer_id).first()
+def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
+    offer = db.session.query(Offer).filter_by(id=id_offer).first()
 
     # If no offer is found, return an error response
     if not offer:
@@ -147,19 +147,22 @@ def update_offer(args, offer_id: int) -> flask_typing.ResponseReturnValue:
     return jsonify(offer.to_dict()), HTTPStatus.OK
 
 
-# Endpoint: /backend/offer/<int:offer_id>
-@offer.route("/<int:offer_id>", methods=["DELETE"])
+# Endpoint: /backend/offer/<int:id_offer>
+@offer.route("/<int:id_offer>", methods=["DELETE"])
 @jwt_required()
-def delete_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
-    offer = db.session.query(Offer).filter_by(id=offer_id).first()
+def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
+    offer = db.session.query(Offer).filter_by(id=id_offer).first()
 
     # If no offer is found, return an error response
     if not offer:
         return error_response("Offer not found", ErrorType.NOT_FOUND)
     
+    # Not implemented
+    return error_response("Not Implemented but passed checks.", ErrorType.NOT_IMPLEMENTED)
+    
     # Set offer status to REMOVED (i think)
     db.session.commit()
-    return jsonify({"message": "Offer deleted"}), HTTPStatus.NO_CONTENT
+    return jsonify({"msg": "Offer deleted"}), HTTPStatus.NO_CONTENT
 
 
 # Endpoint: /backend/offer/user/<int:user_id>
