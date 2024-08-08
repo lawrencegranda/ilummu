@@ -84,12 +84,10 @@ $(document).ready(function () {
   });
 
   $("#btn-bid-raise").on("click", function () {
-    console.log($("#bid-value").val());
     // $('#bid-value').val('$' + (parseFloat($('#bid-value').val()) + 2).toFixed(2));
   });
 
   $("#offer-fare").on("input", function () {
-    console.log($("#button-make-offer").val());
     $("#button-make-offer").text(
       "Offer $" + parseFloat($(this).val()).toFixed(2)
     );
