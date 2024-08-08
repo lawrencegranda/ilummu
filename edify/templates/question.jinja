@@ -12,6 +12,74 @@
   {% include "bases/create-question.jinja" %}
 {% endblock top %}
 
+{% block javascript %}
+  {{ super() }}
+
+  {% if user and not question.solved and not question.is_author and not question.offer_made %}
+    <script>
+      function makeOffer(value) {
+          // Define the data to be sent in the request
+          const data = {
+              question_id: {{ question.id }},
+              price: value,
+          };
+
+          $.ajax({
+              url: '{{ url_for("backend.offer.create_offer") }}',
+              type: 'POST',
+              contentType: 'application/json',
+              data: JSON.stringify(data),
+              success: function (response) {
+                  // Reload the page
+                  location.reload()
+              },
+              error: function(xhr, status, error) {
+                  console.error('Error: ', error);
+              }
+          });
+      }
+
+       $(document).ready(function () {
+          $("#button-agree-offer").on("click", function () {
+              value = {{ question.price }}
+              makeOffer(value)
+          });
+
+          $("#button-make-offer").on("click", function () {
+              value = $("#offer-fare").val()
+              makeOffer(value)          
+          });
+       });
+    </script>
+  {% endif %}
+
+  {% if user and not question.solved and not question.is_author
+    and question.offer_made and (not question.offer_made.status == "ACCEPTED") %}
+    <script>
+      function revokeOffer() {
+          $.ajax({
+              url: '{{ url_for("backend.offer.delete_offer", id_offer=question.offer_made.id) }}',
+              type: 'DELETE',
+              success: function (response) {
+                  // Reload the page
+                  location.reload()
+              },
+              error: function(xhr, status, error) {
+                  console.error('Error: ', error);
+              }
+          });
+      }
+
+       $(document).ready(function () {
+          $("#revoke-offer").on("click", function () {
+              revokeOffer()
+          });
+       });
+    </script>
+  {% endif %}
+
+{% endblock javascript %}
+
 {% block content %}
   <div class="{{ 'container main-content logged' if user else 'container main-content' }}">
     <div class="question-wrapper">
@@ -251,7 +319,7 @@
                            max="{{ 2 * question.price }}"
                            step="0.25"
                            oninput="this.nextElementSibling.value = '$' + parseFloat(this.value).toFixed(2)" />
-                    <output class="qoffer-value">${{ '%.2f' % question.price | float }}</output>
+                    <output class="offer-value">${{ '%.2f' % question.price | float }}</output>
                   </div>
                   <div class="offer-pair">
                     <button id="button-agree-offer"
@@ -270,9 +338,15 @@
             {% else %}
               <div class="separator">
               </div>
-              <p class="question-statement">
-                Waiting for the student to accept your offer.
-              </p>
+              <div class="double-col">
+                <p class="question-statement wait-offer">
+                  Waiting for the student to accept your offer for
+                  <strong>${{ '%.2f' % question.offer_made.amount | float }}</strong>.
+                </p>
+                <button id="revoke-offer" class="btn btn-primary">
+                  Revoke Offer
+                </button>
+              </div>
             {% endif %}
           {% endif %}
         {% endif %}
