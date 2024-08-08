@@ -117,15 +117,18 @@
               contentType: 'application/json', // Request content type
               data: JSON.stringify(data), // Data to be sent
               success: function (response) {
-                  // Handle success (e.g., redirect to dashboard page)
+                  // Handle success (e.g., hide input)
                   let element = $(".create-question-wrapper-dimensions");
                   if (element.is(":visible")) {
+                      // Hide the element after a delay
                       setTimeout(function () {
-                          element.hide(); // Hide the element after a delay
+                          element.hide();
                       }, 300);
-                  } else {
-                      element.show(); // Show the element if hidden
                   }
+
+                  // Refresh the page
+                  location.reload();
+
                   return;
               },
               error: function (error) {
@@ -146,5 +149,5 @@
 </div>
 <div class="create-question-wrapper-dimensions create-question-wrapper"
      style="display: none">
-  {% include "bases/create-question-container.jinja" %}
+    {% include "bases/create-question-container.jinja" %}
 </div>
