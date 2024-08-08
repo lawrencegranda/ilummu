@@ -22,6 +22,7 @@ class ErrorType(Enum):
     NOT_FOUND = HTTPStatus.NOT_FOUND
     USER_NOT_FOUND = HTTPStatus.NOT_FOUND
     UNAUTHORIZED = HTTPStatus.UNAUTHORIZED
+    NOT_IMPLEMENTED = HTTPStatus.NOT_IMPLEMENTED
 
 
 class EdifyEnvironments(Enum):
