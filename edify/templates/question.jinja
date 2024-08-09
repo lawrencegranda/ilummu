@@ -46,7 +46,7 @@
           });
 
           $("#button-make-offer").on("click", function () {
-              value = $("#offer-fare").val()
+              value = $("#offer-fare").value
               makeOffer(value)          
           });
        });
@@ -73,6 +73,67 @@
        $(document).ready(function () {
           $("#revoke-offer").on("click", function () {
               revokeOffer()
+          });
+       });
+    </script>
+  {% endif %}
+
+  {% if user and not question.solved and question.is_author and (not question.offer_accepted) %}
+    <script>
+      function changePrice(value) {
+          // Define the data to be sent in the request
+          const data = {
+              price: value,
+          };
+
+          $.ajax({
+              url: '{{ url_for("backend.question.change_price", id_question=question.id) }}',
+              type: 'PUT',
+              contentType: 'application/json',
+              data: JSON.stringify(data),
+              success: function (response) {
+                  // Reload the page
+                  location.reload()
+              },
+              error: function(xhr, status, error) {
+                  console.error('Error: ', error);
+              }
+          });
+      }
+
+      // Function to update the display price and return the new price
+      function updateDisplayPrice(button) {
+          // Retrieve increment and current value
+          let increment = parseFloat(button.data('value'));
+          let currentValue = parseFloat($("#bid-value").data('value'));
+
+          // Check if the button is disabled
+          if (button.prop('disabled') || button.hasClass('disabled')) {
+              return currentValue
+          }
+          
+          // Calculate the new value
+          let newValue = currentValue + increment;
+
+          // Update the data-value attribute with the new value
+          $("#bid-value").data('value', newValue);
+          
+          // Update the content to display the new value in dollars with two decimal places
+          $("#bid-value").text('$' + newValue.toFixed(2));
+      }
+
+      $(document).ready(function () {
+          $("#btn-bid-lower").on("click", function () {
+              updateDisplayPrice($(this))
+          });
+
+          $("#btn-bid-raise").on("click", function () {
+              updateDisplayPrice($(this))
+          });
+
+          $("#btn-update-price").on("click", function () {
+              // changePrice()
+              console.log("Value: " + $("#bid-value").data('value'))
           });
        });
     </script>
@@ -218,19 +279,22 @@
                   <p class="bid-label">
                     Your Offer:
                   </p>
+                  {% set increment = 2 %}
                   <div class="bid-update-buttons">
                     <button id="btn-bid-lower"
+                            data-value="-{{ increment }}"
                             class="btn btn-primary btn-bid-update disabled"
                             type="button">
-                      -$2
+                      -${{ increment }}
                     </button>
-                    <p id="bid-value">
+                    <p id="bid-value" data-value="{{ '%.2f' % question.price | float }}">
                       ${{ '%.2f' % question.price | float }}
                     </p>
                     <button id="btn-bid-raise"
+                            data-value="{{ increment }}"
                             class="btn btn-primary btn-bid-update"
                             type="button">
-                      +$2
+                      +${{ increment }}
                     </button>
                   </div>
                   <button id="btn-update-price" class="btn btn-primary" type="button">
