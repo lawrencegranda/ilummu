@@ -345,6 +345,7 @@ class Question(BaseModel):
             result["preview"] = trim_text(self.request, PREVIEW_LENGTH)
             result["solve_time"] = self.time_interval.shortname
             result["academic_field"] = self.course.academic_field.value
+            result["original_price"] = self.original_price
 
         return result
 
