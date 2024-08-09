@@ -1,4 +1,5 @@
 {% extends "bases/layout.jinja" %}
+{% set increment = 2 %}
 
 {% block title %}
   Question
@@ -80,17 +81,27 @@
 
   {% if user and not question.solved and question.is_author and (not question.offer_accepted) %}
     <script>
+      // Calculate bounds
+      const lowestValue = {{ question.original_price }};
+      const highestValue = 2 * lowestValue;
+
+      // Set the increment value
+      const increment = Math.abs({{ increment }});
+
+      // Send request to change question price
       function changePrice(value) {
           // Define the data to be sent in the request
           const data = {
               price: value,
           };
 
+          let url = '{{ url_for("backend.question.change_price", id_question=question.id) }}'
+
           $.ajax({
-              url: '{{ url_for("backend.question.change_price", id_question=question.id) }}',
+              url: url,
               type: 'PUT',
-              contentType: 'application/json',
-              data: JSON.stringify(data),
+              contentType: 'application/json', // Specify content type as JSON
+              data: JSON.stringify(data), // Send data as a JSON string
               success: function (response) {
                   // Reload the page
                   location.reload()
@@ -101,39 +112,76 @@
           });
       }
 
+      // Function to update the display price and buttons
+      function displayPrice() {          
+          // Retrieve the current value
+          let value =  parseFloat($("#bid-value").data('value'));
+
+          if (value + increment > highestValue) {
+              if (!$("#btn-bid-raise").hasClass('disabled')) {
+                  $("#btn-bid-raise").toggleClass('disabled');
+              }
+          } else {
+              if ($("#btn-bid-raise").hasClass('disabled')) {
+                  $("#btn-bid-raise").toggleClass('disabled');
+              }
+          }
+
+          if (value - increment < lowestValue) {
+              if (!$("#btn-bid-lower").hasClass('disabled')) {
+                  $("#btn-bid-lower").toggleClass('disabled');
+              }
+          } else {
+              if ($("#btn-bid-lower").hasClass('disabled')) {
+                  $("#btn-bid-lower").toggleClass('disabled');
+              }
+          }
+      }
+
       // Function to update the display price and return the new price
-      function updateDisplayPrice(button) {
-          // Retrieve increment and current value
-          let increment = parseFloat(button.data('value'));
+      function updatePrice(button) {
+          // Retrieve delta and current value
+          let delta = parseFloat(button.data('value'));
           let currentValue = parseFloat($("#bid-value").data('value'));
 
           // Check if the button is disabled
           if (button.prop('disabled') || button.hasClass('disabled')) {
-              return currentValue
+              return currentValue;
           }
-          
+
           // Calculate the new value
-          let newValue = currentValue + increment;
+          let newValue = currentValue + delta;
+
+          // Check bounds
+          if (newValue > highestValue) {
+              newValue = highestValue;
+          } else if (newValue < lowestValue) {
+              newValue = lowestValue;
+          }
 
           // Update the data-value attribute with the new value
           $("#bid-value").data('value', newValue);
           
           // Update the content to display the new value in dollars with two decimal places
           $("#bid-value").text('$' + newValue.toFixed(2));
+        
+          // Display the buttons
+          displayPrice();
       }
 
       $(document).ready(function () {
+          displayPrice();
+
           $("#btn-bid-lower").on("click", function () {
-              updateDisplayPrice($(this))
+              updatePrice($(this));
           });
 
           $("#btn-bid-raise").on("click", function () {
-              updateDisplayPrice($(this))
+              updatePrice($(this));
           });
 
           $("#btn-update-price").on("click", function () {
-              // changePrice()
-              console.log("Value: " + $("#bid-value").data('value'))
+              changePrice($("#bid-value").data('value'));
           });
        });
     </script>
@@ -279,7 +327,6 @@
                   <p class="bid-label">
                     Your Offer:
                   </p>
-                  {% set increment = 2 %}
                   <div class="bid-update-buttons">
                     <button id="btn-bid-lower"
                             data-value="-{{ increment }}"
