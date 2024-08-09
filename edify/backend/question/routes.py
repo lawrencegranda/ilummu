@@ -314,15 +314,19 @@ def offers(id_question: int) -> flask_typing.ResponseReturnValue:
     # Return the list of offers in JSON format with HTTP 200 OK status
     return data_response(offers)
 
+
+
 # Endpoint: /backend/question/<id_question>
 @question.route("/<int:id_question>", methods=["PUT"])
 @jwt_required()
-@author_required("id_question")
 @use_args(
-{
-    "price": fields.Int(required=True),
-})
-def change_price(id_question: int, args) -> flask_typing.ResponseReturnValue:
+    {
+        "price": fields.Float(required=True),
+    },
+    location="json"  # Change to "json" to read from the body
+)
+@author_required('id_question')
+def change_price(args, id_question: int) -> flask_typing.ResponseReturnValue:
     """
     Change the price of the question.
     
