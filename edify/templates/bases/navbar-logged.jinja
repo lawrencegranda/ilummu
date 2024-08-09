@@ -53,9 +53,15 @@
                                     <p class="notification-text">
                                         {{ notification.message }}
                                     </p>
-                                    <button class="btn btn-view" type="button">
-                                        view
-                                    </button>
+
+                                    {% if notification.link %}
+                                        <button class="btn btn-view"
+                                                type="button"
+                                                onclick="location.href='{{ notification.link }}';">
+                                            view
+                                        </button>
+                                    {% endif %}
+
                                 </div>
                             {% endfor %}
 
