@@ -313,3 +313,49 @@ def offers(id_question: int) -> flask_typing.ResponseReturnValue:
 
     # Return the list of offers in JSON format with HTTP 200 OK status
     return data_response(offers)
+
+# Endpoint: /backend/question/<id_question>
+@question.route("/<int:id_question>", methods=["PUT"])
+@jwt_required()
+@author_required("id_question")
+@use_args(
+{
+    "price": fields.Int(required=True),
+})
+def change_price(id_question: int, args) -> flask_typing.ResponseReturnValue:
+    """
+    Change the price of the question.
+    
+    Args:
+        id_question (int): The ID of the question to change.
+        args (dict): Arguments containing the new price.
+    
+    Returns:
+        JSON response.
+    """
+    price = args["price"]
+    
+    # Query the Question model to find the question by its ID
+    question = db.session.query(Question).filter_by(id=id_question).first()
+    
+    # Return an error response if the question does not exist
+    if not question:
+        return error_response("Question not found", ErrorType.NOT_FOUND)
+
+    # If question is not visible, return an error response
+    if not question.visible:
+        return error_response("Question is hidden", ErrorType.UNAUTHORIZED)
+    
+    # If new price is too low, error
+    if price < question.original_price:
+        return error_response("New price is too low", ErrorType.BAD_REQUEST)
+    
+    # If new price is too high, error
+    if price > 2 * question.original_price:
+        return error_response("New price is too high", ErrorType.BAD_REQUEST)
+
+    question.price = price
+    db.session.commit()
+
+    # Return the updated question as a JSON response with status 200 (OK)
+    return jsonify(question.to_dict(simplified=True)), HTTPStatus.OK
