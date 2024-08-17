@@ -56,7 +56,6 @@ def client_with_data(client_with_db):
     A fixture to set up constants.
     """
     populate_constants()
-    populate_fake()
     return client_with_db
 
 
