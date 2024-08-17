@@ -56,8 +56,6 @@ class TestCreateOffer:
 
         offer = response.get_json()
 
-        print(offer)
-
         assert "id" in offer, "Offer has no id"
 
         offer = db.session.get(Offer, offer["id"])
