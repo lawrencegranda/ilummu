@@ -168,7 +168,12 @@ def login() -> flask_typing.ResponseReturnValue:
     Returns:
         str: Rendered login/signup template.
     """
-    return render_template("signup.jinja", login=True)
+
+    next_url = request.args.get("next_url", None)
+    if not next_url:
+        next_url = url_for("frontend.index")
+
+    return render_template("signup.jinja", login=True, next_url=next_url)
 
 
 # Endpoint: /signup
@@ -184,9 +189,13 @@ def signup() -> flask_typing.ResponseReturnValue:
     majors = fetch_data(url_for("backend.data.fetch_user_majors"), "GET")
     majors.sort(key=lambda d: d["name"])
 
-    print(majors)
+    next_url = request.args.get("next_url", None)
+    if not next_url:
+        next_url = url_for("frontend.index")
 
-    return render_template("signup.jinja", login=False, majors=majors)
+    return render_template(
+        "signup.jinja", login=False, majors=majors, next_url=next_url
+    )
 
 
 # Endpoint: /logout
