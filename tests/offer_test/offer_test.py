@@ -43,8 +43,7 @@ class TestCreateOffer:
         
         assert response.status_code == HTTPStatus.CREATED, response.json
         
-        offer = response.get_json()
-        
+        offer = response.get_json().get("offer")
         assert "id" in offer, "Offer has no id"
         
         offer = db.session.get(Offer, offer["id"])
@@ -58,83 +57,4 @@ class TestCreateOffer:
         assert offer.status == OfferStatusEnum.SENT, "Newly created offer must have status 'SENT'"
         
         
-    def test_create_question_user_not_found(self, client_with_data, user_jwt):
-        """
-        Test creating a question without a user (Unauthorized).
-        """
-        user, jwt = user_jwt
-
-        method = db.session.query(Method).first()
-
-        course = db.session.query(Course).filter_by(school_id=user.school_id).first()
-        academic_field = course.academic_field
-
-        response = client_with_data.post(
-            url_for("backend.question.create_question"),
-            json={
-                "class_code": course.code,
-                "class_name": course.name,
-                "academic_field": academic_field.value,
-                "method": method.value,
-                "solve_time": 30,
-                "price": 10.0,
-                "request_message": "What is Python?",
-            },
-            headers=None,
-        )
-        assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json
-
-    def test_create_question_invalid_method(self, client_with_data, user_jwt):
-        """
-        Test creating a question with an invalid method ID.
-        """
-        user, jwt = user_jwt
-
-        invalid_method = "none"  # Assuming this method does not exist
-
-        course = db.session.query(Course).filter_by(school_id=user.school_id).first()
-        academic_field = course.academic_field
-
-        response = client_with_data.post(
-            url_for("backend.question.create_question"),
-            json={
-                "class_code": course.code,
-                "class_name": course.name,
-                "academic_field": academic_field.value,
-                "method": invalid_method,
-                "solve_time": 30,
-                "price": 10.0,
-                "request_message": "What is Python?",
-            },
-            headers=jwt,
-        )
-        assert response.status_code == HTTPStatus.BAD_REQUEST, response.json
-        assert "Invalid method" in response.get_json()["msg"]
-
-    def test_create_question_invalid_academic_field(self, client_with_data, user_jwt):
-        """
-        Test creating a question with an invalid academic field.
-        """
-        user, jwt = user_jwt
-
-        method = db.session.query(Method).first()
-
-        course = db.session.query(Course).filter_by(school_id=user.school_id).first()
-        invalid_academic_field = "Invalid"
-
-        response = client_with_data.post(
-            url_for("backend.question.create_question"),
-            json={
-                "class_code": course.code,
-                "class_name": course.name,
-                "academic_field": invalid_academic_field,
-                "method": method.value,
-                "solve_time": 30,
-                "price": 10.0,
-                "request_message": "What is Python?",
-            },
-            headers=jwt,
-        )
-
-        assert response.status_code == HTTPStatus.BAD_REQUEST, response.json
-        assert "Invalid academic field" in response.get_json()["msg"]
+    
