@@ -11,6 +11,7 @@ import pytest
 
 # Local Application imports
 from edify.database.populate import populate_constants
+from edify.database.fake_data import populate_fake
 from edify.models import *
 from edify import db
 from tests.test_app import create_test_app
@@ -55,6 +56,7 @@ def client_with_data(client_with_db):
     A fixture to set up constants.
     """
     populate_constants()
+    populate_fake()
     return client_with_db
 
 

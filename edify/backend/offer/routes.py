@@ -25,7 +25,8 @@ from edify.utils.utils import (
     error_response
 )
 from edify.utils.constants import (
-    ErrorType
+    ErrorType,
+    OfferStatusEnum
 )
 
 # -----------------------------------------------------------------------------
@@ -46,19 +47,18 @@ offer = Blueprint("offer", __name__, url_prefix="/offer")
 @use_args(
     {
         "question_id": fields.Integer(required=True),
-        "price": fields.Float(required=False),
+        "price": fields.Float(required=True),
     }
 )
 def create_offer(args) -> flask_typing.ResponseReturnValue:
     """
-    Make a new offer and post it in the databse
-
-    Parameters:
-        pass
-
+    Create an offer for a question.
+    Args:
+        args (dict): A dictionary containing the arguments for creating the offer.
     Returns:
-        pass
+        flask_typing.ResponseReturnValue: A tuple containing the new offer and HTTP status code.
     """
+    print("offer_sent")
     user = get_current_user()
     # Check if user exists
     if not user:
@@ -82,6 +82,7 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
         return error_response("Question is not visible", ErrorType.BAD_REQUEST)
     
     # Check if price is reasonable
+    print(args)
     price = args["price"]
     if price < question.price:
         return error_response("Price is too low", ErrorType.BAD_REQUEST)
@@ -101,9 +102,11 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
+        print("failed")
         return error_response("Failed to create offer.", ErrorType.BAD_REQUEST)
     
     response = jsonify({"offer": offer.to_dict(simplified = True)})
+    print(response)
     return (response, HTTPStatus.CREATED)
 
 
@@ -111,6 +114,14 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
 @offer.route("/<int:id_offer>", methods=["GET"])
 @jwt_required()
 def get_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
+    """
+    Retrieve an offer by its ID.
+    Args:
+        id_offer (int): The ID of the offer to retrieve.
+    Returns:
+        flask_typing.ResponseReturnValue: The response containing the offer data.
+    """
+    
     offer = db.session.query(Offer).filter_by(id=id_offer).first()
 
     # If no offer is found, return an error response
@@ -131,6 +142,15 @@ def get_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
     }
 )
 def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
+    """
+    Update an offer with the given arguments.
+    Args:
+        args (dict): The arguments containing the updated offer fields.
+        id_offer (int): The ID of the offer to be updated.
+    Returns:
+        flask_typing.ResponseReturnValue: The updated offer details.
+    """
+    
     offer = db.session.query(Offer).filter_by(id=id_offer).first()
 
     # If no offer is found, return an error response
@@ -143,7 +163,12 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
         offer.status = args["status"]
     if "active" in args:
         offer.active = args["active"]
-    db.session.commit()
+
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return error_response("Failed to update offer.", ErrorType.BAD_REQUEST)
     return jsonify(offer.to_dict()), HTTPStatus.OK
 
 
@@ -151,17 +176,28 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
 @offer.route("/<int:id_offer>", methods=["DELETE"])
 @jwt_required()
 def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
+    """
+    Delete an offer from the database.
+    Args:
+        id_offer (int): The ID of the offer to be deleted.
+    Returns:
+        flask_typing.ResponseReturnValue: The response value indicating the success or failure of the deletion.
+    """
+    
     offer = db.session.query(Offer).filter_by(id=id_offer).first()
 
     # If no offer is found, return an error response
     if not offer:
         return error_response("Offer not found", ErrorType.NOT_FOUND)
     
-    # Not implemented
-    return error_response("Not Implemented but passed checks.", ErrorType.NOT_IMPLEMENTED)
+    offer.status = OfferStatusEnum.REMOVED
     
     # Set offer status to REMOVED (i think)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return error_response("Failed to delete offer.", ErrorType.BAD_REQUEST)
     return jsonify({"msg": "Offer deleted"}), HTTPStatus.NO_CONTENT
 
 
@@ -169,6 +205,14 @@ def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
 @offer.route("/user/<int:user_id>", methods=["GET"])
 @jwt_required()
 def get_offers_by_user(user_id: int) -> flask_typing.ResponseReturnValue:
+    """
+    Retrieves offers associated with a specific user.
+    Args:
+        user_id (int): The ID of the user.
+    Returns:
+        flask_typing.ResponseReturnValue: The response containing the offers associated with the user.
+    """
+    
     user = get_current_user()
     # Check if user exists
     if not user:
