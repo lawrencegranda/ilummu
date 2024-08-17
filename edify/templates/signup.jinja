@@ -203,7 +203,31 @@
         data: JSON.stringify(data),
         success: function (response) {
           // Handle success (e.g., redirect to dashboard page)
-          window.location.href = "{{ next_url }}";
+          let http_method = "{{ http_method | default('GET') }}"
+          let next_url = "{{ next_url }}";
+
+          if (http_method === "POST") {
+              $.ajax({
+                  url: next_url,
+                  type: 'POST',
+                  success: function (response) {
+                    window.location.href = '{{url_for("frontend.dashboard")}}';
+                    return;
+                  },
+                  error: function (error) {
+                    console.log(error)
+                    // Handle error (e.g., display error message)
+                    try {
+                      showError("Attempted to create question. "+ error['responseJSON']['errors']);
+                    } catch (e) {
+                      showError("An error occurred during question creation. Please try again.");
+                    }
+                  }
+                    });
+              return
+          }
+
+          window.location.href = next_url;
           return;
         },
         error: function (error) {

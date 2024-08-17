@@ -141,29 +141,45 @@
               academic_field: academic_field,
               method: method,
               solve_time: time,
-              price: price,
+              price: price, 
           };
+
+          {% if home %}
+          let question_url = "{{url_for('frontend.store_question')}}"
+          {% else %}
+          let question_url = "{{url_for('backend.question.create_question')}}"
+          {% endif %}
 
           // Send the data via AJAX POST request
           $.ajax({
-              url: "{{ question_url | default(url_for('backend.question.create_question')) }}",
+              url: question_url,
               type: 'POST', // HTTP method
               contentType: 'application/json', // Request content type
               data: JSON.stringify(data), // Data to be sent
               success: function (response) {
-                  // Handle success (e.g., hide input)
-                  let element = $(".create-question-wrapper-dimensions");
-                  if (element.is(":visible")) {
-                      // Hide the element after a delay
-                      setTimeout(function () {
-                          element.hide();
-                      }, 300);
-                  }
+                  // Handle success
+                  {% if home %}
+                      if ('next' in response) {
+                          let login = "{{ url_for('frontend.login') }}"
+                          let next = response["next"]
 
-                  // Refresh the page
-                  location.reload();
+                          window.location.href = login + "?next_url=" + next + "&method=POST"
+                          return;
+                      }
+                  {% else %}
+                      let element = $(".create-question-wrapper-dimensions");
+                      if (element.is(":visible")) {
+                          // Hide the element after a delay
+                          setTimeout(function () {
+                              element.hide();
+                          }, 300);
+                      }
 
-                  return;
+                      // Refresh the page
+                      location.reload();
+
+                      return;
+                  {% endif %}
               },
               error: function (error) {
                   console.log(error) // Log error details
