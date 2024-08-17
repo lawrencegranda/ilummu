@@ -133,6 +133,8 @@ def get_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
 def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
     offer = db.session.query(Offer).filter_by(id=id_offer).first()
 
+    # TODO: check user is allowed to edit the offer (owner of the offer).
+
     # If no offer is found, return an error response
     if not offer:
         return error_response("Offer not found", ErrorType.NOT_FOUND)
@@ -153,16 +155,18 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
 def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
     offer = db.session.query(Offer).filter_by(id=id_offer).first()
 
+    # TODO: check user is allowed to remove the offer (owner of the offer).
+
     # If no offer is found, return an error response
     if not offer:
         return error_response("Offer not found", ErrorType.NOT_FOUND)
 
-    # Not implemented
+    # TODO: Not implemented
     return error_response(
         "Not Implemented but passed checks.", ErrorType.NOT_IMPLEMENTED
     )
 
-    # Set offer status to REMOVED (i think)
+    # TODO: Set offer status to REMOVED (i think)
     db.session.commit()
     return jsonify({"msg": "Offer deleted"}), HTTPStatus.NO_CONTENT
 
@@ -172,6 +176,7 @@ def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
 @jwt_required()
 def get_offers_by_user(user_id: int) -> flask_typing.ResponseReturnValue:
     user = get_current_user()
+
     # Check if user exists
     if not user:
         return error_response("User does not exist", ErrorType.USER_NOT_FOUND)
