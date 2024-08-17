@@ -40,6 +40,37 @@
     reset();
   });
 
+  function handleSuccess(response) {
+      // Handle success
+
+      let http_method = "{{ http_method | default('GET') }}"
+      let next_url = "{{ next_url }}";
+
+      if (http_method === "POST") {
+          $.ajax({
+              url: next_url,
+              type: 'POST',
+              success: function (response) {
+                window.location.href = '{{url_for("frontend.dashboard")}}';
+                return;
+              },
+              error: async function (error) {
+                console.log(error)
+                // Handle error (e.g., display error message)
+                showError("An error occurred cresting a question. Please create it later.");
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                showError("Redirecting...");
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                window.location.href = '{{url_for("frontend.dashboard")}}';
+              }
+                });
+          return
+      }
+
+      window.location.href = next_url;
+      return;
+  }
+
   {% if login == false %}
   // Conditional for signup form
   $(document).ready(() => {
@@ -133,11 +164,7 @@
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(data),
-        success: function (response) {
-          // Handle success (e.g., redirect to dashboard page)
-          window.location.href = "{{ next_url }}";
-          return;
-        },
+        success: handleSuccess,
         error: function (error) {
           console.log(error)
           // Handle error (e.g., display error message)
@@ -201,42 +228,14 @@
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(data),
-        success: function (response) {
-          // Handle success (e.g., redirect to dashboard page)
-          let http_method = "{{ http_method | default('GET') }}"
-          let next_url = "{{ next_url }}";
-
-          if (http_method === "POST") {
-              $.ajax({
-                  url: next_url,
-                  type: 'POST',
-                  success: function (response) {
-                    window.location.href = '{{url_for("frontend.dashboard")}}';
-                    return;
-                  },
-                  error: function (error) {
-                    console.log(error)
-                    // Handle error (e.g., display error message)
-                    try {
-                      showError("Attempted to create question. "+ error['responseJSON']['errors']);
-                    } catch (e) {
-                      showError("An error occurred during question creation. Please try again.");
-                    }
-                  }
-                    });
-              return
-          }
-
-          window.location.href = next_url;
-          return;
-        },
+        success: handleSuccess,
         error: function (error) {
           console.log(error)
           // Handle error (e.g., display error message)
           try {
             showError(error['responseJSON']['errors']);
           } catch (e) {
-            showError("An error occurred during signup. Please try again.");
+            showError("An error occurred during login. Please try again.");
           }
         }
       });
