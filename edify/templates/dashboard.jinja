@@ -22,8 +22,6 @@
 {% block javascript %}
   {{ super() }}
   <script>
-      var lastValues = []
-
       function getSelectedCategoryCountAndValues() {
           const container = $('.dashboard-menu-container');
           const selectedValues = [];
@@ -129,18 +127,17 @@
               // Get the value of the input field
               const inputValue = $('#search-box').val();
 
-              if (!arraysAreEqual(values, lastValues)) {
-                  // Pass both values and inputValue to the AJAX function
-                  loadQuestions(values, inputValue);
-                  lastValues = values;
-              }
+              // Pass both values and inputValue to the AJAX function
+              loadQuestions(values, inputValue);
           }
 
           // Attach event handlers
           $('button.category').on('click', handleUpdate);
           $('#category-selector').on('change', handleUpdate);
-          $('#search-box').on('input', handleUpdate);
-      
+          $('#search-box').on('input', function () {
+              handleUpdate();
+              console.log('1');
+          });
       });
   </script>
 {% endblock javascript %}
