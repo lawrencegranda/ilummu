@@ -227,7 +227,7 @@ def signup() -> flask_typing.ResponseReturnValue:
 @frontend.route("/store_question", methods=["POST"])
 @use_args(QuestionSchema)
 # @jwt_required(optional=True)
-def store_question(args):
+def store_question(args) -> flask_typing.ResponseReturnValue:
     # Temporarily store the question data in the session
     session["temp_question"] = args
 
@@ -240,7 +240,7 @@ def store_question(args):
 
 @frontend.route("/submit_question_after_login", methods=["POST"])
 @jwt_required()
-def submit_question_after_login():
+def submit_question_after_login() -> flask_typing.ResponseReturnValue:
     # Retrieve the question data from the session
     question_data = session.pop("temp_question", None)
 
@@ -255,13 +255,7 @@ def submit_question_after_login():
         url_for("backend.question.create_question"), method="POST", data=question_data
     )
 
-    print(response)
-
-    if not response.status_code == 201:
-        # Handle error response
-        return error_response(response.json, ErrorType.BAD_REQUEST)
-
-    return redirect(url_for("frontend.dashboard"))
+    return response
 
 
 # Endpoint: /dashboard
