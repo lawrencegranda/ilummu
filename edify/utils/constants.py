@@ -3,6 +3,9 @@ from enum import Enum
 from http import HTTPStatus
 from typing import List, Tuple
 
+# Third-Party Framework imports
+from webargs import fields, validate
+
 
 # Number of characters to show in the question request preview.
 PREVIEW_LENGTH: int = 127
@@ -147,3 +150,14 @@ class NotificationTypeEnum(EnumBase):
         ):
             return cls.question_required[notification_type]
         raise ValueError(f"{notification_type} is not a valid notification type.")
+
+
+QuestionSchema = {
+    "class_code": fields.Str(required=True, validate=validate.Length(min=4)),
+    "class_name": fields.Str(required=True, validate=validate.Length(min=1)),
+    "academic_field": fields.Str(required=True, validate=validate.Length(min=1)),
+    "method": fields.Str(required=True),
+    "solve_time": fields.Int(required=True, validate=validate.Range(min=1)),
+    "price": fields.Float(required=True, validate=validate.Range(min=0)),
+    "request_message": fields.Str(required=True, validate=validate.Length(min=1)),
+}

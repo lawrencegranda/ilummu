@@ -15,7 +15,7 @@ from edify import db
 from edify.backend.question.utils import question_dictionary
 from edify.backend.user.utils import get_current_user
 from edify.models import AcademicField, Course, Method, Question, User
-from edify.utils.constants import ErrorType
+from edify.utils.constants import ErrorType, QuestionSchema
 from edify.utils.decorators import author_required
 from edify.utils.utils import error_response, data_response
 
@@ -34,17 +34,7 @@ question = Blueprint("question", __name__, url_prefix="/question")
 # Endpoint: /backend/question/new
 @question.route("/new", methods=["POST"])
 @jwt_required()
-@use_args(
-    {
-        "class_code": fields.Str(required=True, validate=validate.Length(min=4)),
-        "class_name": fields.Str(required=True, validate=validate.Length(min=1)),
-        "academic_field": fields.Str(required=True, validate=validate.Length(min=1)),
-        "method": fields.Str(required=True),
-        "solve_time": fields.Int(required=True, validate=validate.Range(min=1)),
-        "price": fields.Float(required=True, validate=validate.Range(min=0)),
-        "request_message": fields.Str(required=True, validate=validate.Length(min=1)),
-    }
-)
+@use_args(QuestionSchema)
 def create_question(args):
     """
     Create a new question and post it in the database.
@@ -178,11 +168,11 @@ def get(id_question: int) -> flask_typing.ResponseReturnValue:
     # If no question is found, return an error response
     if not question:
         return error_response("Question not found", ErrorType.NOT_FOUND)
-    
+
     # If question is not visible, return an error response
     if not question.visible:
         return error_response("Question is hidden", ErrorType.UNAUTHORIZED)
-    
+
     # Get the current user from the JWT
     user = get_current_user()
     user_id = user.id if user else None
@@ -217,7 +207,7 @@ def is_author(id_question: int) -> flask_typing.ResponseReturnValue:
     # If question is not visible, return an error response
     if not question.visible:
         return error_response("Question is hidden", ErrorType.UNAUTHORIZED)
-    
+
     # Get the current user from the JWT
     user = get_current_user()
 
@@ -255,7 +245,7 @@ def offer(id_question: int) -> flask_typing.ResponseReturnValue:
     # If question is not visible, return an error response
     if not question.visible:
         return error_response("Question is hidden", ErrorType.UNAUTHORIZED)
-    
+
     # Get the current user from the JWT
     user = get_current_user()
 
@@ -294,7 +284,7 @@ def offers(id_question: int) -> flask_typing.ResponseReturnValue:
     """
     # Query the Question model to find the question by its ID
     question = db.session.query(Question).filter_by(id=id_question).first()
-    
+
     # Return an error response if the question does not exist
     if not question:
         return error_response("Question not found", ErrorType.NOT_FOUND)
@@ -302,7 +292,7 @@ def offers(id_question: int) -> flask_typing.ResponseReturnValue:
     # If question is not visible, return an error response
     if not question.visible:
         return error_response("Question is hidden", ErrorType.UNAUTHORIZED)
-    
+
     # Query the Offer model for all active offers received for the specified question
     offers = (
         db.session.query(Offer).filter_by(question_id=question.id, active=True).all()
@@ -315,7 +305,6 @@ def offers(id_question: int) -> flask_typing.ResponseReturnValue:
     return data_response(offers)
 
 
-
 # Endpoint: /backend/question/<id_question>
 @question.route("/<int:id_question>", methods=["PUT"])
 @jwt_required()
@@ -323,25 +312,25 @@ def offers(id_question: int) -> flask_typing.ResponseReturnValue:
     {
         "price": fields.Float(required=True),
     },
-    location="json"  # Change to "json" to read from the body
+    location="json",  # Change to "json" to read from the body
 )
-@author_required('id_question')
+@author_required("id_question")
 def change_price(args, id_question: int) -> flask_typing.ResponseReturnValue:
     """
     Change the price of the question.
-    
+
     Args:
         id_question (int): The ID of the question to change.
         args (dict): Arguments containing the new price.
-    
+
     Returns:
         JSON response.
     """
     price = args["price"]
-    
+
     # Query the Question model to find the question by its ID
     question = db.session.query(Question).filter_by(id=id_question).first()
-    
+
     # Return an error response if the question does not exist
     if not question:
         return error_response("Question not found", ErrorType.NOT_FOUND)
@@ -349,11 +338,11 @@ def change_price(args, id_question: int) -> flask_typing.ResponseReturnValue:
     # If question is not visible, return an error response
     if not question.visible:
         return error_response("Question is hidden", ErrorType.UNAUTHORIZED)
-    
+
     # If new price is too low, error
     if price < question.original_price:
         return error_response("New price is too low", ErrorType.BAD_REQUEST)
-    
+
     # If new price is too high, error
     if price > 2 * question.original_price:
         return error_response("New price is too high", ErrorType.BAD_REQUEST)
