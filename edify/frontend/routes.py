@@ -192,7 +192,7 @@ def login() -> flask_typing.ResponseReturnValue:
         str: Rendered login/signup template.
     """
     next_url = request.args.get("next_url", url_for("frontend.index"))
-    http_method = request.args.get("method", "GET")
+    http_method = request.args.get("http_method", "GET")
 
     return render_template(
         "signup.jinja", login=True, next_url=next_url, http_method=http_method
@@ -213,7 +213,7 @@ def signup() -> flask_typing.ResponseReturnValue:
     majors.sort(key=lambda d: d["name"])
 
     next_url = request.args.get("next_url", url_for("frontend.index"))
-    http_method = request.args.get("method", "GET")
+    http_method = request.args.get("http_method", "GET")
 
     return render_template(
         "signup.jinja",

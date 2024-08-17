@@ -163,7 +163,7 @@
                           let login = "{{ url_for('frontend.login') }}"
                           let next = response["next"]
 
-                          window.location.href = login + "?next_url=" + next + "&method=POST"
+                          window.location.href = login + "?next_url=" + next + "&http_method=POST"
                           return;
                       }
                   {% else %}
