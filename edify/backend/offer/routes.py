@@ -18,15 +18,9 @@ from edify.models import (
     OfferStatus,
 )
 from edify.utils.constants import ErrorType
-from edify.backend.user.utils import (
-    get_current_user
-    )
-from edify.utils.utils import (
-    error_response
-)
-from edify.utils.constants import (
-    ErrorType
-)
+from edify.backend.user.utils import get_current_user
+from edify.utils.utils import error_response
+from edify.utils.constants import ErrorType
 
 # -----------------------------------------------------------------------------
 # Route Blueprint
@@ -66,44 +60,50 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
 
     question_id = args["question_id"]
     # Check if question exists
-    question = db.session.query(Question).filter_by(id = question_id).first()
+    question = db.session.query(Question).filter_by(id=question_id).first()
     if not question:
         return error_response("Question does not exist", ErrorType.NOT_FOUND)
-    
+
     # Check if user has made an unresolved offer to question
-    existing_offer = db.session.query(Offer).filter_by(question_id = question_id, user_id = user.id).first()
+    existing_offer = (
+        db.session.query(Offer)
+        .filter_by(question_id=question_id, user_id=user.id)
+        .first()
+    )
     if existing_offer and existing_offer.active:
-        return error_response("User already made offer to question", ErrorType.BAD_REQUEST)
-    
+        return error_response(
+            "User already made offer to question", ErrorType.BAD_REQUEST
+        )
+
     # Check if question is visible and unsolved
     if question.solved:
         return error_response("Question is already solved", ErrorType.BAD_REQUEST)
     if not question.visible:
         return error_response("Question is not visible", ErrorType.BAD_REQUEST)
-    
+
     # Check if price is reasonable
     price = args["price"]
     if price < question.price:
         return error_response("Price is too low", ErrorType.BAD_REQUEST)
     if price > 2 * question.price:
         return error_response("Price is too high", ErrorType.BAD_REQUEST)
-    
+
     offer = Offer(
-        user_id = user.id,
-        question_id = question.id,
-        amount = price,
+        user_id=user.id,
+        question_id=question.id,
+        amount=price,
     )
-    
+
     db.session.add(offer)
-    
+
     # Commit and roll back if there's a database error
     try:
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
         return error_response("Failed to create offer.", ErrorType.BAD_REQUEST)
-    
-    response = jsonify({"offer": offer.to_dict(simplified = True)})
+
+    response = jsonify(offer.to_dict(simplified=True))
     return (response, HTTPStatus.CREATED)
 
 
@@ -136,7 +136,7 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
     # If no offer is found, return an error response
     if not offer:
         return error_response("Offer not found", ErrorType.NOT_FOUND)
-    
+
     # Update offer fields from args
     offer.amount = args["amount"]
     if "status" in args:
@@ -156,10 +156,12 @@ def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
     # If no offer is found, return an error response
     if not offer:
         return error_response("Offer not found", ErrorType.NOT_FOUND)
-    
+
     # Not implemented
-    return error_response("Not Implemented but passed checks.", ErrorType.NOT_IMPLEMENTED)
-    
+    return error_response(
+        "Not Implemented but passed checks.", ErrorType.NOT_IMPLEMENTED
+    )
+
     # Set offer status to REMOVED (i think)
     db.session.commit()
     return jsonify({"msg": "Offer deleted"}), HTTPStatus.NO_CONTENT
@@ -173,6 +175,6 @@ def get_offers_by_user(user_id: int) -> flask_typing.ResponseReturnValue:
     # Check if user exists
     if not user:
         return error_response("User does not exist", ErrorType.USER_NOT_FOUND)
-    
+
     offers = Offer.query.filter_by(user_id=user_id).all()
     return jsonify(Offer.to_dict_all(offers)), HTTPStatus.OK
