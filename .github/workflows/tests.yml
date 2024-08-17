@@ -38,5 +38,5 @@ jobs:
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         
       - name: Run tests
-        run: poetry pytest
+        run: poetry run pytest
         
