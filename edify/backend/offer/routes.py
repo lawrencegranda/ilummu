@@ -58,7 +58,6 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
     Returns:
         flask_typing.ResponseReturnValue: A tuple containing the new offer and HTTP status code.
     """
-    print("offer_sent")
     user = get_current_user()
     # Check if user exists
     if not user:
@@ -88,7 +87,6 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
         return error_response("Question is not visible", ErrorType.BAD_REQUEST)
 
     # Check if price is reasonable
-    print(args)
     price = args["price"]
     if price < question.price:
         return error_response("Price is too low", ErrorType.BAD_REQUEST)
