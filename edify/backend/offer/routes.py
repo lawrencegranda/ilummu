@@ -18,16 +18,9 @@ from edify.models import (
     OfferStatus,
 )
 from edify.utils.constants import ErrorType
-from edify.backend.user.utils import (
-    get_current_user
-    )
-from edify.utils.utils import (
-    error_response
-)
-from edify.utils.constants import (
-    ErrorType,
-    OfferStatusEnum
-)
+from edify.backend.user.utils import get_current_user
+from edify.utils.utils import error_response
+from edify.utils.constants import ErrorType, OfferStatusEnum
 
 # -----------------------------------------------------------------------------
 # Route Blueprint
@@ -108,8 +101,8 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
         db.session.rollback()
         print("failed")
         return error_response("Failed to create offer.", ErrorType.BAD_REQUEST)
-    
-    response = jsonify({"offer": offer.to_dict(simplified = True)})
+
+    response = jsonify({"offer": offer.to_dict(simplified=True)})
     print(response)
     return (response, HTTPStatus.CREATED)
 
@@ -125,7 +118,7 @@ def get_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
     Returns:
         flask_typing.ResponseReturnValue: The response containing the offer data.
     """
-    
+
     offer = db.session.query(Offer).filter_by(id=id_offer).first()
 
     # If no offer is found, return an error response
@@ -154,7 +147,7 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
     Returns:
         flask_typing.ResponseReturnValue: The updated offer details.
     """
-    
+
     offer = db.session.query(Offer).filter_by(id=id_offer).first()
 
     # If no offer is found, return an error response
@@ -187,15 +180,15 @@ def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
     Returns:
         flask_typing.ResponseReturnValue: The response value indicating the success or failure of the deletion.
     """
-    
+
     offer = db.session.query(Offer).filter_by(id=id_offer).first()
 
     # If no offer is found, return an error response
     if not offer:
         return error_response("Offer not found", ErrorType.NOT_FOUND)
-    
+
     offer.status = OfferStatusEnum.REMOVED
-    
+
     # Set offer status to REMOVED (i think)
     try:
         db.session.commit()
@@ -216,7 +209,7 @@ def get_offers_by_user(user_id: int) -> flask_typing.ResponseReturnValue:
     Returns:
         flask_typing.ResponseReturnValue: The response containing the offers associated with the user.
     """
-    
+
     user = get_current_user()
     # Check if user exists
     if not user:
