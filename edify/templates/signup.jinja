@@ -71,6 +71,23 @@
       return;
   }
 
+  function handleError(str) {
+      return function (error) {
+          console.log(error['responseJSON']['msg'])
+          // Handle error (e.g., display error message)
+          let error_msg = "An error occurred during " + str + ". Please try again.";
+
+          if ("msg" in error['responseJSON']) {
+              error_msg = error['responseJSON']['msg'];
+          } else if ("errors" in error['responseJSON']) {
+              error_msg = error['responseJSON']['errors'];
+          }
+
+          console.log(error_msg)
+          showError(error_msg)
+      }
+  }
+
   {% if login == false %}
   // Conditional for signup form
   $(document).ready(() => {
@@ -165,15 +182,7 @@
         contentType: 'application/json',
         data: JSON.stringify(data),
         success: handleSuccess,
-        error: function (error) {
-          console.log(error)
-          // Handle error (e.g., display error message)
-          try {
-            showError(error['responseJSON']['errors']);
-          } catch (e) {
-            showError("An error occurred during signup. Please try again.");
-          }
-        }
+        error: handleError("signup"),
       });
     });
   });
@@ -229,15 +238,7 @@
         contentType: 'application/json',
         data: JSON.stringify(data),
         success: handleSuccess,
-        error: function (error) {
-          console.log(error)
-          // Handle error (e.g., display error message)
-          try {
-            showError(error['responseJSON']['errors']);
-          } catch (e) {
-            showError("An error occurred during login. Please try again.");
-          }
-        }
+        error: handleError("login"),
       });
     });
   });
@@ -389,9 +390,9 @@
           <div class="signup-login">
 
             {% if login == false %}
-              Already have an account? <a href='{{ url_for("frontend.login") }}'>Log In</a>
+              Already have an account? <a href='{{ url_for("frontend.login", next_url=next_url, http_method=http_method) }}'>Log In</a>
             {% else %}
-              Do not have an account? <a href='{{ url_for("frontend.signup") }}'>Sign Up</a>
+              Do not have an account? <a href='{{ url_for("frontend.signup", next_url=next_url, http_method=http_method) }}'>Sign Up</a>
             {% endif %}
 
             <br />
