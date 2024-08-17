@@ -479,7 +479,7 @@ class Offer(BaseModel):
             target.active = True
         if target.status is None:
             target.status = OfferStatusEnum.SENT
-            
+
         if target.amount <= 0:
             raise ValueError(
                 f'OFFER MODEL: Amount must be a positive value ("{target.amount}").'
@@ -526,6 +526,7 @@ class NotificationType(BaseModel):
 
     def to_dict(self, simplified=True) -> Dict[str, Any]:
         return {
+            "id": self.id,
             "value": self.name,
             "question_required": self.question_required,
         }
