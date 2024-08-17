@@ -135,8 +135,8 @@
         data: JSON.stringify(data),
         success: function (response) {
           // Handle success (e.g., redirect to dashboard page)
-          window.location.href = "/dashboard";
-          return
+          window.location.href = "{{ next_url }}";
+          return;
         },
         error: function (error) {
           console.log(error)
@@ -203,8 +203,8 @@
         data: JSON.stringify(data),
         success: function (response) {
           // Handle success (e.g., redirect to dashboard page)
-          window.location.href = "/dashboard";
-          return
+          window.location.href = "{{ next_url }}";
+          return;
         },
         error: function (error) {
           console.log(error)
