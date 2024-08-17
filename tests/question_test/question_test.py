@@ -86,7 +86,7 @@ class TestCreateQuestion:
         assert (
             question["solved"] == False
         ), f"Question should be unsolved {question['solved']}"
-        
+
         assert (
             question["course_id"] == course.id
         ), f"Course ID does not match {question['course_id']}"
