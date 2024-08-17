@@ -10,7 +10,7 @@ import pytest
 
 # Local Application imports
 from edify import db
-from edify.models import User, Offer, Question
+from edify.models import User, Offer, Question, Method, Course
 from edify.utils.constants import OfferStatusEnum
 
 # Initialize Faker for generating fake data
@@ -19,45 +19,61 @@ fake = Faker()
 
 class TestCreateOffer:
 
-    def test_create_offer_success(self, client_with_data, user_jwt):
+    # LAWRENCE: you need to create a fixture. Right now you have no questions, this is
+    # because the database is a mock sqlite instance that is brand new and empty.
+    # Create a fixture in conftest.py where you create a question that you use to test against.
+
+    def test_create_offer_success(self, client_with_question, user_jwt):
         """
         Test creating an offer successfully.
         """
         user, jwt = user_jwt
 
-        question = db.session.query(Question).first()
-        while question.user_id == user.id or question.solved or not question.visible:
-            question = db.session.query(Question).first()
-        
+        # LAWRENCE: instead, filter the query.
+        question = (
+            db.session.query(Question)
+            .filter(Question.user_id != user.id)
+            .filter(Question.visible == True)
+            .first()
+        )
+
+        # question = db.session.query(Question).first()
+        # while question.user_id == user.id or question.solved or not question.visible:
+        #     question = db.session.query(
+        #         Question
+        #     ).first()  # you are getting the same question every time, infinite loop
+
         question_id = question.id
         price = 1.5 * question.price
-        
-        response = client_with_data.post(
+
+        response = client_with_question.post(
             url_for("backend.offer.create_offer"),
-            json = {
-                "question_id": question_id,
-                "price": price
-            },
-            headers = jwt
+            json={"question_id": question_id, "price": price},
+            headers=jwt,
         )
-        
+
         assert response.status_code == HTTPStatus.CREATED, response.json
-        
+
         offer = response.get_json()
-        
+
+        print(offer)
+
         assert "id" in offer, "Offer has no id"
-        
+
         offer = db.session.get(Offer, offer["id"])
         assert offer, "Offer not found in database"
-        
+
         assert offer.user_id == user.id, f"User ID does not match {offer.user_id}"
-        
-        assert offer.question_id == question.id, f"Question ID does not match {offer.question_id}"
+
+        assert (
+            offer.question_id == question.id
+        ), f"Question ID does not match {offer.question_id}"
         assert offer.active, "Offer not active"
         assert offer.amount, "Amount must not be null"
-        assert offer.status == OfferStatusEnum.SENT, "Newly created offer must have status 'SENT'"
-        
-        
+        assert (
+            offer.status == OfferStatusEnum.SENT
+        ), "Newly created offer must have status 'SENT'"
+
     def test_create_question_user_not_found(self, client_with_data, user_jwt):
         """
         Test creating a question without a user (Unauthorized).
