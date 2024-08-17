@@ -136,6 +136,7 @@ class TestCreateOffer:
         )
         
         question.visible = False
+        db.session.commit()
         
         assert question, "User cannot create Offer for any question in database"
         
@@ -171,6 +172,7 @@ class TestCreateOffer:
         )
         
         question.solved = True
+        db.session.commit()
         
         assert question, "User cannot create Offer for any question in Database"
         
@@ -193,7 +195,7 @@ class TestCreateOffer:
         
 class TestGetOffer:
     
-        def test_get_offer_success(self, client_with_question, user_jwt):
+        def test_get_offer_success(self, client_with_offer, user_jwt):
             """
             Test getting an offer successfully.
             """
@@ -206,7 +208,7 @@ class TestGetOffer:
             
             assert offer, "User does not have any offer in Database"
             
-            response = client_with_question.get(
+            response = client_with_offer.get(
                 url_for("backend.offer.get_offer", offer_id = offer.id),
                 headers = jwt
             )
@@ -218,13 +220,13 @@ class TestGetOffer:
             assert offer, "Offer not found in database"
             
             
-        def test_get_offer_invalid_offer_id(self, client_with_question, user_jwt):
+        def test_get_offer_invalid_offer_id(self, client_with_offer, user_jwt):
             """
             Test getting an offer with an invalid offer ID.
             """
             user, jwt = user_jwt
             
-            response = client_with_question.get(
+            response = client_with_offer.get(
                 url_for("backend.offer.get_offer", offer_id = -1),
                 headers = jwt
             )
