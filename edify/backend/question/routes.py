@@ -170,6 +170,16 @@ def delete_question(id_question: int):
     question.visible = False
     db.session.commit()
 
+    # Create a notification for the updated question
+    notification = Notification(
+        type=NotificationTypeEnum.QUESTION_DELETED,
+        message=f"Question deleted successfully.",
+        user_id=user.id,
+        question_id=question.id,
+    )
+    db.session.add(notification)
+    db.session.commit()
+
     # Return the updated question as a JSON response with status 200 (OK)
     return jsonify(question.to_dict(simplified=True)), HTTPStatus.OK
 
