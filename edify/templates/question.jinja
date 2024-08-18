@@ -187,6 +187,31 @@
     </script>
   {% endif %}
 
+  {% if user and not question.solved and question.is_author and (not question.offer_accepted) %}
+    <script>
+      function cancelQuestion() {
+          $.ajax({
+              url: '{{  url_for("backend.question.delete_question", id_question=question.id) }}',
+              type: 'DELETE',
+              success: function (response) {
+                  // Redirect to dashboard
+                  window.location.href = '{{ url_for("frontend.dashboard") }}'
+              },
+              error: function(xhr, status, error) {
+                  console.error('Error: ', error);
+                  location.reload()
+              }
+          });
+      }
+
+       $(document).ready(function () {
+          $("#btn-bid-cancel").on("click", function () {
+              cancelQuestion()
+          });
+       });
+    </script>
+  {% endif %}
+
 {% endblock javascript %}
 
 {% block content %}
