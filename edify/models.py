@@ -22,6 +22,7 @@ from edify.utils.constants import (
     SupportedLanguagesEnum,
 )
 from edify.utils.utils import (
+    date_to_int,
     format_lower_case,
     format_phone,
     format_title_case,
@@ -328,8 +329,8 @@ class Question(BaseModel):
             "price": self.price,
             "method_id": self.method_id,
             "solved": self.solved,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
+            "created_at": date_to_int(self.created_at),
+            "updated_at": date_to_int(self.updated_at),
         }
 
         if simplified == False:
@@ -463,8 +464,8 @@ class Offer(BaseModel):
             "amount": self.amount,
             "status": self.status,
             "active": self.active,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
+            "created_at": date_to_int(self.created_at),
+            "updated_at": date_to_int(self.updated_at),
         }
 
         if simplified == False:
@@ -601,7 +602,7 @@ class Notification(BaseModel):
             "message": self.message,
             "link": link,
             "type": self.type,
-            "created_at": self.created_at,
+            "created_at": int(self.created_at.strftime("%Y%m%d%H%M%S")),
         }
 
     @staticmethod

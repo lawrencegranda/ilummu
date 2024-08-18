@@ -385,3 +385,7 @@ def trim_text(string: str, length: int) -> str:
         str: The trimmed string with ellipsis if it exceeds the length.
     """
     return string[0:length].strip() + "..." if len(string) > length + 3 else string
+
+
+# Encode datetime as int
+date_to_int = lambda d: int(d.strftime("%Y%m%d%H%M%S"))
