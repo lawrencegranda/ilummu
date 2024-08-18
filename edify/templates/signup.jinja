@@ -55,7 +55,7 @@
                 return;
               },
               error: async function (error) {
-                console.log(error)
+                console.log(error);
                 // Handle error (e.g., display error message)
                 showError("An error occurred cresting a question. Please create it later.");
                 await new Promise(resolve => setTimeout(resolve, 2000));
@@ -73,18 +73,13 @@
 
   function handleError(str) {
       return function (error) {
-          console.log(error['responseJSON']['msg'])
-          // Handle error (e.g., display error message)
-          let error_msg = "An error occurred during " + str + ". Please try again.";
+          let error_msg = getErrorResponse(error);
 
-          if ("msg" in error['responseJSON']) {
-              error_msg = error['responseJSON']['msg'];
-          } else if ("errors" in error['responseJSON']) {
-              error_msg = error['responseJSON']['errors'];
+          if (!error_msg) {
+            error_msg = "An error occurred during " + str + ". Please try again.";
           }
 
-          console.log(error_msg)
-          showError(error_msg)
+          showError(error_msg);
       }
   }
 

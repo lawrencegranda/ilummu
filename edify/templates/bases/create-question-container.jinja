@@ -159,13 +159,16 @@
               success: function (response) {
                   // Handle success
                   {% if home %}
+                      let login = "{{ url_for('frontend.login') }}"
+
                       if ('next' in response) {
-                          let login = "{{ url_for('frontend.login') }}"
                           let next = response["next"]
 
-                          window.location.href = login + "?next_url=" + next + "&http_method=POST"
-                          return;
+                          login = login + "?next_url=" + next + "&http_method=POST"
                       }
+
+                      window.location.href = login
+                      return;
                   {% else %}
                       let element = $(".create-question-wrapper-dimensions");
                       if (element.is(":visible")) {
@@ -182,13 +185,13 @@
                   {% endif %}
               },
               error: function (error) {
-                  console.log(error) // Log error details
-                  // Handle error (e.g., display error message)
-                  try {
-                      showError(error['responseJSON']['errors']); // Show specific error messages
-                  } catch (e) {
-                      showError("An error occurred during creation. Please try again."); // Generic error message
-                  }
+                let error_msg = getErrorResponse(error);
+
+                if (!error_msg) {
+                  error_msg = "An error occurred during creation. Please try again.";
+                }
+
+                showError(error_msg);
               }
           });
       });
