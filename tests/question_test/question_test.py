@@ -285,7 +285,7 @@ class TestDeleteQuestion:
         original_question_dict = question.to_dict(simplified=False)
 
         response = client_with_question.delete(
-            url_for("backend.question.delete_question", question_id=question_id),
+            url_for("backend.question.delete_question", id_question=question_id),
             headers=jwt,
         )
 
@@ -313,4 +313,4 @@ class TestDeleteQuestion:
             if k == "visible":
                 continue
 
-            assert v1 == v1, f"Values for {k} are not equal ({v1} != {v2})"
+            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
