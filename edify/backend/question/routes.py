@@ -14,8 +14,8 @@ from webargs.flaskparser import use_args
 from edify import db
 from edify.backend.question.utils import question_dictionary
 from edify.backend.user.utils import get_current_user
-from edify.models import AcademicField, Course, Method, Question, User
-from edify.utils.constants import ErrorType, QuestionSchema
+from edify.models import AcademicField, Course, Method, Question, User, Notification
+from edify.utils.constants import ErrorType, QuestionSchema, NotificationTypeEnum
 from edify.utils.decorators import author_required
 from edify.utils.utils import error_response, data_response
 
@@ -121,6 +121,16 @@ def create_question(args):
     except IntegrityError:
         db.session.rollback()
         return error_response("Failed to create question.", ErrorType.BAD_REQUEST)
+
+    # Create a notification for the new question
+    notification = Notification(
+        type=NotificationTypeEnum.QUESTION_CREATED,
+        message=f"Question created successfully.",
+        user_id=user.id,
+        question_id=question.id,
+    )
+    db.session.add(notification)
+    db.session.commit()
 
     # Return the created question as a JSON response with status 201 (Created)
     return jsonify(question.to_dict(simplified=True)), HTTPStatus.CREATED
