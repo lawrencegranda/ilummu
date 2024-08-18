@@ -226,10 +226,14 @@ def signup() -> flask_typing.ResponseReturnValue:
 
 @frontend.route("/store_question", methods=["POST"])
 @use_args(QuestionSchema)
-# @jwt_required(optional=True)
+@jwt_required(optional=True)
 def store_question(args) -> flask_typing.ResponseReturnValue:
     # Temporarily store the question data in the session
     session["temp_question"] = args
+
+    # If the user is authenticated, create the question inmidiately.
+    if get_user():
+        return submit_question_after_login()
 
     # Return the data endpoint
     return (
