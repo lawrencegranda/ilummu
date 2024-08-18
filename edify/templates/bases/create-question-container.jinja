@@ -9,7 +9,6 @@
     $("#create-question-price").on("change", function () {
       let value = parseFloat($(this).val()).toFixed(2);
       if (isNaN(value)) {
-        console.log();
         value = "";
         $(this).attr("placeholder", "Invalid. Try again.");
       }
