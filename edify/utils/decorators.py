@@ -153,7 +153,7 @@ def author_required(arg_name: str):
 
             # Retrieve the question by ID
             id_question = value
-            question = db.session.query(Question).get(id_question)
+            question = db.session.get(Question, id_question)
             if not question:
                 return error_response("Question not found", ErrorType.NOT_FOUND)
 
