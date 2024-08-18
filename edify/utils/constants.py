@@ -115,6 +115,8 @@ class NotificationTypeEnum(EnumBase):
     ACCOUNT_VERIFIED = "ACCOUNT_VERIFIED"
     PASSWORD_RESET = "PASSWORD_RESET"
     ACCOUNT_CREATED = "ACCOUNT_CREATED"
+    QUESTION_CREATED = "QUESTION_CREATED"
+    QUESTION_DELETED = "QUESTION_DELETED"
 
     # Metadata to store additional information
     question_required = {
@@ -127,6 +129,8 @@ class NotificationTypeEnum(EnumBase):
         "ACCOUNT_VERIFIED": False,
         "PASSWORD_RESET": False,
         "ACCOUNT_CREATED": False,
+        "QUESTION_CREATED": True,
+        "QUESTION_DELETED": False,
     }
 
     @classmethod
