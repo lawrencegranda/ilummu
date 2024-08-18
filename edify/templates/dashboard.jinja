@@ -26,8 +26,6 @@
           const container = $('.dashboard-menu-container');
           const selectedValues = [];
 
-          console.log(container)
-
           if (container.length === 0 || container.css('display') === 'none') {
               // Get the option value from id="category-selector"
               const selector = $('#category-selector');
@@ -134,10 +132,7 @@
           // Attach event handlers
           $('button.category').on('click', handleUpdate);
           $('#category-selector').on('change', handleUpdate);
-          $('#search-box').on('input', function () {
-              handleUpdate();
-              console.log('1');
-          });
+          $('#search-box').on('input', handleUpdate);
       });
   </script>
 {% endblock javascript %}
