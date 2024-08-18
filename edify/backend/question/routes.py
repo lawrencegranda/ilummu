@@ -126,6 +126,44 @@ def create_question(args):
     return jsonify(question.to_dict(simplified=True)), HTTPStatus.CREATED
 
 
+# Endpoint: /backend/question/<int:id_question>/delete
+@question.route("/<int:id_question>/delete", methods=["DELETE"])
+@jwt_required()
+@author_required("id_question")
+def delete_question(id_question: int):
+    """
+    Delete a question by marking it not visible.
+
+    Args:
+        id_question (int): The question to delete
+
+    Returns:
+        dict: A JSON response containing the updated question or an error message.
+    """
+    # Retrieve the current user. Return an error if no user is found
+    user = get_current_user()
+    if user is None:
+        return error_response("User not found", ErrorType.USER_NOT_FOUND)
+
+    # Query the Question model to find the question by its ID
+    question = db.session.query(Question).filter_by(id=id_question).first()
+
+    # Return an error response if the question does not exist
+    if not question:
+        return error_response("Question not found", ErrorType.NOT_FOUND)
+
+    # If question is not visible, return an error response
+    if not question.visible:
+        return error_response("Question is hidden", ErrorType.UNAUTHORIZED)
+
+    # Set to not visible as deleted
+    question.visible = False
+    db.session.commit()
+
+    # Return the updated question as a JSON response with status 200 (OK)
+    return jsonify(question.to_dict(simplified=True)), HTTPStatus.OK
+
+
 # Endpoint: /backend/question/all
 @question.route("/all", methods=["GET"])
 @jwt_required(optional=True)
@@ -326,6 +364,11 @@ def change_price(args, id_question: int) -> flask_typing.ResponseReturnValue:
     Returns:
         JSON response.
     """
+    # Retrieve the current user. Return an error if no user is found
+    user = get_current_user()
+    if user is None:
+        return error_response("User not found", ErrorType.USER_NOT_FOUND)
+
     price = args["price"]
 
     # Query the Question model to find the question by its ID
