@@ -18,6 +18,7 @@ from edify.models import *
 from edify import db
 from edify.utils.utils import validate_phone
 from tests.test_app import create_test_app
+from tests.utils import get_jwt_header
 
 # Initialize Faker for generating fake data
 fake = Faker()
@@ -103,9 +104,9 @@ def user_jwt(client_with_data):
     user = create_user()
 
     # Create and return a JWT token for the user
-    access_token = create_access_token(identity=user.id)
+    jwt_header = get_jwt_header(user)
 
-    return user, {"Authorization": f"Bearer {access_token}"}
+    return user, jwt_header
 
 
 @pytest.fixture
