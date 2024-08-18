@@ -7,7 +7,7 @@ from http import HTTPStatus
 from typing import Optional, Dict, Any, List
 
 # Third-Party Framework imports
-from flask import current_app, jsonify
+from flask import current_app, jsonify, url_for
 from flask_jwt_extended import create_access_token, decode_token, create_refresh_token
 from flask_login import UserMixin
 from sqlalchemy import Index, UniqueConstraint, event
@@ -576,6 +576,7 @@ class Notification(BaseModel):
 
     # Question it relates to, if it does
     question_id = db.Column(db.Integer, db.ForeignKey("question.id"), nullable=True)
+    question = db.relationship("Question", backref="notifications", lazy=True)
 
     # Entry creation date (to keep track)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -584,12 +585,21 @@ class Notification(BaseModel):
         return f"Notification({self.id}, {self.user_id}, {self.message})"
 
     def to_dict(self, simplified=True) -> Dict[str, Any]:
+        link = None
+
+        if self.question_id:
+            if self.question.visible:
+                link = url_for(
+                    "frontend.question.fetch_question", id_question=self.question_id
+                )
+        elif self.link:
+            link = self.link
+
         return {
             "id": self.id,
             "user_id": self.user_id,
             "message": self.message,
-            "link": self.link,
-            "question_id": self.question_id,
+            "link": link,
             "type": self.type,
             "created_at": self.created_at,
         }
