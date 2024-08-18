@@ -479,7 +479,7 @@ class Offer(BaseModel):
             target.active = True
         if target.status is None:
             target.status = OfferStatusEnum.SENT
-            
+
         if target.amount <= 0:
             raise ValueError(
                 f'OFFER MODEL: Amount must be a positive value ("{target.amount}").'
@@ -589,6 +589,7 @@ class Notification(BaseModel):
             "user_id": self.user_id,
             "message": self.message,
             "link": self.link,
+            "question_id": self.question_id,
             "type": self.type,
             "created_at": self.created_at,
         }
