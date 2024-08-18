@@ -54,7 +54,13 @@
                                         {{ notification.message }}
                                     </p>
 
-                                    {% if notification.link %}
+                                    {% if notification.question_id %}
+                                        <button class="btn btn-view"
+                                                type="button"
+                                                onclick="location.href='{{ url_for('frontend.question.fetch_question', id_question=notification.question_id) }}';">
+                                            view
+                                        </button>
+                                    {% elif notification.link %}
                                         <button class="btn btn-view"
                                                 type="button"
                                                 onclick="location.href='{{ notification.link }}';">
