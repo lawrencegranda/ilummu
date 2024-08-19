@@ -135,6 +135,11 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
     # Entry updated date (to keep track)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
+    # Password last reset date (to keep track)
+    password_last_reset = db.Column(
+        db.DateTime, nullable=False, default=datetime.utcnow
+    )
+
     # API authentication token, token is given to user upon login to authenticate future requests
     # This is part of the API token-based authentication schema
     token = db.Column(db.String(300), nullable=True)
