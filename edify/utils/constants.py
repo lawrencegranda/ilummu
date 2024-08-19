@@ -110,6 +110,7 @@ class NotificationTypeEnum(EnumBase):
     OFFER_ACCEPTED = "OFFER_ACCEPTED"
     OFFER_DECLINED = "OFFER_DECLINED"
     NEW_OFFER = "NEW_OFFER"
+    UPDATED_OFFER = "UPDATED_OFFER"
     PRICE_CHANGE = "PRICE_CHANGE"
     QUESTION_SOLVED = "QUESTION_SOLVED"
     ACCOUNT_VERIFIED = "ACCOUNT_VERIFIED"
@@ -125,14 +126,15 @@ class NotificationTypeEnum(EnumBase):
         "OFFER_ACCEPTED": True,
         "OFFER_DECLINED": True,
         "NEW_OFFER": True,
+        "UPDATED_OFFER": True,
         "PRICE_CHANGE": True,
         "QUESTION_SOLVED": True,
         "ACCOUNT_VERIFIED": False,
         "PASSWORD_RESET": False,
         "ACCOUNT_CREATED": False,
         "QUESTION_CREATED": True,
-        "QUESTION_DELETED": False,
-        "QUESTION_UPDATED": False,
+        "QUESTION_DELETED": True,
+        "QUESTION_UPDATED": True,
     }
 
     @classmethod
