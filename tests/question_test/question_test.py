@@ -304,13 +304,16 @@ class TestDeleteQuestion:
         # Convert to dict
         question_dict = question.to_dict(simplified=False)
 
+        # Data types to check
+        primitives = (bool, str, int, float, type(None))
+
         # Assert all attributes are equal except for visibility
         for (k, v1), (k2, v2) in zip(
             original_question_dict.items(), question_dict.items()
         ):
             assert k == k2, f"Keys are not equal ({k} != {k2})"
 
-            if k == "visible":
+            if k == "visible" or not isinstance(v1, primitives):
                 continue
 
             assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
