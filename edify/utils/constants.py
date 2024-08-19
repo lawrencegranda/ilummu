@@ -117,6 +117,7 @@ class NotificationTypeEnum(EnumBase):
     ACCOUNT_CREATED = "ACCOUNT_CREATED"
     QUESTION_CREATED = "QUESTION_CREATED"
     QUESTION_DELETED = "QUESTION_DELETED"
+    QUESTION_UPDATED = "QUESTION_UPDATED"
 
     # Metadata to store additional information
     question_required = {
@@ -131,6 +132,7 @@ class NotificationTypeEnum(EnumBase):
         "ACCOUNT_CREATED": False,
         "QUESTION_CREATED": True,
         "QUESTION_DELETED": False,
+        "QUESTION_UPDATED": False,
     }
 
     @classmethod
