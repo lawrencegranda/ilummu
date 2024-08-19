@@ -14,7 +14,15 @@ from webargs.flaskparser import use_args
 from edify import db
 from edify.backend.question.utils import question_dictionary
 from edify.backend.user.utils import get_current_user
-from edify.models import AcademicField, Course, Method, Question, User, Notification
+from edify.models import (
+    AcademicField,
+    Course,
+    Method,
+    Question,
+    User,
+    Notification,
+    Offer,
+)
 from edify.utils.constants import ErrorType, QuestionSchema, NotificationTypeEnum
 from edify.utils.decorators import author_required
 from edify.utils.utils import error_response, data_response
@@ -126,7 +134,7 @@ def create_question(args):
     notification = Notification(
         type=NotificationTypeEnum.QUESTION_CREATED,
         message=f"Question created successfully.",
-        user_id=user.id,
+        user_id=question.user.id,
         question_id=question.id,
     )
     db.session.add(notification)
@@ -174,7 +182,7 @@ def delete_question(id_question: int):
     notification = Notification(
         type=NotificationTypeEnum.QUESTION_DELETED,
         message=f"Question deleted successfully.",
-        user_id=user.id,
+        user_id=question.user.id,
         question_id=question.id,
     )
     db.session.add(notification)
@@ -417,11 +425,26 @@ def change_price(args, id_question: int) -> flask_typing.ResponseReturnValue:
     notification = Notification(
         type=NotificationTypeEnum.QUESTION_UPDATED,
         message=f"Question price updated to ${price:.2f}!",
-        user_id=user.id,
+        user_id=question.user.id,
         question_id=question.id,
     )
     db.session.add(notification)
     db.session.commit()
+
+    # Send notifications to those who made an offer.
+    offers = (
+        db.session.query(Offer).filter_by(question_id=question.id, active=True).all()
+    )
+
+    for offer in offers:
+        notification = Notification(
+            type=NotificationTypeEnum.PRICE_CHANGE,
+            message=f"{question.user.username} updated the question price to ${price:.2f}! Check your offer.",
+            user_id=offer.user.id,
+            question_id=question.id,
+        )
+        db.session.add(notification)
+        db.session.commit()
 
     # Return the updated question as a JSON response with status 200 (OK)
     return jsonify(question.to_dict(simplified=True)), HTTPStatus.OK
