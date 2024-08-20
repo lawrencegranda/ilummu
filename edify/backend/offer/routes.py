@@ -1,6 +1,7 @@
 # Standard Library imports
 from http import HTTPStatus
 from typing import Optional, Any, Tuple
+from datetime import datetime, timedelta
 
 # Third-Party Framework imports
 from flask import Blueprint, Flask, jsonify, redirect, url_for
@@ -8,6 +9,7 @@ from flask import typing as flask_typing
 from flask_jwt_extended import jwt_required
 from webargs import fields, validate
 from webargs.flaskparser import use_args
+from sqlalchemy.exc import IntegrityError
 
 # Local Application imports
 from edify import db
@@ -133,8 +135,6 @@ def get_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
 def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
     offer = db.session.query(Offer).filter_by(id=id_offer).first()
 
-    # TODO: check user is allowed to edit the offer (owner of the offer).
-
     # If no offer is found, return an error response
     if not offer:
         return error_response("Offer not found", ErrorType.NOT_FOUND)
@@ -166,6 +166,7 @@ def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
         return error_response("User not permited to delete offer", ErrorType.UNAUTHORIZED)
 
     offer.status = OfferStatusEnum.REMOVED
+    offer.active = False
     
     try:
         db.session.commit()
