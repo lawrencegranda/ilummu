@@ -17,7 +17,7 @@ from edify.models import (
     Offer,
     OfferStatus,
 )
-from edify.utils.constants import ErrorType
+from edify.utils.constants import ErrorType, OfferStatusEnum
 from edify.backend.user.utils import get_current_user
 from edify.utils.utils import error_response
 from edify.utils.constants import ErrorType
@@ -153,21 +153,25 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
 @offer.route("/<int:id_offer>", methods=["DELETE"])
 @jwt_required()
 def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
+    
+    user = get_current_user()
+    
     offer = db.session.query(Offer).filter_by(id=id_offer).first()
-
-    # TODO: check user is allowed to remove the offer (owner of the offer).
 
     # If no offer is found, return an error response
     if not offer:
         return error_response("Offer not found", ErrorType.NOT_FOUND)
+    
+    if not offer.user_id == user.id:
+        return error_response("User not permited to delete offer", ErrorType.UNAUTHORIZED)
 
-    # TODO: Not implemented
-    return error_response(
-        "Not Implemented but passed checks.", ErrorType.NOT_IMPLEMENTED
-    )
-
-    # TODO: Set offer status to REMOVED (i think)
-    db.session.commit()
+    offer.status = OfferStatusEnum.REMOVED
+    
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return error_response("Couldn't delete offer", ErrorType.BAD_REQUEST)
     return jsonify({"msg": "Offer deleted"}), HTTPStatus.NO_CONTENT
 
 
