@@ -145,7 +145,11 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
         offer.status = args["status"]
     if "active" in args:
         offer.active = args["active"]
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return error_response("Couldn't update offer", ErrorType.BAD_REQUEST)
     return jsonify(offer.to_dict()), HTTPStatus.OK
 
 
