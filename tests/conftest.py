@@ -13,10 +13,12 @@ import pytest
 
 # Local Application imports
 from edify.database.populate import populate_constants
+from edify.database.fake_data import populate_fake
 from edify.models import *
 from edify import db
 from edify.utils.utils import validate_phone
 from tests.test_app import create_test_app
+from tests.utils import get_jwt_header
 
 # Initialize Faker for generating fake data
 fake = Faker()
@@ -102,13 +104,13 @@ def user_jwt(client_with_data):
     user = create_user()
 
     # Create and return a JWT token for the user
-    access_token = create_access_token(identity=user.id)
+    jwt_header = get_jwt_header(user)
 
-    return user, {"Authorization": f"Bearer {access_token}"}
+    return user, jwt_header
 
 
 @pytest.fixture
-def client_with_question(client_with_data, user_jwt):
+def client_with_question(client_with_data):
     user = create_user()
 
     method = db.session.query(Method).first()
@@ -129,3 +131,28 @@ def client_with_question(client_with_data, user_jwt):
     db.session.commit()
 
     return client_with_data
+
+
+@pytest.fixture
+def client_with_offer(client_with_question):
+    user = create_user()
+
+    question = (
+        db.session.query(Question)
+        .filter(Question.user_id != user.id)
+        .filter(Question.visible == True)
+        .filter(Question.solved == False)
+        .first()
+    )
+
+    # Create a new offer associated with the user and question
+    offer = Offer(
+        user_id=user.id,
+        question_id=question.id,
+        amount=question.price,
+    )
+
+    db.session.add(offer)
+    db.session.commit()
+
+    return client_with_question

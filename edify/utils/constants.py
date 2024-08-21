@@ -3,6 +3,9 @@ from enum import Enum
 from http import HTTPStatus
 from typing import List, Tuple
 
+# Third-Party Framework imports
+from webargs import fields, validate
+
 
 # Number of characters to show in the question request preview.
 PREVIEW_LENGTH: int = 127
@@ -107,11 +110,15 @@ class NotificationTypeEnum(EnumBase):
     OFFER_ACCEPTED = "OFFER_ACCEPTED"
     OFFER_DECLINED = "OFFER_DECLINED"
     NEW_OFFER = "NEW_OFFER"
+    UPDATED_OFFER = "UPDATED_OFFER"
     PRICE_CHANGE = "PRICE_CHANGE"
     QUESTION_SOLVED = "QUESTION_SOLVED"
     ACCOUNT_VERIFIED = "ACCOUNT_VERIFIED"
     PASSWORD_RESET = "PASSWORD_RESET"
     ACCOUNT_CREATED = "ACCOUNT_CREATED"
+    QUESTION_CREATED = "QUESTION_CREATED"
+    QUESTION_DELETED = "QUESTION_DELETED"
+    QUESTION_UPDATED = "QUESTION_UPDATED"
 
     # Metadata to store additional information
     question_required = {
@@ -119,11 +126,15 @@ class NotificationTypeEnum(EnumBase):
         "OFFER_ACCEPTED": True,
         "OFFER_DECLINED": True,
         "NEW_OFFER": True,
+        "UPDATED_OFFER": True,
         "PRICE_CHANGE": True,
         "QUESTION_SOLVED": True,
         "ACCOUNT_VERIFIED": False,
         "PASSWORD_RESET": False,
         "ACCOUNT_CREATED": False,
+        "QUESTION_CREATED": True,
+        "QUESTION_DELETED": True,
+        "QUESTION_UPDATED": True,
     }
 
     @classmethod
@@ -147,3 +158,14 @@ class NotificationTypeEnum(EnumBase):
         ):
             return cls.question_required[notification_type]
         raise ValueError(f"{notification_type} is not a valid notification type.")
+
+
+QuestionSchema = {
+    "class_code": fields.Str(required=True, validate=validate.Length(min=4)),
+    "class_name": fields.Str(required=True, validate=validate.Length(min=1)),
+    "academic_field": fields.Str(required=True, validate=validate.Length(min=1)),
+    "method": fields.Str(required=True),
+    "solve_time": fields.Int(required=True, validate=validate.Range(min=1)),
+    "price": fields.Float(required=True, validate=validate.Range(min=0)),
+    "request_message": fields.Str(required=True, validate=validate.Length(min=1)),
+}
