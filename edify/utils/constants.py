@@ -109,6 +109,7 @@ class NotificationTypeEnum(EnumBase):
     GENERAL = "GENERAL"
     OFFER_ACCEPTED = "OFFER_ACCEPTED"
     OFFER_DECLINED = "OFFER_DECLINED"
+    OFFER_REVOKED = "OFFER_REVOKED"
     NEW_OFFER = "NEW_OFFER"
     UPDATED_OFFER = "UPDATED_OFFER"
     PRICE_CHANGE = "PRICE_CHANGE"
@@ -125,6 +126,7 @@ class NotificationTypeEnum(EnumBase):
         "GENERAL": False,
         "OFFER_ACCEPTED": True,
         "OFFER_DECLINED": True,
+        "OFFER_REVOKED": True,
         "NEW_OFFER": True,
         "UPDATED_OFFER": True,
         "PRICE_CHANGE": True,
