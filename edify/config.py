@@ -25,6 +25,14 @@ class Config:
         TESTING = True
         SQLALCHEMY_DATABASE_URI = "sqlite:///site.db"
 
+    # Mail config
+    MAIL_SERVER = os.environ["MAIL_SERVER"]
+    MAIL_PORT = os.environ["MAIL_PORT"]
+    MAIL_USERNAME = os.environ["MAIL_USERNAME"]
+    MAIL_PASSWORD = os.environ["MAIL_PASSWORD"]
+    MAIL_USE_TLS = os.environ["MAIL_USE_TLS"]
+    MAIL_USE_SSL = os.environ["MAIL_USE_SSL"]
+
     # Configure all the ways you want to allow JWTs to be sent.
     JWT_TOKEN_LOCATION = ["headers", "cookies"]
 
