@@ -8,17 +8,35 @@ from flask_mail import Message
 
 # Local Application imports
 from edify import mail
+from edify.utils.constants import ErrorType
+from edify.utils.utils import error_response
 
 
-def send(subject: str, body: str, recipients: List[str]):
+def send(subject: str, html: str, recipients: List[str]) -> tuple:
+    """Sends an email with the specified subject and HTML content.
+
+    Args:
+        subject (str): The subject of the email.
+        html (str): The HTML content of the email.
+        recipients (List[str]): A list of email addresses to send the email to.
+
+    Returns:
+        tuple: A tuple containing a JSON response message and an HTTP status code.
+    """
     msg = Message(
         subject=subject,
         sender=mail.username,
         recipients=recipients,
     )
 
-    msg.body = body
+    msg.body = html
+    msg.html = html
 
-    mail.send(msg)
+    try:
+        mail.send(msg)
+    except:
+        return error_response(
+            f"Failed to send email to {str(recipients)}.", ErrorType.INTERNAL_ERROR
+        )
 
     return jsonify("Success."), HTTPStatus.OK
