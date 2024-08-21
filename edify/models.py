@@ -11,6 +11,8 @@ from flask import current_app, jsonify, url_for
 from flask_jwt_extended import create_access_token, decode_token, create_refresh_token
 from flask_login import UserMixin
 from sqlalchemy import Index, UniqueConstraint, event
+from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 # Local Application imports
 from edify import db, jwt, bcrypt
@@ -422,7 +424,6 @@ class Offer(BaseModel):
     __table_args__ = (
         Index("ix_offer_question_id", "question_id"),
         Index("ix_offer_user_id", "user_id"),
-        UniqueConstraint("user_id", "question_id", "active", name="_user_question_uc"),
     )
 
     # Primary key that identifies the offer
@@ -486,25 +487,51 @@ class Offer(BaseModel):
         if target.status is None:
             target.status = OfferStatusEnum.SENT
 
+        # Ensure amount is positive
         if target.amount <= 0:
             raise ValueError(
                 f'OFFER MODEL: Amount must be a positive value ("{target.amount}").'
             )
 
+        # Ensure created_at is before updated_at
         if target.updated_at and target.updated_at < target.created_at:
             raise ValueError(
                 f'OFFER MODEL: Creation ("{target.created_at}") must be before update ("{target.updated_at}").'
             )
 
+        # Enforce that if the offer is inactive, it cannot have an active status
         if target.status in OfferStatusEnum.inactive and target.active:
             raise ValueError(
                 f'OFFER MODEL: Offer status is inactive ("{target.status}") but still active).'
             )
 
+        # Enforce that if the offer is not active, it must have an inactive status
         if not target.active and not (target.status in OfferStatusEnum.inactive):
             raise ValueError(
                 f'OFFER MODEL: Offer is not active but status is not inactive ("{target.status}").'
             )
+
+        # Ensure only one active offer per user and question
+        if target.active:
+            session = Session.object_session(target)
+
+            # Count the number of active offers for the same user_id and question_id, excluding the current offer
+            active_offers_count = (
+                session.query(func.count(Offer.id))
+                .filter(
+                    Offer.user_id == target.user_id,
+                    Offer.question_id == target.question_id,
+                    Offer.active == True,
+                    Offer.id
+                    != target.id,  # Exclude the current offer if it exists (on update)
+                )
+                .scalar()
+            )
+
+            if active_offers_count > 0:
+                raise ValueError(
+                    f"OFFER MODEL: Only one active offer per user and question is allowed. User: {target.user_id}, Question: {target.question_id}."
+                )
 
         return
 
