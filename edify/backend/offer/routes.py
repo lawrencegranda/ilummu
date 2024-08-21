@@ -127,7 +127,7 @@ def get_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
 @jwt_required()
 @use_args(
     {
-        "amount": fields.Float(required=True),
+        "amount": fields.Float(required=False),
         "status": fields.String(required=False),
         "active": fields.Boolean(required=False),
     }
@@ -139,17 +139,36 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
     if not offer:
         return error_response("Offer not found", ErrorType.NOT_FOUND)
 
+    user = get_current_user()
+
+    # Check if user exists
+    if not user:
+        return error_response("User does not exist", ErrorType.USER_NOT_FOUND)
+
+    # Check user is author of the question or owner of the offer
+    if not (offer.user_id == user.id or offer.question.user_id == user.id):
+        return error_response(
+            "User is not owner of the offer or the author of the question",
+            ErrorType.UNAUTHORIZED,
+        )
+
     # Update offer fields from args
-    offer.amount = args["amount"]
+    if "amount" in args:
+        offer.status = args["amount"]
+
     if "status" in args:
         offer.status = args["status"]
+
     if "active" in args:
         offer.active = args["active"]
+
+    # Try adding to database
     try:
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
         return error_response("Couldn't update offer", ErrorType.BAD_REQUEST)
+
     return jsonify(offer.to_dict()), HTTPStatus.OK
 
 
@@ -157,21 +176,23 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
 @offer.route("/<int:id_offer>", methods=["DELETE"])
 @jwt_required()
 def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
-    
+
     user = get_current_user()
-    
+
     offer = db.session.query(Offer).filter_by(id=id_offer).first()
 
     # If no offer is found, return an error response
     if not offer:
         return error_response("Offer not found", ErrorType.NOT_FOUND)
-    
+
     if not offer.user_id == user.id:
-        return error_response("User not permited to delete offer", ErrorType.UNAUTHORIZED)
+        return error_response(
+            "User not permited to delete offer", ErrorType.UNAUTHORIZED
+        )
 
     offer.status = OfferStatusEnum.REMOVED
     offer.active = False
-    
+
     try:
         db.session.commit()
     except IntegrityError:
