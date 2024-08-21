@@ -7,7 +7,7 @@ from http import HTTPStatus
 from typing import Optional, Dict, Any, List
 
 # Third-Party Framework imports
-from flask import current_app, jsonify
+from flask import current_app, jsonify, url_for
 from flask_jwt_extended import create_access_token, decode_token, create_refresh_token
 from flask_login import UserMixin
 from sqlalchemy import Index, UniqueConstraint, event
@@ -22,6 +22,7 @@ from edify.utils.constants import (
     SupportedLanguagesEnum,
 )
 from edify.utils.utils import (
+    date_to_int,
     format_lower_case,
     format_phone,
     format_title_case,
@@ -133,6 +134,11 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
 
     # Entry updated date (to keep track)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    # Password last reset date (to keep track)
+    password_last_reset = db.Column(
+        db.DateTime, nullable=False, default=datetime.utcnow
+    )
 
     # API authentication token, token is given to user upon login to authenticate future requests
     # This is part of the API token-based authentication schema
@@ -328,8 +334,8 @@ class Question(BaseModel):
             "price": self.price,
             "method_id": self.method_id,
             "solved": self.solved,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
+            "created_at": date_to_int(self.created_at),
+            "updated_at": date_to_int(self.updated_at),
         }
 
         if simplified == False:
@@ -463,8 +469,8 @@ class Offer(BaseModel):
             "amount": self.amount,
             "status": self.status,
             "active": self.active,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
+            "created_at": date_to_int(self.created_at),
+            "updated_at": date_to_int(self.updated_at),
         }
 
         if simplified == False:
@@ -577,6 +583,7 @@ class Notification(BaseModel):
 
     # Question it relates to, if it does
     question_id = db.Column(db.Integer, db.ForeignKey("question.id"), nullable=True)
+    question = db.relationship("Question", backref="notifications", lazy=True)
 
     # Entry creation date (to keep track)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -585,13 +592,23 @@ class Notification(BaseModel):
         return f"Notification({self.id}, {self.user_id}, {self.message})"
 
     def to_dict(self, simplified=True) -> Dict[str, Any]:
+        link = None
+
+        if self.question_id:
+            if self.question.visible:
+                link = url_for(
+                    "frontend.question.fetch_question", id_question=self.question_id
+                )
+        elif self.link:
+            link = self.link
+
         return {
             "id": self.id,
             "user_id": self.user_id,
             "message": self.message,
-            "link": self.link,
+            "link": link,
             "type": self.type,
-            "created_at": self.created_at,
+            "created_at": int(self.created_at.strftime("%Y%m%d%H%M%S")),
         }
 
     @staticmethod

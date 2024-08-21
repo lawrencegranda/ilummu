@@ -13,16 +13,11 @@ from sqlalchemy.exc import IntegrityError
 
 # Local Application imports
 from edify import db
-from edify.models import (
-    User,
-    Question,
-    Offer,
-    OfferStatus,
-)
+from edify.models import User, Question, Offer, OfferStatus, Notification
 from edify.utils.constants import ErrorType, OfferStatusEnum
 from edify.backend.user.utils import get_current_user
 from edify.utils.utils import error_response
-from edify.utils.constants import ErrorType
+from edify.utils.constants import ErrorType, NotificationTypeEnum
 
 # -----------------------------------------------------------------------------
 # Route Blueprint
@@ -42,7 +37,7 @@ offer = Blueprint("offer", __name__, url_prefix="/offer")
 @use_args(
     {
         "question_id": fields.Integer(required=True),
-        "price": fields.Float(required=False),
+        "price": fields.Float(required=True),
     }
 )
 def create_offer(args) -> flask_typing.ResponseReturnValue:
@@ -105,7 +100,28 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
         db.session.rollback()
         return error_response("Failed to create offer.", ErrorType.BAD_REQUEST)
 
+    # Create notification for the new offer (user)
+    notification_user = Notification(
+        type=NotificationTypeEnum.NEW_OFFER,
+        message=f"You made a new offer for ${price:.2f}!",
+        user_id=user.id,
+        question_id=question.id,
+    )
+    db.session.add(notification_user)
+    db.session.commit()
+
+    # Create notification for the new offer (question author)
+    notification_author = Notification(
+        type=NotificationTypeEnum.NEW_OFFER,
+        message=f"You have a new offer from {user.username} for ${price:.2f}!",
+        user_id=question.user_id,
+        question_id=question.id,
+    )
+    db.session.add(notification_author)
+    db.session.commit()
+
     response = jsonify(offer.to_dict(simplified=True))
+
     return (response, HTTPStatus.CREATED)
 
 
@@ -169,6 +185,26 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
         db.session.rollback()
         return error_response("Couldn't update offer", ErrorType.BAD_REQUEST)
 
+    # Create notification for the updated offer (user)
+    notification_user = Notification(
+        type=NotificationTypeEnum.UPDATED_OFFER,
+        message=f"You changed the offer amount to ${amount:.2f}!",
+        user_id=offer.user.id,
+        question_id=question.id,
+    )
+    db.session.add(notification_user)
+    db.session.commit()
+
+    # Create notification for the updated offer (question author)
+    notification_author = Notification(
+        type=NotificationTypeEnum.NEW_OFFER,
+        message=f"{offer.user.username} changed their offer to ${amount:.2f}!",
+        user_id=question.user_id,
+        question_id=question.id,
+    )
+    db.session.add(notification_author)
+    db.session.commit()
+
     return jsonify(offer.to_dict()), HTTPStatus.OK
 
 
@@ -198,6 +234,7 @@ def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
     except IntegrityError:
         db.session.rollback()
         return error_response("Couldn't delete offer", ErrorType.BAD_REQUEST)
+
     return jsonify({"msg": "Offer deleted"}), HTTPStatus.NO_CONTENT
 
 
