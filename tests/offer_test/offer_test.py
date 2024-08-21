@@ -10,7 +10,8 @@ import pytest
 
 # Local Application imports
 from edify import db
-from edify.models import User, Offer, Question
+from edify.models import User, Offer, Question, Method, Course
+from edify.utils.constants import OfferStatusEnum
 
 # Initialize Faker for generating fake data
 fake = Faker()
@@ -18,7 +19,7 @@ fake = Faker()
 
 class TestCreateOffer:
 
-    def test_create_offer_success(self, client_with_data, user_jwt):
+    def test_create_offer_success(self, client_with_question, user_jwt):
         """
         Test creating an offer successfully.
         """

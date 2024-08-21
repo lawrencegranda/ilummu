@@ -1,6 +1,7 @@
 # Standard Library imports
 from http import HTTPStatus
 from typing import Optional, Any, Tuple
+from datetime import datetime, timedelta
 
 # Third-Party Framework imports
 from flask import Blueprint, Flask, jsonify, redirect, url_for
@@ -8,11 +9,12 @@ from flask import typing as flask_typing
 from flask_jwt_extended import jwt_required
 from webargs import fields, validate
 from webargs.flaskparser import use_args
+from sqlalchemy.exc import IntegrityError
 
 # Local Application imports
 from edify import db
 from edify.models import User, Question, Offer, OfferStatus, Notification
-from edify.utils.constants import ErrorType
+from edify.utils.constants import ErrorType, OfferStatusEnum
 from edify.backend.user.utils import get_current_user
 from edify.utils.utils import error_response
 from edify.utils.constants import ErrorType, NotificationTypeEnum
@@ -118,7 +120,8 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
     db.session.add(notification_author)
     db.session.commit()
 
-    response = jsonify({"offer": offer.to_dict(simplified=True)})
+    response = jsonify(offer.to_dict(simplified=True))
+
     return (response, HTTPStatus.CREATED)
 
 
@@ -140,7 +143,7 @@ def get_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
 @jwt_required()
 @use_args(
     {
-        "amount": fields.Float(required=True),
+        "amount": fields.Float(required=False),
         "status": fields.String(required=False),
         "active": fields.Boolean(required=False),
     }
@@ -152,13 +155,35 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
     if not offer:
         return error_response("Offer not found", ErrorType.NOT_FOUND)
 
+    user = get_current_user()
+
+    # Check if user exists
+    if not user:
+        return error_response("User does not exist", ErrorType.USER_NOT_FOUND)
+
+    # Check user is author of the question or owner of the offer
+    if not (offer.user_id == user.id or offer.question.user_id == user.id):
+        return error_response(
+            "User is not owner of the offer or the author of the question",
+            ErrorType.UNAUTHORIZED,
+        )
+
     # Update offer fields from args
-    offer.amount = args["amount"]
+    if "amount" in args:
+        offer.status = args["amount"]
+
     if "status" in args:
         offer.status = args["status"]
+
     if "active" in args:
         offer.active = args["active"]
-    db.session.commit()
+
+    # Try adding to database
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return error_response("Couldn't update offer", ErrorType.BAD_REQUEST)
 
     # Create notification for the updated offer (user)
     notification_user = Notification(
@@ -187,19 +212,29 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
 @offer.route("/<int:id_offer>", methods=["DELETE"])
 @jwt_required()
 def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
+
+    user = get_current_user()
+
     offer = db.session.query(Offer).filter_by(id=id_offer).first()
 
     # If no offer is found, return an error response
     if not offer:
         return error_response("Offer not found", ErrorType.NOT_FOUND)
 
-    # Not implemented
-    return error_response(
-        "Not Implemented but passed checks.", ErrorType.NOT_IMPLEMENTED
-    )
+    if not offer.user_id == user.id:
+        return error_response(
+            "User not permited to delete offer", ErrorType.UNAUTHORIZED
+        )
 
-    # Set offer status to REMOVED (i think)
-    db.session.commit()
+    offer.status = OfferStatusEnum.REMOVED
+    offer.active = False
+
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return error_response("Couldn't delete offer", ErrorType.BAD_REQUEST)
+
     return jsonify({"msg": "Offer deleted"}), HTTPStatus.NO_CONTENT
 
 
@@ -208,6 +243,7 @@ def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
 @jwt_required()
 def get_offers_by_user(user_id: int) -> flask_typing.ResponseReturnValue:
     user = get_current_user()
+
     # Check if user exists
     if not user:
         return error_response("User does not exist", ErrorType.USER_NOT_FOUND)

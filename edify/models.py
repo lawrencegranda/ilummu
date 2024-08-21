@@ -532,6 +532,7 @@ class NotificationType(BaseModel):
 
     def to_dict(self, simplified=True) -> Dict[str, Any]:
         return {
+            "id": self.id,
             "value": self.name,
             "question_required": self.question_required,
         }
