@@ -27,3 +27,13 @@ export SECRET_KEY='test_key'
 # SQLALCHEMY
 #-------------------------------------------------------------------------------
 export DB_URL=''
+
+#-------------------------------------------------------------------------------
+# Mail Information
+#-------------------------------------------------------------------------------
+export MAIL_SERVER=''
+export MAIL_PORT=0
+export MAIL_USERNAME=''
+export MAIL_PASSWORD=''
+export MAIL_USE_TLS=0
+export MAIL_USE_SSL=0
