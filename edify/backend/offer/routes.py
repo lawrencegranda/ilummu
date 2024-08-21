@@ -190,17 +190,17 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
         type=NotificationTypeEnum.UPDATED_OFFER,
         message=f"You changed the offer amount to ${amount:.2f}!",
         user_id=offer.user.id,
-        question_id=question.id,
+        question_id=offer.question.id,
     )
     db.session.add(notification_user)
     db.session.commit()
 
     # Create notification for the updated offer (question author)
     notification_author = Notification(
-        type=NotificationTypeEnum.NEW_OFFER,
+        type=NotificationTypeEnum.UPDATED_OFFER,
         message=f"{offer.user.username} changed their offer to ${amount:.2f}!",
-        user_id=question.user_id,
-        question_id=question.id,
+        user_id=offer.question.user_id,
+        question_id=offer.question.id,
     )
     db.session.add(notification_author)
     db.session.commit()
@@ -234,6 +234,26 @@ def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
     except IntegrityError:
         db.session.rollback()
         return error_response("Couldn't delete offer", ErrorType.BAD_REQUEST)
+
+    # Create notification for the updated offer (user)
+    notification_user = Notification(
+        type=NotificationTypeEnum.OFFER_REVOKED,
+        message=f"You revoked an offer to {offer.question.user.username}!",
+        user_id=offer.user.id,
+        question_id=offer.question.id,
+    )
+    db.session.add(notification_user)
+    db.session.commit()
+
+    # Create notification for the updated offer (question author)
+    notification_author = Notification(
+        type=NotificationTypeEnum.OFFER_REVOKED,
+        message=f"{offer.user.username} revoked their offer!",
+        user_id=offer.question.user_id,
+        question_id=offer.question.id,
+    )
+    db.session.add(notification_author)
+    db.session.commit()
 
     return jsonify({"msg": "Offer deleted"}), HTTPStatus.NO_CONTENT
 
