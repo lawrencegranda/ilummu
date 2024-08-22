@@ -13,6 +13,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    session,
     url_for,
 )
 from flask import typing as flask_typing
@@ -28,6 +29,7 @@ from webargs.flaskparser import use_args
 # Local Application imports
 from edify import bcrypt, db
 from edify.models import *
+from edify.utils.constants import ErrorType, QuestionSchema
 from edify.utils.decorators import no_token_allowed
 from edify.utils.utils import error_response, internal_request
 
@@ -155,38 +157,8 @@ def home() -> flask_typing.ResponseReturnValue:
         subjects=subjects,
         methods=methods,
         time_intervals=time_intervals,
+        home=True,
     )
-
-
-# Endpoint: /login
-@frontend.route("/login")
-@no_token_allowed
-def login() -> flask_typing.ResponseReturnValue:
-    """
-    Login route for rendering the login form.
-
-    Returns:
-        str: Rendered login/signup template.
-    """
-    return render_template("signup.jinja", login=True)
-
-
-# Endpoint: /signup
-@frontend.route("/signup")
-@no_token_allowed
-def signup() -> flask_typing.ResponseReturnValue:
-    """
-    Signup route that fetches majors and renders the signup form.
-
-    Returns:
-        str: Rendered signup template.
-    """
-    majors = fetch_data(url_for("backend.data.fetch_user_majors"), "GET")
-    majors.sort(key=lambda d: d["name"])
-
-    print(majors)
-
-    return render_template("signup.jinja", login=False, majors=majors)
 
 
 # Endpoint: /logout
@@ -209,6 +181,87 @@ def logout() -> flask_typing.ResponseReturnValue:
     return response
 
 
+# Endpoint: /login
+@frontend.route("/login")
+@no_token_allowed
+def login() -> flask_typing.ResponseReturnValue:
+    """
+    Login route for rendering the login form.
+
+    Returns:
+        str: Rendered login/signup template.
+    """
+    next_url = request.args.get("next_url", url_for("frontend.index"))
+    http_method = request.args.get("http_method", "GET")
+
+    return render_template(
+        "signup.jinja", login=True, next_url=next_url, http_method=http_method
+    )
+
+
+# Endpoint: /signup
+@frontend.route("/signup")
+@no_token_allowed
+def signup() -> flask_typing.ResponseReturnValue:
+    """
+    Signup route that fetches majors and renders the signup form.
+
+    Returns:
+        str: Rendered signup template.
+    """
+    majors = fetch_data(url_for("backend.data.fetch_user_majors"), "GET")
+    majors.sort(key=lambda d: d["name"])
+
+    next_url = request.args.get("next_url", url_for("frontend.index"))
+    http_method = request.args.get("http_method", "GET")
+
+    return render_template(
+        "signup.jinja",
+        login=False,
+        majors=majors,
+        next_url=next_url,
+        http_method=http_method,
+    )
+
+
+@frontend.route("/store_question", methods=["POST"])
+@use_args(QuestionSchema)
+@jwt_required(optional=True)
+def store_question(args) -> flask_typing.ResponseReturnValue:
+    # Temporarily store the question data in the session
+    session["temp_question"] = args
+
+    # If the user is authenticated, create the question inmidiately.
+    if get_user():
+        return submit_question_after_login()
+
+    # Return the data endpoint
+    return (
+        jsonify({"next": url_for("frontend.submit_question_after_login")}),
+        HTTPStatus.OK,
+    )
+
+
+@frontend.route("/submit_question_after_login", methods=["POST"])
+@jwt_required()
+def submit_question_after_login() -> flask_typing.ResponseReturnValue:
+    # Retrieve the question data from the session
+    question_data = session.pop("temp_question", None)
+
+    if not question_data:
+        return error_response(
+            "No question data found in session.", ErrorType.BAD_REQUEST
+        )
+
+    # Submit the question using the existing endpoint
+    # Create a request to submit the question to /backend/question/new
+    response = internal_request(
+        url_for("backend.question.create_question"), method="POST", data=question_data
+    )
+
+    return response
+
+
 # Endpoint: /dashboard
 @frontend.route("/dashboard")
 @jwt_required(optional=True)
@@ -228,15 +281,6 @@ def dashboard() -> flask_typing.ResponseReturnValue:
     methods.sort(key=lambda d: d["name"])
 
     time_intervals = fetch_data(url_for("backend.data.fetch_intervals"), "GET")
-
-    # If the user is logged in, fetch their notifications
-    if user:
-        notifications = fetch_data(
-            url_for("backend.data.fetch_user_notifications"), "GET"
-        )
-        notifications.sort(key=lambda d: d["created_at"])
-    else:
-        notifications = []
 
     return render_template(
         "dashboard.jinja",
@@ -370,9 +414,6 @@ def fetch_question(id_question: int) -> flask_typing.ResponseReturnValue:
 
     time_intervals = fetch_data(url_for("backend.data.fetch_intervals"), "GET")
 
-    notifications = fetch_data(url_for("backend.data.fetch_user_notifications"), "GET")
-    notifications.sort(key=lambda d: d["created_at"])
-
     question = fetch_data(
         url_for("backend.question.get", id_question=id_question), "GET"
     )
@@ -387,7 +428,6 @@ def fetch_question(id_question: int) -> flask_typing.ResponseReturnValue:
         subjects=subjects,
         methods=methods,
         time_intervals=time_intervals,
-        notifications=notifications,
         user=user,
         question=question,
     )

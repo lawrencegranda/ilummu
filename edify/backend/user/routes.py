@@ -288,9 +288,7 @@ def signup(args) -> flask_typing.ResponseReturnValue:
 
     # Add new user to the database
     db.session.add(user)
-
-    # Flush to get ID
-    db.session.flush()
+    db.session.commit()
 
     # Generate the access token for the user
     access_token = generate_access_token(user)
@@ -302,7 +300,6 @@ def signup(args) -> flask_typing.ResponseReturnValue:
         user_id=user.id,
     )
     db.session.add(notif)
-
     db.session.commit()
 
     response = jsonify(

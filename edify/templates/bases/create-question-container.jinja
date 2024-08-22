@@ -9,7 +9,6 @@
     $("#create-question-price").on("change", function () {
       let value = parseFloat($(this).val()).toFixed(2);
       if (isNaN(value)) {
-        console.log();
         value = "";
         $(this).attr("placeholder", "Invalid. Try again.");
       }
@@ -31,6 +30,171 @@
 
   });
   
+</script>
+<script>
+  var errorMsg
+
+  // Function to reset error messages
+  const reset = () => {
+      errorMsg.text("");
+      errorMsg.hide();
+  };
+
+  // Function to display error messages
+  const showError = (msg) => {
+      console.log(msg);
+      errorMsg.text(msg);
+      errorMsg.show();
+  };
+
+  // Ensure the document is ready before executing the script
+  $(document).ready(() => {
+      errorMsg = $("#error-msg");
+      reset();
+  });
+
+  // Form submission event handler for question form
+  $(document).ready(() => {
+      $("#create-question-form").on("submit", function (event) {
+          event.preventDefault(); // Prevent default form submission
+          reset(); // Clear previous error messages
+
+          // Validate class code
+          var class_code = $("#create-question-class-code").val().replace(' ', '').trim();
+          if (!class_code) {
+              showError("Class code is required.");
+              return;
+          } else if (class_code.length > 8) {
+              showError("Class code is too long.");
+              return;
+          } else if (class_code.length < 6) {
+              showError("Class code is too short.");
+              return;
+          }
+
+          // Validate class name
+          var class_name = $("#create-question-class-name").val().replace(/\s+/g, ' ').trim();
+          if (!class_name) {
+              showError("Class name is required.");
+              return;
+          } else if (class_name.length < 3) {
+              showError("Class name is too short.");
+              return;
+          }
+
+          // Validate request message
+          var request_message = $("#create-question-textbox").val().replace(/[ \t]+/g, ' ').trim();
+          if (!request_message) {
+              showError("Fill out the textarea.");
+              return;
+          } else if (request_message.length < 50) {
+              showError("Request is too short (minimum of 50 characters).");
+              return;
+          } else if (request_message.length > 5000) {
+              showError("Request is too long (maximum of 5000 characters).");
+              return;
+          }
+
+          // Validate academic field selection
+          var academic_field = $("#create-question-category").val().trim()
+          if (!academic_field) {
+              showError("Select a school from the options.");
+              return;
+          }
+
+          // Validate method selection
+          var method = $("#create-question-method").val().trim()
+          if (!method) {
+              showError("Select a method from the options.");
+              return;
+          }
+
+          // Validate time interval selection
+          var time = $("#create-question-solve-time").val().trim()
+          if (!time) {
+              showError("Select a time interval from the options.");
+              return;
+          }
+
+          // Validate price input
+          var price = parseFloat($("#create-question-price").val().trim());
+          if (!price) {
+              showError("A question price is required.");
+              return;
+          } else if (isNaN(price)) {
+              showError("Please enter a valid price.");
+              return;
+          } else if (price < 2) {
+              showError("$2.00 is the minimum price.");
+              return;
+          } else if (price > 100) {
+              showError("$100.00 is the maximum price.");
+              return;
+          }
+
+          // If validation passes, format the data
+          var data = {
+              class_code: class_code,
+              class_name: class_name,
+              request_message: request_message,
+              academic_field: academic_field,
+              method: method,
+              solve_time: time,
+              price: price, 
+          };
+
+          {% if home %}
+          let question_url = "{{url_for('frontend.store_question')}}"
+          {% else %}
+          let question_url = "{{url_for('backend.question.create_question')}}"
+          {% endif %}
+
+          // Send the data via AJAX POST request
+          $.ajax({
+              url: question_url,
+              type: 'POST', // HTTP method
+              contentType: 'application/json', // Request content type
+              data: JSON.stringify(data), // Data to be sent
+              success: function (response) {
+                  // Handle success
+                  {% if home %}
+                      let login = "{{ url_for('frontend.login') }}"
+
+                      if ('next' in response) {
+                          let next = response["next"]
+
+                          login = login + "?next_url=" + next + "&http_method=POST"
+                      }
+
+                      window.location.href = login
+                      return;
+                  {% else %}
+                      let element = $(".create-question-wrapper-dimensions");
+                      if (element.is(":visible")) {
+                          // Hide the element after a delay
+                          setTimeout(function () {
+                              element.hide();
+                          }, 300);
+                      }
+
+                      // Refresh the page
+                      location.reload();
+
+                      return;
+                  {% endif %}
+              },
+              error: function (error) {
+                let error_msg = getErrorResponse(error);
+
+                if (!error_msg) {
+                  error_msg = "An error occurred during creation. Please try again.";
+                }
+
+                showError(error_msg);
+              }
+          });
+      });
+  });
 </script>
 <div class="create-question-container">
   <form id="create-question-form" method="post" enctype="multipart/form-data">

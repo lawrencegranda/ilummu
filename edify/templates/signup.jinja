@@ -40,6 +40,49 @@
     reset();
   });
 
+  function handleSuccess(response) {
+      // Handle success
+
+      let http_method = "{{ http_method | default('GET') }}"
+      let next_url = "{{ next_url }}";
+
+      if (http_method === "POST") {
+          $.ajax({
+              url: next_url,
+              type: 'POST',
+              success: function (response) {
+                window.location.href = '{{url_for("frontend.dashboard")}}';
+                return;
+              },
+              error: async function (error) {
+                console.log(error);
+                // Handle error (e.g., display error message)
+                showError("An error occurred cresting a question. Please create it later.");
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                showError("Redirecting...");
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                window.location.href = '{{url_for("frontend.dashboard")}}';
+              }
+                });
+          return
+      }
+
+      window.location.href = next_url;
+      return;
+  }
+
+  function handleError(str) {
+      return function (error) {
+          let error_msg = getErrorResponse(error);
+
+          if (!error_msg) {
+            error_msg = "An error occurred during " + str + ". Please try again.";
+          }
+
+          showError(error_msg);
+      }
+  }
+
   {% if login == false %}
   // Conditional for signup form
   $(document).ready(() => {
@@ -115,7 +158,6 @@
       }
 
       var remember = $("#signup-remember-box").prop("checked");
-      console.log(remember);
 
       // If validation passes, format the data
       var data = {
@@ -133,20 +175,8 @@
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(data),
-        success: function (response) {
-          // Handle success (e.g., redirect to dashboard page)
-          window.location.href = "/dashboard";
-          return
-        },
-        error: function (error) {
-          console.log(error)
-          // Handle error (e.g., display error message)
-          try {
-            showError(error['responseJSON']['errors']);
-          } catch (e) {
-            showError("An error occurred during signup. Please try again.");
-          }
-        }
+        success: handleSuccess,
+        error: handleError("signup"),
       });
     });
   });
@@ -186,7 +216,6 @@
       }
 
       var remember = $("#signup-remember-box").prop("checked")
-      console.log(remember)
 
       // If validation passes, format the data
       var data = {
@@ -201,20 +230,8 @@
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(data),
-        success: function (response) {
-          // Handle success (e.g., redirect to dashboard page)
-          window.location.href = "/dashboard";
-          return
-        },
-        error: function (error) {
-          console.log(error)
-          // Handle error (e.g., display error message)
-          try {
-            showError(error['responseJSON']['errors']);
-          } catch (e) {
-            showError("An error occurred during signup. Please try again.");
-          }
-        }
+        success: handleSuccess,
+        error: handleError("login"),
       });
     });
   });
@@ -366,9 +383,9 @@
           <div class="signup-login">
 
             {% if login == false %}
-              Already have an account? <a href='{{ url_for("frontend.login") }}'>Log In</a>
+              Already have an account? <a href='{{ url_for("frontend.login", next_url=next_url, http_method=http_method) }}'>Log In</a>
             {% else %}
-              Do not have an account? <a href='{{ url_for("frontend.signup") }}'>Sign Up</a>
+              Do not have an account? <a href='{{ url_for("frontend.signup", next_url=next_url, http_method=http_method) }}'>Sign Up</a>
             {% endif %}
 
             <br />

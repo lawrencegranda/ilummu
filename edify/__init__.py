@@ -17,6 +17,7 @@ from flask_jwt_extended import (
 from flask_jwt_extended.exceptions import UserLookupError
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from flask_mail import Mail
 from werkzeug.exceptions import HTTPException
 from jwt.exceptions import ExpiredSignatureError
 
@@ -29,6 +30,7 @@ db = SQLAlchemy()
 bcrypt = Bcrypt()
 jwt = JWTManager()
 migrate = Migrate()
+mail = Mail()
 
 
 def create_app(config_class):
@@ -44,6 +46,9 @@ def create_app(config_class):
     bcrypt.init_app(app)
     jwt.init_app(app)
     migrate.init_app(app, db)
+    mail.state = mail.init_app(
+        app
+    )  # Had to do this because there is an error in source code.
 
     from edify.frontend.routes import frontend
     from edify.backend.routes import backend

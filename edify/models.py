@@ -7,10 +7,12 @@ from http import HTTPStatus
 from typing import Optional, Dict, Any, List
 
 # Third-Party Framework imports
-from flask import current_app, jsonify
+from flask import current_app, jsonify, url_for
 from flask_jwt_extended import create_access_token, decode_token, create_refresh_token
 from flask_login import UserMixin
 from sqlalchemy import Index, UniqueConstraint, event
+from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 # Local Application imports
 from edify import db, jwt, bcrypt
@@ -22,6 +24,7 @@ from edify.utils.constants import (
     SupportedLanguagesEnum,
 )
 from edify.utils.utils import (
+    date_to_int,
     format_lower_case,
     format_phone,
     format_title_case,
@@ -133,6 +136,11 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
 
     # Entry updated date (to keep track)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+    # Password last reset date (to keep track)
+    password_last_reset = db.Column(
+        db.DateTime, nullable=False, default=datetime.utcnow
+    )
 
     # API authentication token, token is given to user upon login to authenticate future requests
     # This is part of the API token-based authentication schema
@@ -328,8 +336,8 @@ class Question(BaseModel):
             "price": self.price,
             "method_id": self.method_id,
             "solved": self.solved,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
+            "created_at": date_to_int(self.created_at),
+            "updated_at": date_to_int(self.updated_at),
         }
 
         if simplified == False:
@@ -416,7 +424,6 @@ class Offer(BaseModel):
     __table_args__ = (
         Index("ix_offer_question_id", "question_id"),
         Index("ix_offer_user_id", "user_id"),
-        UniqueConstraint("user_id", "question_id", "active", name="_user_question_uc"),
     )
 
     # Primary key that identifies the offer
@@ -463,8 +470,8 @@ class Offer(BaseModel):
             "amount": self.amount,
             "status": self.status,
             "active": self.active,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
+            "created_at": date_to_int(self.created_at),
+            "updated_at": date_to_int(self.updated_at),
         }
 
         if simplified == False:
@@ -480,25 +487,51 @@ class Offer(BaseModel):
         if target.status is None:
             target.status = OfferStatusEnum.SENT
 
+        # Ensure amount is positive
         if target.amount <= 0:
             raise ValueError(
                 f'OFFER MODEL: Amount must be a positive value ("{target.amount}").'
             )
 
+        # Ensure created_at is before updated_at
         if target.updated_at and target.updated_at < target.created_at:
             raise ValueError(
                 f'OFFER MODEL: Creation ("{target.created_at}") must be before update ("{target.updated_at}").'
             )
 
+        # Enforce that if the offer is inactive, it cannot have an active status
         if target.status in OfferStatusEnum.inactive and target.active:
             raise ValueError(
                 f'OFFER MODEL: Offer status is inactive ("{target.status}") but still active).'
             )
 
+        # Enforce that if the offer is not active, it must have an inactive status
         if not target.active and not (target.status in OfferStatusEnum.inactive):
             raise ValueError(
                 f'OFFER MODEL: Offer is not active but status is not inactive ("{target.status}").'
             )
+
+        # Ensure only one active offer per user and question
+        if target.active:
+            session = Session.object_session(target)
+
+            # Count the number of active offers for the same user_id and question_id, excluding the current offer
+            active_offers_count = (
+                session.query(func.count(Offer.id))
+                .filter(
+                    Offer.user_id == target.user_id,
+                    Offer.question_id == target.question_id,
+                    Offer.active == True,
+                    Offer.id
+                    != target.id,  # Exclude the current offer if it exists (on update)
+                )
+                .scalar()
+            )
+
+            if active_offers_count > 0:
+                raise ValueError(
+                    f"OFFER MODEL: Only one active offer per user and question is allowed. User: {target.user_id}, Question: {target.question_id}."
+                )
 
         return
 
@@ -577,6 +610,7 @@ class Notification(BaseModel):
 
     # Question it relates to, if it does
     question_id = db.Column(db.Integer, db.ForeignKey("question.id"), nullable=True)
+    question = db.relationship("Question", backref="notifications", lazy=True)
 
     # Entry creation date (to keep track)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -585,13 +619,23 @@ class Notification(BaseModel):
         return f"Notification({self.id}, {self.user_id}, {self.message})"
 
     def to_dict(self, simplified=True) -> Dict[str, Any]:
+        link = None
+
+        if self.question_id:
+            if self.question.visible:
+                link = url_for(
+                    "frontend.question.fetch_question", id_question=self.question_id
+                )
+        elif self.link:
+            link = self.link
+
         return {
             "id": self.id,
             "user_id": self.user_id,
             "message": self.message,
-            "link": self.link,
+            "link": link,
             "type": self.type,
-            "created_at": self.created_at,
+            "created_at": int(self.created_at.strftime("%Y%m%d%H%M%S")),
         }
 
     @staticmethod

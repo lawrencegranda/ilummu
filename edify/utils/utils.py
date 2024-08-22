@@ -1,5 +1,6 @@
 # Standard Library imports
 from http import HTTPStatus
+import io
 import json
 import random
 import re
@@ -62,13 +63,16 @@ def get_request_cookie(request: flask.Request) -> Optional[str]:
 
 
 # Creates an internal request within the Flask application using test request context
-def internal_request(url: str, method: str = "GET") -> flask_typing.ResponseReturnValue:
+def internal_request(
+    url: str, method: str = "GET", data: Any = None
+) -> flask_typing.ResponseReturnValue:
     """
     Creates an internal request within the Flask application using test request context.
 
     Args:
         url (str): The URL to request.
         method (str, optional): The HTTP method to use. Defaults to "GET".
+        data (Any, optional): The data to send.
 
     Returns:
         flask.Response: The response from the requested URL.
@@ -90,8 +94,13 @@ def internal_request(url: str, method: str = "GET") -> flask_typing.ResponseRetu
             f'{env["HTTP_COOKIE"]}; refresh_token_cookie={refresh_token}'
         )
 
+    # Include JSON data if provided
+    if data is not None and method == "POST":
+        env["wsgi.input"] = io.BytesIO(json.dumps(data).encode("utf-8"))
+        env["CONTENT_TYPE"] = "application/json"
+
     # Create the test request context with the environment
-    with current_app.test_request_context(environ_overrides=env):
+    with current_app.test_request_context(json=data, environ_overrides=env):
         response = current_app.full_dispatch_request()
 
     return response
@@ -127,6 +136,7 @@ def error_response(message: str, error_type: ErrorType) -> tuple:
     Returns:
         tuple: A tuple containing the JSON response and the HTTP status code.
     """
+    print(f"{error_type.value} {error_type.name}: {message}")
     return (
         jsonify({"msg": message, "type": error_type.name}),
         error_type.value,
@@ -345,6 +355,7 @@ def get_time_ago(date: datetime) -> str:
         years = diff.days // 365
         return f"{years} year{'s' if years > 1 else ''} ago"
 
+
 # Returns a int from the given date to now
 def get_seconds_ago(date: datetime) -> int:
     """
@@ -362,7 +373,6 @@ def get_seconds_ago(date: datetime) -> int:
     return int(diff.total_seconds())
 
 
-
 # Trims a string to a specified length and appends ellipsis if the string exceeds the length
 def trim_text(string: str, length: int) -> str:
     """
@@ -376,3 +386,7 @@ def trim_text(string: str, length: int) -> str:
         str: The trimmed string with ellipsis if it exceeds the length.
     """
     return string[0:length].strip() + "..." if len(string) > length + 3 else string
+
+
+# Encode datetime as int
+date_to_int = lambda d: int(d.strftime("%Y%m%d%H%M%S"))

@@ -11,6 +11,7 @@ import pytest
 # Local Application imports
 from edify import db
 from edify.models import User, AcademicField, Course, Method, Question
+from tests.utils import get_jwt_header
 
 # Initialize Faker for generating fake data
 fake = Faker()
@@ -266,3 +267,53 @@ class TestCreateQuestion:
 
         assert response.status_code == HTTPStatus.BAD_REQUEST, response.json
         assert "Invalid academic field" in response.get_json()["msg"]
+
+
+class TestDeleteQuestion:
+
+    def test_delete_question_success(self, client_with_question):
+        """
+        Test deleting a question successfully.
+        """
+        question = db.session.query(Question).filter(Question.visible == True).first()
+
+        # Get the user and it's jwt
+        user = db.session.get(User, question.user_id)
+        jwt = get_jwt_header(user)
+
+        question_id = question.id
+        original_question_dict = question.to_dict(simplified=False)
+
+        response = client_with_question.delete(
+            url_for("backend.question.delete_question", id_question=question_id),
+            headers=jwt,
+        )
+
+        assert response.status_code == HTTPStatus.OK, response.json
+
+        # Get the json representation from the response
+        question = response.get_json()
+
+        assert "id" in question, "Question has no id"
+
+        # Find the question in the database
+        question = db.session.get(Question, question["id"])
+        assert question, "Question not in database"
+        assert question.visible == False, "Question is visible and was not removed"
+
+        # Convert to dict
+        question_dict = question.to_dict(simplified=False)
+
+        # Data types to check
+        primitives = (bool, str, int, float, type(None))
+
+        # Assert all attributes are equal except for visibility
+        for (k, v1), (k2, v2) in zip(
+            original_question_dict.items(), question_dict.items()
+        ):
+            assert k == k2, f"Keys are not equal ({k} != {k2})"
+
+            if k == "visible" or not isinstance(v1, primitives):
+                continue
+
+            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
