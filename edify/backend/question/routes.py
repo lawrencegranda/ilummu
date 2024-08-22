@@ -13,7 +13,7 @@ from webargs.flaskparser import use_args
 # Local Application imports
 from edify import db
 from edify.backend.question.utils import question_dictionary
-from edify.backend.user.utils import get_current_user
+from edify.backend.user.utils import get_current_user, check_author
 from edify.models import (
     AcademicField,
     Course,

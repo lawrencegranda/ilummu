@@ -170,7 +170,7 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
 
     # Update offer fields from args
     if "amount" in args:
-        offer.status = args["amount"]
+        offer.amount = args["amount"]
 
     if "status" in args:
         offer.status = args["status"]
@@ -185,6 +185,7 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
         db.session.rollback()
         return error_response("Couldn't update offer", ErrorType.BAD_REQUEST)
 
+    amount = offer.amount
     # Create notification for the updated offer (user)
     notification_user = Notification(
         type=NotificationTypeEnum.UPDATED_OFFER,
