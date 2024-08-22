@@ -215,3 +215,72 @@ class TestGetOffer:
             "msg" in response.get_json()
             and "Offer not found" in response.get_json()["msg"]
         ), response.get_json()
+        
+
+class TestUpdateOffer:
+    
+    def test_update_offer_success(self, client_with_offer, user_jwt):
+        """
+        Test updating an offer successfully.
+        """
+        user, jwt = user_jwt
+
+        offer = db.session.query(Offer).first()
+
+        assert offer, "User does not have any offer in Database"
+
+        response = client_with_offer.put(
+            url_for("backend.offer.update_offer", id_offer=offer.id),
+            json={"status": OfferStatusEnum.ACCEPTED.value},
+            headers=jwt,
+        )
+
+        assert response.status_code == HTTPStatus.OK, response.json
+
+        offer = db.session.query(Offer).filter(Offer.id == offer.id).first()
+
+        assert offer.status == OfferStatusEnum.ACCEPTED, "Offer status not updated"
+
+    def test_update_offer_invalid_status(self, client_with_offer, user_jwt):
+        """
+        Test updating an offer with an invalid status.
+        """
+        user, jwt = user_jwt
+
+        offer = db.session.query(Offer).first()
+
+        assert offer, "User does not have any offer in Database"
+
+        response = client_with_offer.put(
+            url_for("backend.offer.update_offer", id_offer=offer.id),
+            json={"status": "invalid"},
+            headers=jwt,
+        )
+
+        assert response.status_code == HTTPStatus.BAD_REQUEST, response.json
+
+        # Assert right error message is returned.
+        assert (
+            "msg" in response.get_json()
+            and "Invalid status" in response.get_json()["msg"]
+        ), response.get_json()
+
+    def test_update_offer_invalid_id_offer(self, client_with_offer, user_jwt):
+        """
+        Test updating an offer with an invalid offer ID.
+        """
+        user, jwt = user_jwt
+
+        response = client_with_offer.put(
+            url_for("backend.offer.update_offer", id_offer=0),
+            json={"status": OfferStatusEnum.ACCEPTED.value},
+            headers=jwt,
+        )
+
+        assert response.status_code == HTTPStatus.NOT_FOUND, response.json
+
+        # Assert right error message is returned.
+        assert (
+            "msg" in response.get_json()
+            and "Offer not found" in response.get_json()["msg"]
+        ), response.get_json()
