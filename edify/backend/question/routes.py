@@ -14,8 +14,16 @@ from webargs.flaskparser import use_args
 from edify import db
 from edify.backend.question.utils import question_dictionary
 from edify.backend.user.utils import get_current_user, check_author
-from edify.models import AcademicField, Course, Method, Question, User, Offer
-from edify.utils.constants import ErrorType
+from edify.models import (
+    AcademicField,
+    Course,
+    Method,
+    Question,
+    User,
+    Notification,
+    Offer,
+)
+from edify.utils.constants import ErrorType, QuestionSchema, NotificationTypeEnum
 from edify.utils.decorators import author_required
 from edify.utils.utils import error_response, data_response
 
@@ -34,17 +42,7 @@ question = Blueprint("question", __name__, url_prefix="/question")
 # Endpoint: /backend/question/new
 @question.route("/new", methods=["POST"])
 @jwt_required()
-@use_args(
-    {
-        "class_code": fields.Str(required=True, validate=validate.Length(min=4)),
-        "class_name": fields.Str(required=True, validate=validate.Length(min=1)),
-        "academic_field": fields.Str(required=True, validate=validate.Length(min=1)),
-        "method": fields.Str(required=True),
-        "solve_time": fields.Int(required=True, validate=validate.Range(min=1)),
-        "price": fields.Float(required=True, validate=validate.Range(min=0)),
-        "request_message": fields.Str(required=True, validate=validate.Length(min=1)),
-    }
-)
+@use_args(QuestionSchema)
 def create_question(args):
     """
     Create a new question and post it in the database.
@@ -132,8 +130,66 @@ def create_question(args):
         db.session.rollback()
         return error_response("Failed to create question.", ErrorType.BAD_REQUEST)
 
+    # Create a notification for the new question
+    notification = Notification(
+        type=NotificationTypeEnum.QUESTION_CREATED,
+        message=f"Question created successfully.",
+        user_id=question.user.id,
+        question_id=question.id,
+    )
+    db.session.add(notification)
+    db.session.commit()
+
     # Return the created question as a JSON response with status 201 (Created)
     return jsonify(question.to_dict(simplified=True)), HTTPStatus.CREATED
+
+
+# Endpoint: /backend/question/<int:id_question>/delete
+@question.route("/<int:id_question>/delete", methods=["DELETE"])
+@jwt_required()
+@author_required("id_question")
+def delete_question(id_question: int):
+    """
+    Delete a question by marking it not visible.
+
+    Args:
+        id_question (int): The question to delete
+
+    Returns:
+        dict: A JSON response containing the updated question or an error message.
+    """
+    # Retrieve the current user. Return an error if no user is found
+    user = get_current_user()
+    if user is None:
+        return error_response("User not found", ErrorType.USER_NOT_FOUND)
+
+    # Query the Question model to find the question by its ID
+    question = db.session.query(Question).filter_by(id=id_question).first()
+
+    # Return an error response if the question does not exist
+    if not question:
+        return error_response("Question not found", ErrorType.NOT_FOUND)
+
+    # If question is not visible, return an error response
+    if not question.visible:
+        return error_response("Question is hidden", ErrorType.UNAUTHORIZED)
+
+    # Set to not visible as deleted
+    question.visible = False
+    db.session.commit()
+
+    # Create a notification for the updated question
+    notification = Notification(
+        type=NotificationTypeEnum.QUESTION_DELETED,
+        message=f"Question deleted successfully.",
+        user_id=question.user.id,
+        question_id=question.id,
+    )
+    db.session.add(notification)
+    db.session.commit()
+
+    # Return the updated question as a JSON response with status 200 (OK)
+    return jsonify(question.to_dict(simplified=True)), HTTPStatus.OK
 
 
 # Endpoint: /backend/question/all
@@ -336,6 +392,11 @@ def change_price(args, id_question: int) -> flask_typing.ResponseReturnValue:
     Returns:
         JSON response.
     """
+    # Retrieve the current user. Return an error if no user is found
+    user = get_current_user()
+    if user is None:
+        return error_response("User not found", ErrorType.USER_NOT_FOUND)
+
     price = args["price"]
 
     # Query the Question model to find the question by its ID
@@ -359,6 +420,31 @@ def change_price(args, id_question: int) -> flask_typing.ResponseReturnValue:
 
     question.price = price
     db.session.commit()
+
+    # Create a notification for the updated question
+    notification = Notification(
+        type=NotificationTypeEnum.QUESTION_UPDATED,
+        message=f"Question price updated to ${price:.2f}!",
+        user_id=question.user.id,
+        question_id=question.id,
+    )
+    db.session.add(notification)
+    db.session.commit()
+
+    # Send notifications to those who made an offer.
+    offers = (
+        db.session.query(Offer).filter_by(question_id=question.id, active=True).all()
+    )
+
+    for offer in offers:
+        notification = Notification(
+            type=NotificationTypeEnum.PRICE_CHANGE,
+            message=f"{question.user.username} updated the question price to ${price:.2f}! Check your offer.",
+            user_id=offer.user.id,
+            question_id=question.id,
+        )
+        db.session.add(notification)
+        db.session.commit()
 
     # Return the updated question as a JSON response with status 200 (OK)
     return jsonify(question.to_dict(simplified=True)), HTTPStatus.OK

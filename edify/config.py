@@ -7,7 +7,7 @@ from edify.utils.constants import EdifyEnvironments
 
 
 class Config:
-    MAINTENANCE_MODE = os.environ["MAINTENANCE_MODE"] == 1
+    MAINTENANCE_MODE = int(os.environ["MAINTENANCE_MODE"]) == 1
 
     SECRET_KEY = os.environ["SECRET_KEY"]
     JWT_SECRET_KEY = SECRET_KEY
@@ -47,3 +47,11 @@ class Config:
     # Cookies should only be sent with requests from the same site, providing maximum
     # CSRF protection.
     JWT_COOKIE_SAMESITE = "Strict"
+
+    # Mail config
+    MAIL_SERVER = os.environ["MAIL_SERVER"]
+    MAIL_PORT = os.environ["MAIL_PORT"]
+    MAIL_USERNAME = os.environ["MAIL_USERNAME"]
+    MAIL_PASSWORD = os.environ["MAIL_PASSWORD"]
+    MAIL_USE_TLS = int(os.environ["MAIL_USE_TLS"]) == 1
+    MAIL_USE_SSL = int(os.environ["MAIL_USE_SSL"]) == 1

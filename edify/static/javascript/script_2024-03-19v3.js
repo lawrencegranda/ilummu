@@ -48,28 +48,6 @@ $(document).ready(function () {
     else $("#notification-wrapper").show();
   });
 
-  // $(".btn-reply").on("click", function () {
-  //   let element = $(this).closest('.comment-container').children('.comment-area').first();
-
-  //   if (element.is(':visible'))
-  //     element.hide();
-  //   else {
-  //     element.show();
-  //   }
-  // });
-
-  // $(".btn-submit-comment, .btn-cancel-comment").on("click", function () {
-  //   let element = $(this).closest('.comment-container').children('.comment-area').first();
-
-  //   if (element.is(':visible'))
-  //     setTimeout(function () {
-  //       element.hide();
-  //     }, 200);
-  //   else {
-  //     element.show();
-  //   }
-  // });
-
   $("#add-button, #button-nav-question").on("click", function () {
     let element = $(".create-question-wrapper-dimensions");
 
@@ -83,13 +61,23 @@ $(document).ready(function () {
     element.hide();
   });
 
-  $("#btn-bid-raise").on("click", function () {
-    // $('#bid-value').val('$' + (parseFloat($('#bid-value').val()) + 2).toFixed(2));
-  });
-
   $("#offer-fare").on("input", function () {
     $("#button-make-offer").text(
       "Offer $" + parseFloat($(this).val()).toFixed(2)
     );
   });
 });
+
+function getErrorResponse(error) {
+  try {
+    if ("msg" in error["responseJSON"]) {
+      return error["responseJSON"]["msg"];
+    }
+
+    if ("errors" in error["responseJSON"]) {
+      return error["responseJSON"]["errors"];
+    }
+  } catch (e) {}
+
+  return undefined;
+}
