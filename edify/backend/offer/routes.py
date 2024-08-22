@@ -6,6 +6,7 @@ from typing import Optional, Any, Tuple
 from flask import Blueprint, Flask, jsonify, redirect, url_for
 from flask import typing as flask_typing
 from flask_jwt_extended import jwt_required
+from sqlalchemy.exc import IntegrityError
 from webargs import fields, validate
 from webargs.flaskparser import use_args
 
