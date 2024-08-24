@@ -46,11 +46,7 @@ from edify.utils.utils import (
     generate_funny_username,
     format_phone,
 )
-from edify.backend.user.utils import (
-    get_current_user,
-    generate_access_token,
-    generate_refresh_token,
-)
+from edify.backend.user.utils import get_current_user, generate_refresh_token
 
 
 # -----------------------------------------------------------------------------
@@ -91,7 +87,7 @@ def refresh() -> flask_typing.ResponseReturnValue:
     """
     user = get_current_user()
     print(f"Refreshing token... User {user.id}")
-    token = generate_access_token(user)
+    token = user.get_access_token()
     db.session.commit()
     response = jsonify({"access_token": token})
     set_access_cookies(response, token)
@@ -149,7 +145,7 @@ def login(args) -> flask_typing.ResponseReturnValue:
     #     return error_response("Phone not verified", ErrorType.USER_NOT_VERIFIED)
 
     # Generate and commit the access token for the user
-    access_token = generate_access_token(user)
+    access_token = user.get_access_token()
     db.session.commit()
 
     if user.auth_level in [AuthLevelEnum.SCHOOL_ADMIN, AuthLevelEnum.SUPER_ADMIN]:
@@ -291,7 +287,7 @@ def signup(args) -> flask_typing.ResponseReturnValue:
     db.session.commit()
 
     # Generate the access token for the user
-    access_token = generate_access_token(user)
+    access_token = user.get_access_token()
 
     # Create a notification for the new user
     notif = Notification(
@@ -317,11 +313,41 @@ def signup(args) -> flask_typing.ResponseReturnValue:
     return (response, HTTPStatus.CREATED)
 
 
+# Endpoint: /backend/user/reset-email
+@user.route("/reset-email", methods=["POST"])
+@use_args(
+    {
+        "email": fields.Email(required=True),
+    }
+)
+def reset_email(args) -> flask_typing.ResponseReturnValue:
+    """
+    Endpoint to reset send an email to reset password.
+
+    Args:
+        args (dict): The login arguments containing email.
+
+    Returns:
+        Response: Send email.
+    """
+    # Get the user corresponding to the email that is logging in
+    user = db.session.query(User).filter_by(email=args["email"], is_mock=False).first()
+
+    # Check if user exists and if the given password is correct
+    if not user:
+        return error_response(
+            "Email not found. Register for an account.", ErrorType.INCORRECT_CREDENTIALS
+        )
+
+    return error_response("Not implemented.", ErrorType.NOT_IMPLEMENTED)
+
+
 # Endpoint: /backend/user/reset-password
 @user.route("/reset-password", methods=["POST"])
 @use_args(
     {
-        "email": fields.Email(required=True),
+        "password": fields.Str(required=True),
+        "token": fields.Str(required=True),
     }
 )
 def reset_password(args) -> flask_typing.ResponseReturnValue:
@@ -332,7 +358,7 @@ def reset_password(args) -> flask_typing.ResponseReturnValue:
         args (dict): The login arguments containing email.
 
     Returns:
-        Response: Send email.
+        Response: Tuple
     """
     # Get the user corresponding to the email that is logging in
     user = db.session.query(User).filter_by(email=args["email"], is_mock=False).first()

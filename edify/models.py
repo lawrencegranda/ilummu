@@ -4,12 +4,14 @@ from collections import OrderedDict, defaultdict
 from datetime import datetime, timedelta
 from functools import wraps
 from http import HTTPStatus
+import json
 from typing import Optional, Dict, Any, List
 
 # Third-Party Framework imports
 from flask import current_app, jsonify, url_for
 from flask_jwt_extended import create_access_token, decode_token, create_refresh_token
 from flask_login import UserMixin
+from itsdangerous.url_safe import URLSafeTimedSerializer
 from sqlalchemy import Index, UniqueConstraint, event
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -142,11 +144,13 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
         db.DateTime, nullable=False, default=datetime.utcnow
     )
 
-    # API authentication token, token is given to user upon login to authenticate future requests
-    # This is part of the API token-based authentication schema
-    token = db.Column(db.String(300), nullable=True)
+    # Token given when reset password
+    reset_token = db.Column(db.String(300), nullable=True)
 
-    token_last_refresh = db.Column(db.DateTime, nullable=True)
+    # Last time the reseted their password
+    password_last_refresh = db.Column(
+        db.DateTime, nullable=True, default=datetime.utcnow
+    )
 
     # Field that indicates the level of permissions.
     auth_level = db.Column(
@@ -186,19 +190,45 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
     def hash_password(password: str) -> str:
         return bcrypt.generate_password_hash(password).decode("utf-8")
 
-    def get_reset_token(self) -> Any:
-        return create_access_token(identity=self.id)
+    def get_access_token(self) -> Any:
+        """
+        Generate an access token for the user and update the user's token information.
+
+        Args:
+            user (User): The user for whom the access token is generated.
+
+        Returns:
+            str: The generated access token.
+        """
+        access_token = create_access_token(identity=self.id)
+
+        return access_token
 
     def get_refresh_token(self) -> Any:
         return create_refresh_token(identity=self.id)
 
+    def generate_reset_xwtoken(self):
+        serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+
+        return serializer.dumps((self.id, self.password_last_refresh))
+
     @staticmethod
-    def verify_reset_token(token):
+    def validate_reset_token(token: str):
+        serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
         try:
-            user_id = decode_token(token)["sub"]
-        except Exception:
+            user_id, password_last_refresh = serializer.loads(
+                token,
+                max_age=current_app.config["RESET_PASS_TOKEN_MAX_AGE"],
+            )
+        except (BadSignature, SignatureExpired):
             return None
-        return db.session.get(User, user_id)
+
+        user = db.session.get(User, user_id)
+
+        if user.password_last_refresh != password_last_refresh:
+            return None
+
+        return user
 
     def __repr__(self):
         return f"({self.id}, {self.username}, {self.email}\n"

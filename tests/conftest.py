@@ -8,7 +8,6 @@ import string
 
 # Third-Party Framework imports
 from faker import Faker
-from flask_jwt_extended import create_access_token
 import pytest
 
 # Local Application imports
