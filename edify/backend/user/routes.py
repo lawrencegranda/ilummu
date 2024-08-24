@@ -315,3 +315,32 @@ def signup(args) -> flask_typing.ResponseReturnValue:
         )
 
     return (response, HTTPStatus.CREATED)
+
+
+# Endpoint: /backend/user/reset-password
+@user.route("/reset-password", methods=["POST"])
+@use_args(
+    {
+        "email": fields.Email(required=True),
+    }
+)
+def reset_password(args) -> flask_typing.ResponseReturnValue:
+    """
+    Endpoint to reset a password.
+
+    Args:
+        args (dict): The login arguments containing email.
+
+    Returns:
+        Response: Send email.
+    """
+    # Get the user corresponding to the email that is logging in
+    user = db.session.query(User).filter_by(email=args["email"], is_mock=False).first()
+
+    # Check if user exists and if the given password is correct
+    if not user:
+        return error_response(
+            "Email not found. Register for an account.", ErrorType.INCORRECT_CREDENTIALS
+        )
+
+    return error_response("Not implemented.", ErrorType.NOT_IMPLEMENTED)
