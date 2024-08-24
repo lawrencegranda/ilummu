@@ -207,7 +207,7 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
     def get_refresh_token(self) -> Any:
         return create_refresh_token(identity=self.id)
 
-    def generate_reset_xwtoken(self):
+    def generate_reset_token(self):
         serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
 
         return serializer.dumps((self.id, self.password_last_refresh))
