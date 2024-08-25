@@ -4,7 +4,7 @@ from http import HTTPStatus
 from typing import Optional, Any, Tuple
 
 # Third-Party Framework imports
-from flask import Blueprint, url_for, jsonify, current_app, request
+from flask import Blueprint, url_for, jsonify, current_app, request, render_template
 from flask import typing as flask_typing
 from flask_jwt_extended import (
     jwt_required,
@@ -347,8 +347,11 @@ def reset_email(args) -> flask_typing.ResponseReturnValue:
     # Format url with token
     url = url_for("frontend.reset_password", token=token, _external=True)
 
+    # Render html
+    html = render_template("/reset_email.jinja", name=user.username, action_url=url)
+
     # Send email
-    send(subject="Edify: Password reset request", html=url, recipients=[user.email])
+    send(subject="Edify: Password reset request", html=html, recipients=[user.email])
 
     return jsonify({}), HTTPStatus.OK
 
