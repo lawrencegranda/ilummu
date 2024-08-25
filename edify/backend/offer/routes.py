@@ -305,3 +305,162 @@ def get_offers_by_user(user_id: int) -> flask_typing.ResponseReturnValue:
 
     offers = Offer.query.filter_by(user_id=user_id).all()
     return jsonify(Offer.to_dict_all(offers)), HTTPStatus.OK
+
+
+# Endpoint: /backend/offer/accept/<int:offer_id>
+@offer.route("/accept/<int:offer_id>", methods=["POST"])
+@jwt_required()
+def accept_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
+    """
+    Accept an offer for a question.
+    Args:
+        offer_id (int): The ID of the offer to accept.
+    Returns:
+        flask_typing.ResponseReturnValue: The response containing the accepted offer.
+    """
+
+    user = get_current_user()
+
+    # Check if user exists
+    if not user:
+        return error_response("User does not exist", ErrorType.USER_NOT_FOUND)
+
+    offer = db.session.query(Offer).filter_by(id=offer_id).first()
+
+    # If no offer is found, return an error response
+    if not offer:
+        return error_response("Offer not found", ErrorType.NOT_FOUND)
+
+    question = db.session.query(Question).filter_by(id=offer.question_id).first()
+
+    # Check if question exists
+    if not question:
+        return error_response("Question does not exist", ErrorType.NOT_FOUND)
+    
+    # Check if user is author of the question
+    if not question.user_id == user.id:
+        return error_response("User is not author of the question", ErrorType.UNAUTHORIZED)
+
+    # Check if question is visible and unsolved
+    if question.solved:
+        return error_response("Question is already solved", ErrorType.BAD_REQUEST)
+    if not question.visible:
+        return error_response("Question is not visible", ErrorType.BAD_REQUEST)
+
+    # Check if offer is active
+    if not offer.active:
+        return error_response("Offer is not active", ErrorType.BAD_REQUEST)
+
+    # Check if offer is not already accepted
+    if offer.status == OfferStatusEnum.ACCEPTED:
+        return error_response("Offer is already accepted", ErrorType.BAD_REQUEST)
+
+    # Update offer status to accepted
+    offer.status = OfferStatusEnum.ACCEPTED
+    
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return error_response("Couldn't accept offer", ErrorType.BAD_REQUEST)
+    
+    # Create notification for the updated offer (user)
+    notification_user = Notification(
+        type=NotificationTypeEnum.OFFER_ACCEPTED,
+        message=f"Your offer to {offer.question.user.username} was accepted!",
+        user_id=offer.user.id,
+        question_id=offer.question.id,
+    )
+    db.session.add(notification_user)
+    db.session.commit()
+
+    # Create notification for the updated offer (question author)
+    notification_author = Notification(
+        type=NotificationTypeEnum.OFFER_ACCEPTED,
+        message=f"You accepted {offer.user.username}'s offer!",
+        user_id=offer.question.user_id,
+        question_id=offer.question.id,
+    )
+    db.session.add(notification_author)
+    db.session.commit()
+    
+    return jsonify(offer.to_dict()), HTTPStatus.OK
+
+# Endpoint: /backend/offer/decline/<int:offer_id>
+@offer.route("/decline/<int:offer_id>", methods=["POST"])
+@jwt_required()
+def decline_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
+    """
+    Decline an offer for a question.
+    Args:
+        offer_id (int): The ID of the offer to decline.
+    Returns:
+        flask_typing.ResponseReturnValue: The response containing the declined offer.
+    """
+
+    user = get_current_user()
+
+    # Check if user exists
+    if not user:
+        return error_response("User does not exist", ErrorType.USER_NOT_FOUND)
+
+    offer = db.session.query(Offer).filter_by(id=offer_id).first()
+
+    # If no offer is found, return an error response
+    if not offer:
+        return error_response("Offer not found", ErrorType.NOT_FOUND)
+
+    question = db.session.query(Question).filter_by(id=offer.question_id).first()
+
+    # Check if question exists
+    if not question:
+        return error_response("Question does not exist", ErrorType.NOT_FOUND)
+    
+    # Check if user is author of the question
+    if not question.user_id == user.id:
+        return error_response("User is not author of the question", ErrorType.UNAUTHORIZED)
+
+    # Check if question is visible and unsolved
+    if question.solved:
+        return error_response("Question is already solved", ErrorType.BAD_REQUEST)
+    if not question.visible:
+        return error_response("Question is not visible", ErrorType.BAD_REQUEST)
+
+    # Check if offer is active
+    if not offer.active:
+        return error_response("Offer is not active", ErrorType.BAD_REQUEST)
+
+    # Check if offer is not already declined
+    if offer.status == OfferStatusEnum.DECLINED:
+        return error_response("Offer is already declined", ErrorType.BAD_REQUEST)
+
+    # Update offer status to declined
+    offer.status = OfferStatusEnum.DECLINED
+    
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return error_response("Couldn't decline offer", ErrorType.BAD_REQUEST)
+    
+    # Create notification for the updated offer (user)
+    notification_user = Notification(
+        type=NotificationTypeEnum.OFFER_DECLINED,
+        message=f"Your offer to {offer.question.user.username} was declined!",
+        user_id=offer.user.id,
+        question_id=offer.question.id,
+    )
+    db.session.add(notification_user)
+    db.session.commit()
+
+    # Create notification for the updated offer (question author)
+    notification_author = Notification(
+        type=NotificationTypeEnum.OFFER_DECLINED,
+        message=f"You declined {offer.user.username}'s offer!",
+        user_id=offer.question.user_id,
+        question_id=offer.question.id,
+    )
+    db.session.add(notification_author)
+    db.session.commit()
+    
+    return jsonify(offer.to_dict()), HTTPStatus.OK
