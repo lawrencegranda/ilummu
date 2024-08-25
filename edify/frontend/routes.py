@@ -146,7 +146,7 @@ def reset_password() -> flask_typing.ResponseReturnValue:
     next_url = request.args.get("next_url", url_for("frontend.index"))
     http_method = request.args.get("http_method", "GET")
 
-    token = request.args.get("token", None)
+    token = request.args.get("token", "")
 
     if not token:
         forgot_password()
