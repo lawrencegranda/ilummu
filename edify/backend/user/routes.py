@@ -337,7 +337,7 @@ def reset_email(args) -> flask_typing.ResponseReturnValue:
     if not user:
         return jsonify({}), HTTPStatus.OK
 
-    return error_response("Not implemented.", ErrorType.NOT_IMPLEMENTED)
+    return jsonify({}), HTTPStatus.OK
 
 
 # Endpoint: /backend/user/reset-password
