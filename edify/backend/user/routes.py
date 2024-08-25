@@ -333,11 +333,9 @@ def reset_email(args) -> flask_typing.ResponseReturnValue:
     # Get the user corresponding to the email that is logging in
     user = db.session.query(User).filter_by(email=args["email"], is_mock=False).first()
 
-    # Check if user exists and if the given password is correct
+    # If user not found, do not send email.
     if not user:
-        return error_response(
-            "Email not found. Register for an account.", ErrorType.INCORRECT_CREDENTIALS
-        )
+        return jsonify({}), HTTPStatus.OK
 
     return error_response("Not implemented.", ErrorType.NOT_IMPLEMENTED)
 
