@@ -12,6 +12,7 @@ from flask import current_app, jsonify, url_for
 from flask_jwt_extended import create_access_token, decode_token, create_refresh_token
 from flask_login import UserMixin
 from itsdangerous.url_safe import URLSafeTimedSerializer
+from itsdangerous.exc import BadSignature, SignatureExpired
 from sqlalchemy import Index, UniqueConstraint, event
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -144,14 +145,6 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
         db.DateTime, nullable=False, default=datetime.utcnow
     )
 
-    # Token given when reset password
-    reset_token = db.Column(db.String(300), nullable=True)
-
-    # Last time the reseted their password
-    password_last_refresh = db.Column(
-        db.DateTime, nullable=True, default=datetime.utcnow
-    )
-
     # Field that indicates the level of permissions.
     auth_level = db.Column(
         db.String(30),
@@ -210,13 +203,13 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
     def generate_reset_token(self):
         serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
 
-        return serializer.dumps((self.id, self.password_last_refresh))
+        return serializer.dumps((self.id, self.password_last_reset.timestamp()))
 
     @staticmethod
     def validate_reset_token(token: str):
         serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
         try:
-            user_id, password_last_refresh = serializer.loads(
+            user_id, password_last_reset = serializer.loads(
                 token,
                 max_age=current_app.config["RESET_PASS_TOKEN_MAX_AGE"],
             )
@@ -225,7 +218,7 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
 
         user = db.session.get(User, user_id)
 
-        if user.password_last_refresh != password_last_refresh:
+        if user.password_last_reset.timestamp() != password_last_reset:
             return None
 
         return user
