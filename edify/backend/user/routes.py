@@ -47,7 +47,7 @@ from edify.utils.utils import (
     format_phone,
 )
 from edify.backend.user.utils import get_current_user, generate_refresh_token
-
+from edify.backend.mail.utils import send
 
 # -----------------------------------------------------------------------------
 # Route Blueprint
@@ -331,11 +331,24 @@ def reset_email(args) -> flask_typing.ResponseReturnValue:
         Response: Send email.
     """
     # Get the user corresponding to the email that is logging in
-    user = db.session.query(User).filter_by(email=args["email"], is_mock=False).first()
+    user = (
+        db.session.query(User)
+        .filter_by(email=args["email"].lower(), is_mock=False)
+        .first()
+    )
 
     # If user not found, do not send email.
     if not user:
         return jsonify({}), HTTPStatus.OK
+
+    # Generate token.
+    token = user.generate_reset_token()
+
+    # Format url with token
+    url = url_for("frontend.reset_password", token=token, _external=True)
+
+    # Send email
+    send(subject="Edify: Password reset request", html=url, recipients=[user.email])
 
     return jsonify({}), HTTPStatus.OK
 
@@ -358,13 +371,43 @@ def reset_password(args) -> flask_typing.ResponseReturnValue:
     Returns:
         Response: Tuple
     """
-    # Get the user corresponding to the email that is logging in
-    user = db.session.query(User).filter_by(email=args["email"], is_mock=False).first()
+    token = args["token"]
+    user = User.validate_reset_token(token)
 
     # Check if user exists and if the given password is correct
     if not user:
         return error_response(
-            "Email not found. Register for an account.", ErrorType.INCORRECT_CREDENTIALS
+            "Invalid or expired reset link. Please try again.", ErrorType.BAD_REQUEST
         )
 
-    return error_response("Not implemented.", ErrorType.NOT_IMPLEMENTED)
+    # Hash password before storing it in the db for privacy purposes
+    user.password = User.hash_password(args["password"])
+    user.password_last_reset = datetime.utcnow()
+    db.session.commit()
+
+    # Create a notification for the password reset
+    notif = Notification(
+        type=NotificationTypeEnum.PASSWORD_RESET,
+        message=f'Your password was reset on {datetime.now().strftime("%m/%d/%Y %H:%M")}.',
+        user_id=user.id,
+    )
+    db.session.add(notif)
+    db.session.commit()
+
+    # Generate the access token for the user
+    access_token = user.get_access_token()
+
+    # Return access token and user
+    response = jsonify(
+        {"access_token": access_token, "user": user.to_dict(simplified=True)}
+    )
+
+    # Set up cookies
+    set_access_cookies(response, access_token)
+    set_refresh_cookies(
+        response,
+        generate_refresh_token(user),
+        max_age=current_app.config["JWT_REFRESH_TOKEN_EXPIRES"],
+    )
+
+    return response, HTTPStatus.OK
