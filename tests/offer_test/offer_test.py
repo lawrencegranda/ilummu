@@ -12,6 +12,7 @@ import pytest
 from edify import db
 from edify.models import User, Offer, Question, Method, Course
 from edify.utils.constants import OfferStatusEnum
+from tests.utils import get_jwt_header
 
 # Initialize Faker for generating fake data
 fake = Faker()
@@ -46,9 +47,7 @@ class TestCreateOffer:
 
         response = response.get_json()
 
-        assert "offer" in response
-
-        offer = response.get("offer")
+        offer = response
 
         assert "id" in offer, "Offer has no id"
 
@@ -228,20 +227,31 @@ class TestUpdateOffer:
         offer = db.session.query(Offer).first()
 
         assert offer, "User does not have any offer in Database"
-
+        user = offer.user
+        
+        amount = offer.amount
+        status = OfferStatusEnum.ACCEPTED
+        active = True
+        
         response = client_with_offer.put(
             url_for("backend.offer.update_offer", id_offer=offer.id),
-            json={"status": OfferStatusEnum.ACCEPTED.value},
-            headers=jwt,
+            json={"status": status, 
+                  "amount": amount, 
+                  "active": active},
+            headers=get_jwt_header(user),
         )
-
+        
         assert response.status_code == HTTPStatus.OK, response.json
 
         offer = db.session.query(Offer).filter(Offer.id == offer.id).first()
 
-        assert offer.status == OfferStatusEnum.ACCEPTED, "Offer status not updated"
+        assert offer.status == status, "Offer status not updated"
+        
+        assert offer.amount == amount, "Offer amount not updated"
+        
+        assert offer.active == active, "Offer active not updated"
 
-    def test_update_offer_invalid_status(self, client_with_offer, user_jwt):
+    def test_update_offer_low_price(self, client_with_offer, user_jwt):
         """
         Test updating an offer with an invalid status.
         """
@@ -250,37 +260,55 @@ class TestUpdateOffer:
         offer = db.session.query(Offer).first()
 
         assert offer, "User does not have any offer in Database"
-
+        user = offer.user
+        
+        question = offer.question
+        
+        amount = offer.amount
+        status = OfferStatusEnum.ACCEPTED
+        active = True
+        
         response = client_with_offer.put(
             url_for("backend.offer.update_offer", id_offer=offer.id),
-            json={"status": "invalid"},
-            headers=jwt,
+            json={"status": status, 
+                  "amount": question.price - 1, 
+                  "active": active},
+            headers=get_jwt_header(user),
         )
 
         assert response.status_code == HTTPStatus.BAD_REQUEST, response.json
 
         # Assert right error message is returned.
-        assert (
-            "msg" in response.get_json()
-            and "Invalid status" in response.get_json()["msg"]
-        ), response.get_json()
+        assert response.get_json()["msg"] == "Invalid offer amount", response.get_json()
 
-    def test_update_offer_invalid_id_offer(self, client_with_offer, user_jwt):
+    def test_update_offer_unauthorized_user(self, client_with_offer, user_jwt):
         """
         Test updating an offer with an invalid offer ID.
         """
         user, jwt = user_jwt
 
+        offer = (
+            db.session.query(Offer)
+            .filter(Offer.user_id != user.id)
+            .first()
+        )
+
+        assert offer, "User does not have any offer in Database"
+        
+        question = offer.question
+        
+        amount = offer.amount
+        status = OfferStatusEnum.ACCEPTED
+        active = True
+        
         response = client_with_offer.put(
-            url_for("backend.offer.update_offer", id_offer=0),
-            json={"status": OfferStatusEnum.ACCEPTED.value},
+            url_for("backend.offer.update_offer", id_offer=offer.id),
+            json={"status": status, 
+                  "amount": question.price,
+                  "active": active},
             headers=jwt,
         )
 
-        assert response.status_code == HTTPStatus.NOT_FOUND, response.json
-
-        # Assert right error message is returned.
-        assert (
-            "msg" in response.get_json()
-            and "Offer not found" in response.get_json()["msg"]
-        ), response.get_json()
+        assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json
+        
+        assert response.get_json()["msg"] == "User is not owner of the offer or the author of the question", response.json

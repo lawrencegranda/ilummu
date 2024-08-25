@@ -187,6 +187,8 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
 
     # Update offer fields from args
     if "amount" in args:
+        if not (offer.question.price <= args["amount"] <= 2 * offer.question.price):
+            return error_response("Invalid offer amount", ErrorType.BAD_REQUEST)
         offer.amount = args["amount"]
 
     if "status" in args:
