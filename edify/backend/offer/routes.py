@@ -358,6 +358,19 @@ def accept_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     # Update offer status to accepted
     offer.status = OfferStatusEnum.ACCEPTED
     
+    # Get other offers for same question, decline them and make them inactive
+    other_offers_for_question = (
+        db.session.query(Offer)
+        .filter_by(Offer.question_id == question.id)
+        .filter_by(id != offer_id)
+        .filter_by(Offer.active == True)
+        .all()
+    )
+    
+    for other_offer in other_offers_for_question:
+        other_offer.status = OfferStatusEnum.DECLINED
+        other_offer.active = False
+    
     try:
         db.session.commit()
     except IntegrityError:
@@ -436,6 +449,9 @@ def decline_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
 
     # Update offer status to declined
     offer.status = OfferStatusEnum.DECLINED
+    
+    # Make offer inactive
+    offer.active = False
     
     try:
         db.session.commit()
