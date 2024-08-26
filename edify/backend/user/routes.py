@@ -353,6 +353,15 @@ def reset_email(args) -> flask_typing.ResponseReturnValue:
     # Send email
     send(subject="Edify: Password reset request", html=html, recipients=[user.email])
 
+    # Create a notification for the forgot password
+    notif = Notification(
+        type=NotificationTypeEnum.PASSWORD_RESET,
+        message=f'You initated the password reset process on {datetime.now().strftime("%m/%d/%Y %H:%M")}.',
+        user_id=user.id,
+    )
+    db.session.add(notif)
+    db.session.commit()
+
     return jsonify({}), HTTPStatus.OK
 
 
