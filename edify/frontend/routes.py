@@ -148,7 +148,7 @@ def reset_password() -> flask_typing.ResponseReturnValue:
         forgot_password()
 
     success = (
-        internal_request(url_for("backend.user.check_token")).status_code
+        internal_request(url_for("backend.user.check_token", token=token)).status_code
         == HTTPStatus.OK
     )
 

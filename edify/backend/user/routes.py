@@ -378,7 +378,8 @@ def reset_email(args) -> flask_typing.ResponseReturnValue:
 @use_args(
     {
         "token": fields.Str(required=True),
-    }
+    },
+    location="query",
 )
 def check_token(args) -> flask_typing.ResponseReturnValue:
     """
