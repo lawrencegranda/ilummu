@@ -55,3 +55,6 @@ class Config:
     MAIL_PASSWORD = os.environ["MAIL_PASSWORD"]
     MAIL_USE_TLS = int(os.environ["MAIL_USE_TLS"]) == 1
     MAIL_USE_SSL = int(os.environ["MAIL_USE_SSL"]) == 1
+
+    # Reset password length
+    RESET_PASS_TOKEN_MAX_AGE: int = int(timedelta(minutes=10).total_seconds())
