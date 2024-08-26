@@ -147,6 +147,14 @@ def reset_password() -> flask_typing.ResponseReturnValue:
     if not token:
         forgot_password()
 
+    success = (
+        internal_request(url_for("backend.user.check_token")).status_code
+        == HTTPStatus.OK
+    )
+
+    if not success:
+        return render_template("/invalid_reset.jinja")
+
     return render_template("/reset_password.jinja", token=token)
 
 

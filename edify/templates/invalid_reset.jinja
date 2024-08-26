@@ -1,0 +1,67 @@
+{% extends "bases/layout.jinja" %}
+
+{% block title %}
+  Invalid reset link
+{% endblock title %}
+
+{% block javascript %}
+  {{ super() }}
+{% endblock javascript %}
+
+{% block headers %}
+  <style>
+      .footer {
+          display: none;
+      }
+
+      body {
+          background-color: var(--blue--base);
+      }
+  </style>
+{% endblock headers %}
+
+{% block content %}
+  <div class="signup-wrapper">
+    <div class="signup-container">
+      <form class="signup-body" id="reset-form" method="post">
+        <div class="signup-top">
+          <div class="logo-wrapper">
+            <div class="signup-logo">
+              <a class="brand" href='{{ url_for("frontend.home") }}'>
+                <img class="image brand-image"
+                     src="{{ url_for('static', filename='logo.svg') }}"
+                     alt=""
+                     width="auto"
+                     height="auto" />
+              </a>
+              <div class="brand-name" onclick="location.href='/home';">
+                Edify
+              </div>
+            </div>
+            <p class="made-students">
+              Made by <strong style="color: var(--red)">Cornell</strong> Students
+            </p>
+          </div>
+          <p class="signup-title">
+            Invalid reset link
+          </p>
+        </div>
+        <div class="signup-middle">
+          <p id="error-msg">
+            Invalid link. Email might have expired.
+          </p>
+        </div>
+        <div class="signup-bottom">
+          <div class="signup-login">
+            Is the link not working? <a href='{{ url_for("frontend.forgot_password") }}'>Try Again</a>
+            <br />
+            Remembered your password? <a href='{{ url_for("frontend.login", next_url=next_url, http_method=http_method) }}'>Log In</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block footer %}
+{% endblock footer %}
