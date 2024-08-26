@@ -5,7 +5,7 @@ import json
 import random
 import re
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any, Optional, Tuple
 
 # Third-Party Framework Imports
 import flask
@@ -390,3 +390,37 @@ def trim_text(string: str, length: int) -> str:
 
 # Encode datetime as int
 date_to_int = lambda d: int(d.strftime("%Y%m%d%H%M%S"))
+
+
+# Validate password
+def validate_password(password: str) -> Tuple[bool, str]:
+    """
+    Validate the password based on the following criteria:
+    - At least 8 characters long
+    - At least one uppercase letter
+    - At least one lowercase letter
+    - At least one digit
+    - At least one special character (e.g., !@#$%^&*)
+
+    Args:
+        password (str): The password to validate.
+
+    Returns:
+        Tuple[bool, str]: True if the password is valid, False otherwise, along with a message indicating the result of the validation.
+    """
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters long."
+
+    if not re.search(r"[A-Z]", password):
+        return False, "Password must contain at least one uppercase letter."
+
+    if not re.search(r"[a-z]", password):
+        return False, "Password must contain at least one lowercase letter."
+
+    if not re.search(r"[0-9]", password):
+        return False, "Password must contain at least one digit."
+
+    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
+        return False, "Password must contain at least one special character."
+
+    return True, "Password is valid."
