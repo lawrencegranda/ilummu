@@ -373,6 +373,35 @@ def reset_email(args) -> flask_typing.ResponseReturnValue:
     return jsonify({}), HTTPStatus.OK
 
 
+# Endpoint: /backend/user/check-reset-token
+@user.route("/check-reset-token", methods=["GET"])
+@use_args(
+    {
+        "token": fields.Str(required=True),
+    }
+)
+def check_token(args) -> flask_typing.ResponseReturnValue:
+    """
+    Endpoint to check a reset token.
+
+    Args:
+        args (dict): The token.
+
+    Returns:
+        Response: Tuple. Success or failure.
+    """
+    token = args["token"]
+    user = User.validate_reset_token(token)
+
+    # Check if user exists
+    if not user:
+        return error_response(
+            "Invalid or expired reset link. Please try again.", ErrorType.BAD_REQUEST
+        )
+
+    return jsonify({}), HTTPStatus.OK
+
+
 # Endpoint: /backend/user/reset-password
 @user.route("/reset-password", methods=["POST"])
 @use_args(
@@ -386,15 +415,15 @@ def reset_password(args) -> flask_typing.ResponseReturnValue:
     Endpoint to reset a password.
 
     Args:
-        args (dict): The login arguments containing email.
+        args (dict): The new password and the token.
 
     Returns:
-        Response: Tuple
+        Response: Tuple. Access token and user, and code.
     """
     token = args["token"]
     user = User.validate_reset_token(token)
 
-    # Check if user exists and if the given password is correct
+    # Check if user exists
     if not user:
         return error_response(
             "Invalid or expired reset link. Please try again.", ErrorType.BAD_REQUEST
