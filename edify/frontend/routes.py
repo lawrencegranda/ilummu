@@ -142,18 +142,20 @@ def reset_password() -> flask_typing.ResponseReturnValue:
     Returns:
         str: Rendered route.
     """
-
-    next_url = request.args.get("next_url", url_for("frontend.index"))
-    http_method = request.args.get("http_method", "GET")
-
     token = request.args.get("token", "")
 
     if not token:
         forgot_password()
 
-    return render_template(
-        "/reset_password.jinja", token=token, next_url=next_url, http_method=http_method
+    success = (
+        internal_request(url_for("backend.user.check_token")).status_code
+        == HTTPStatus.OK
     )
+
+    if not success:
+        return render_template("/invalid_reset.jinja")
+
+    return render_template("/reset_password.jinja", token=token)
 
 
 # Endpoint: /
