@@ -45,6 +45,7 @@ from edify.utils.utils import (
     validate_phone,
     generate_funny_username,
     format_phone,
+    validate_password,
 )
 from edify.backend.user.utils import get_current_user, generate_refresh_token
 from edify.backend.mail.utils import send
@@ -249,8 +250,15 @@ def signup(args) -> flask_typing.ResponseReturnValue:
     if not major:
         return error_response("Invalid Major.", ErrorType.BAD_REQUEST)
 
+    # Check password
+    password = args["password"]
+    valid, msg = validate_password(password)
+
+    if not valid:
+        return error_response(msg, ErrorType.BAD_REQUEST)
+
     # Hash password before storing it in the db for privacy purposes
-    hashed_password = User.hash_password(args["password"])
+    hashed_password = User.hash_password(password)
 
     # Generate a unique and funny username
     n = 3
@@ -392,8 +400,22 @@ def reset_password(args) -> flask_typing.ResponseReturnValue:
             "Invalid or expired reset link. Please try again.", ErrorType.BAD_REQUEST
         )
 
+    password = args["password"]
+
+    # Make sure it is a new password
+    if user.check_password(password):
+        return error_response(
+            "Password must be different from your last password.", ErrorType.BAD_REQUEST
+        )
+
+    # Check password
+    valid, msg = validate_password(password)
+
+    if not valid:
+        return error_response(msg, ErrorType.BAD_REQUEST)
+
     # Hash password before storing it in the db for privacy purposes
-    user.password = User.hash_password(args["password"])
+    user.password = User.hash_password(password)
     user.password_last_reset = datetime.utcnow()
     db.session.commit()
 
