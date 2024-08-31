@@ -18,9 +18,15 @@ class Config:
     ENV = os.environ["ENV"]
 
     if ENV == EdifyEnvironments.PRODUCTION.value:
-        raise Exception("Production environment not in service.")
+        SQLALCHEMY_DATABASE_URI = os.environ["DB_URL"]
+
+        # Web settings
+        HOST = os.environ["HOST"]
+        PORT = os.environ["PORT"]
+
     elif ENV == EdifyEnvironments.LOCAL.value:
         SQLALCHEMY_DATABASE_URI = os.environ["DB_URL"]
+
     elif ENV == EdifyEnvironments.TEST.value:
         TESTING = True
         SQLALCHEMY_DATABASE_URI = "sqlite:///site.db"
