@@ -100,7 +100,7 @@ class OfferStatusEnum(EnumBase):
     EDITED = "EDITED"
     REMOVED = "REMOVED"
 
-    inactive = [REMOVED]
+    inactive = [REMOVED, DECLINED]
 
 
 class NotificationTypeEnum(EnumBase):
