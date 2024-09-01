@@ -355,6 +355,10 @@ def accept_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     if offer.status == OfferStatusEnum.ACCEPTED:
         return error_response("Offer is already accepted", ErrorType.BAD_REQUEST)
 
+    # Check if offer has already been declined
+    if offer.status == OfferStatusEnum.DECLINED:
+        return error_response("Offer is already declined", ErrorType.BAD_REQUEST)
+    
     # Update offer status to accepted
     offer.status = OfferStatusEnum.ACCEPTED
     
@@ -366,9 +370,9 @@ def accept_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
         .filter(Offer.active == True)
         .all()
     )
-    print(other_offers_for_question)
+    
     for other_offer in other_offers_for_question:
-        other_offer.status = OfferStatusEnum.DECLINED
+        other_offer.status = OfferStatusEnum.REMOVED
         other_offer.active = False
     
     try:
@@ -447,9 +451,9 @@ def decline_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     if offer.status == OfferStatusEnum.DECLINED:
         return error_response("Offer is already declined", ErrorType.BAD_REQUEST)
 
-    # Update offer status to REMOVED
-    offer.status = OfferStatusEnum.REMOVED
-
+    # Update offer status to DECLINED
+    offer.status = OfferStatusEnum.DECLINED
+    
     # Make offer inactive
     offer.active = False
 

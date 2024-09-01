@@ -10,7 +10,7 @@ import pytest
 
 # Local Application imports
 from edify import db
-from edify.models import User, Offer, Question, Method, Course
+from edify.models import User, Offer, Question, Method, Course, Notification
 from edify.utils.constants import OfferStatusEnum
 from tests.utils import get_jwt_header
 
@@ -312,3 +312,262 @@ class TestUpdateOffer:
         assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json
         
         assert response.get_json()["msg"] == "User is not owner of the offer or the author of the question", response.json
+        
+    
+    class TestAcceptOffer():
+            
+            def test_accept_offer_success(self, client_with_offer, user_jwt):
+                """
+                Test accepting an offer successfully.
+                """
+                user, jwt = user_jwt
+    
+                offer = (
+                    db.session.query(Offer)
+                    .filter(Offer.active ==True)
+                    .first()
+                )
+    
+                assert offer, "User does not have any offer in Database"
+                user = offer.question.user
+    
+                response = client_with_offer.post(
+                    url_for("backend.offer.accept_offer", offer_id=offer.id),
+                    headers=get_jwt_header(user),
+                )
+
+                assert response.status_code == HTTPStatus.OK, response.json
+    
+                offer = db.session.query(Offer).filter(Offer.id == offer.id).first()
+    
+                assert offer.status == OfferStatusEnum.ACCEPTED, "Offer status not updated"
+                
+                question = offer.question
+                
+                other_offers_for_question = (
+                    db.session.query(Offer)
+                    .filter(Offer.question_id == question.id)
+                    .filter(Offer.id != offer.id)
+                    .all()
+                )
+                
+                for other_offer in other_offers_for_question:
+                    assert other_offer.status == OfferStatusEnum.REMOVED, "Other offer status not updated"
+                    assert other_offer.active == False, "Other offer status not updated"
+                
+                notification_offer_creator = (
+                    db.session.query(Notification)
+                    .filter(Notification.user_id == offer.user_id)
+                    .filter(Notification.question_id == question.id)
+                    .first()
+                )
+                
+                assert notification_offer_creator, "Notification not created"
+                
+                assert notification_offer_creator.message == f"Your offer to {offer.question.user.username} was accepted!", "Incorrect notification message"
+                
+                notification_question_creater = (
+                    db.session.query(Notification)
+                    .filter(Notification.user_id == question.user_id)
+                    .filter(Notification.question_id == question.id)
+                    .first()
+                )
+                
+                assert notification_question_creater, "Notification not created"
+                
+                assert notification_question_creater.message == f"You accepted {offer.user.username}'s offer!", "Incorrect notification message"
+                
+                
+            def test_accept_offer_unauthorized_user(self, client_with_offer, user_jwt):
+                """
+                Test accepting an offer with an invalid offer ID.
+                """
+                user, jwt = user_jwt
+    
+                offer = (
+                    db.session.query(Offer)
+                    .filter(Offer.user_id != user.id)
+                    .first()
+                )
+
+                assert offer.question.user != user
+                
+                assert offer, "User does not have any offer in Database"
+    
+                response = client_with_offer.post(
+                    url_for("backend.offer.accept_offer", offer_id=offer.id),
+                    headers=jwt,
+                )
+    
+                assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json
+    
+                assert response.get_json()["msg"] == "User is not author of the question", response.json
+    
+    
+            def test_ffer_status_already_accepted_offer(self, client_with_offer, user_jwt):
+                """
+                Test accepting an offer with an invalid status.
+                """
+                user, jwt = user_jwt
+    
+                offer = (
+                    db.session.query(Offer)
+                    .filter(Offer.active ==True)
+                    .first()
+                )
+    
+                assert offer, "User does not have any offer in Database"
+                user = offer.question.user
+    
+                offer.status = OfferStatusEnum.ACCEPTED
+                db.session.commit()
+    
+                response = client_with_offer.post(
+                    url_for("backend.offer.accept_offer", offer_id=offer.id),
+                    headers=get_jwt_header(user),
+                )
+    
+                assert response.status_code == HTTPStatus.BAD_REQUEST, response.json
+    
+                # Assert right error message is returned.
+                assert response.get_json()["msg"] == "Offer is already accepted", response.get_json()
+
+            
+            def test_ffer_status_already_declined_offer(self, client_with_offer, user_jwt):
+                """
+                Test accepting an offer with an invalid status.
+                """
+                user, jwt = user_jwt
+    
+                offer = (
+                    db.session.query(Offer)
+                    .filter(Offer.active ==True)
+                    .first()
+                )
+    
+                assert offer, "User does not have any offer in Database"
+                user = offer.question.user
+    
+                offer.status = OfferStatusEnum.DECLINED
+                offer.active = False
+                db.session.commit()
+    
+                response = client_with_offer.post(
+                    url_for("backend.offer.accept_offer", offer_id=offer.id),
+                    headers=get_jwt_header(user),
+                )
+    
+                assert response.status_code == HTTPStatus.BAD_REQUEST, response.json
+    
+                # Assert right error message is returned.
+                assert response.get_json()["msg"] == "Offer is not active", response.get_json()
+
+
+class TestDeclineOffer():
+    
+        def test_decline_offer_success(self, client_with_offer, user_jwt):
+            """
+            Test declining an offer successfully.
+            """
+            user, jwt = user_jwt
+    
+            offer = (
+                db.session.query(Offer)
+                .filter(Offer.active ==True)
+                .first()
+            )
+    
+            assert offer, "User does not have any offer in Database"
+            user = offer.question.user
+    
+            response = client_with_offer.post(
+                url_for("backend.offer.decline_offer", offer_id=offer.id),
+                headers=get_jwt_header(user),
+            )
+    
+            assert response.status_code == HTTPStatus.OK, response.json
+    
+            assert offer.status == OfferStatusEnum.DECLINED, "Offer status not updated"
+            
+            assert offer.active == False, "Offer still active"
+            
+            question = offer.question
+            
+            notification_offer_creator = (
+                db.session.query(Notification)
+                .filter(Notification.user_id == offer.user_id)
+                .filter(Notification.question_id == question.id)
+                .first()
+            )
+            
+            assert notification_offer_creator, "Notification not created"
+            
+            assert notification_offer_creator.message == f"Your offer to {offer.question.user.username} was declined!", "Incorrect notification message"
+            
+            notification_question_creater = (
+                db.session.query(Notification)
+                .filter(Notification.user_id == question.user_id)
+                .filter(Notification.question_id == question.id)
+                .first()
+            )
+            
+            assert notification_question_creater, "Notification not created"
+            
+            assert notification_question_creater.message == f"You declined {offer.user.username}'s offer!", "Incorrect notification message"
+            
+    
+        def test_decline_offer_unauthorized_user(self, client_with_offer, user_jwt):
+            """
+            Test declining an offer with an invalid offer ID.
+            """
+            user, jwt = user_jwt
+    
+            offer = (
+                db.session.query(Offer)
+                .filter(Offer.user_id != user.id)
+                .first()
+            )
+
+            assert offer.question.user != user
+            
+            assert offer, "User does not have any offer in Database"
+
+            response = client_with_offer.post(
+                url_for("backend.offer.decline_offer", offer_id=offer.id),
+                headers=jwt,
+            )
+
+            assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json
+
+            assert response.get_json()["msg"] == "User is not author of the question", response.json
+        
+        
+        def test_decline_offer_invalid_status(self, client_with_offer, user_jwt):
+            """
+            Test declining an offer with an invalid status.
+            """
+            
+            user, jwt = user_jwt
+    
+            offer = (
+                db.session.query(Offer)
+                .filter(Offer.active ==True)
+                .first()
+            )
+    
+            assert offer, "User does not have any offer in Database"
+            user = offer.question.user
+    
+            offer.status = OfferStatusEnum.DECLINED
+            offer.active = False
+            db.session.commit()
+    
+            response = client_with_offer.post(
+                url_for("backend.offer.decline_offer", offer_id=offer.id),
+                headers=get_jwt_header(user),
+            )
+    
+            assert response.status_code == HTTPStatus.BAD_REQUEST, response.json
+    
+            # Assert right error message is returned.
+            assert response.get_json()["msg"] == "Offer is not active", response.get_json()
