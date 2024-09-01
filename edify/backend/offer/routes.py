@@ -66,7 +66,7 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
         .filter_by(question_id=question_id, user_id=user.id)
         .first()
     )
-    if existing_offer and existing_offer.active:
+    if existing_offer:
         return error_response(
             "User already made offer to question", ErrorType.BAD_REQUEST
         )
@@ -361,12 +361,12 @@ def accept_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     # Get other offers for same question, decline them and make them inactive
     other_offers_for_question = (
         db.session.query(Offer)
-        .filter_by(Offer.question_id == question.id)
-        .filter_by(id != offer_id)
-        .filter_by(Offer.active == True)
+        .filter(Offer.question_id == question.id)
+        .filter(Offer.id != offer_id)
+        .filter(Offer.active == True)
         .all()
     )
-    
+    print(other_offers_for_question)
     for other_offer in other_offers_for_question:
         other_offer.status = OfferStatusEnum.DECLINED
         other_offer.active = False
@@ -447,12 +447,12 @@ def decline_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     if offer.status == OfferStatusEnum.DECLINED:
         return error_response("Offer is already declined", ErrorType.BAD_REQUEST)
 
-    # Update offer status to declined
-    offer.status = OfferStatusEnum.DECLINED
-    
+    # Update offer status to REMOVED
+    offer.status = OfferStatusEnum.REMOVED
+
     # Make offer inactive
     offer.active = False
-    
+
     try:
         db.session.commit()
     except IntegrityError:
