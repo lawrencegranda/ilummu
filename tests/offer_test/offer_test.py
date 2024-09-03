@@ -11,11 +11,14 @@ import pytest
 # Local Application imports
 from edify import db
 from edify.models import User, Offer, Question, Method, Course, Notification
-from edify.utils.constants import OfferStatusEnum
+from edify.utils.constants import OfferStatusEnum, primitives
 from tests.utils import get_jwt_header
 
 # Initialize Faker for generating fake data
 fake = Faker()
+
+# TODO: add more comments
+# TODO: check notifications, do not check messages as those could change in the future
 
 
 class TestCreateOffer:
@@ -156,8 +159,6 @@ class TestCreateOffer:
 
         question.solved = True
         db.session.commit()
-        
-        db.session.commit()
 
         assert question, "User cannot create Offer for any question in Database"
 
@@ -214,10 +215,10 @@ class TestGetOffer:
             "msg" in response.get_json()
             and "Offer not found" in response.get_json()["msg"]
         ), response.get_json()
-        
+
 
 class TestUpdateOffer:
-    
+
     def test_update_offer_success(self, client_with_offer, user_jwt):
         """
         Test updating an offer successfully.
@@ -228,28 +229,35 @@ class TestUpdateOffer:
 
         assert offer, "User does not have any offer in Database"
         user = offer.user
-        
+
         amount = offer.amount
-        status = OfferStatusEnum.ACCEPTED
-        active = True
-        
+
+        # Retrieve the original offer as dictionary
+        original_offer_dict = offer.to_dict(simplified=False)
+
         response = client_with_offer.put(
             url_for("backend.offer.update_offer", id_offer=offer.id),
-            json={"status": status, 
-                  "amount": amount, 
-                  "active": active},
+            json={"amount": amount},
             headers=get_jwt_header(user),
         )
-        
+
         assert response.status_code == HTTPStatus.OK, response.json
 
         offer = db.session.query(Offer).filter(Offer.id == offer.id).first()
 
-        assert offer.status == status, "Offer status not updated"
-        
         assert offer.amount == amount, "Offer amount not updated"
-        
-        assert offer.active == active, "Offer active not updated"
+
+        # Retrieve the current offer as dictionary
+        offer_dict = offer.to_dict(simplified=False)
+
+        # Assert all attributes are equal except for amount
+        for (k, v1), (k2, v2) in zip(original_offer_dict.items(), offer_dict.items()):
+            assert k == k2, f"Keys are not equal ({k} != {k2})"
+
+            if k == "amount" or not isinstance(v1, primitives):
+                continue
+
+            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
 
     def test_update_offer_low_price(self, client_with_offer, user_jwt):
         """
@@ -261,18 +269,19 @@ class TestUpdateOffer:
 
         assert offer, "User does not have any offer in Database"
         user = offer.user
-        
+
         question = offer.question
-        
+
         amount = offer.amount
         status = OfferStatusEnum.ACCEPTED
         active = True
-        
+
+        # Retrieve the original offer as dictionary
+        original_offer_dict = offer.to_dict(simplified=False)
+
         response = client_with_offer.put(
             url_for("backend.offer.update_offer", id_offer=offer.id),
-            json={"status": status, 
-                  "amount": question.price - 1, 
-                  "active": active},
+            json={"status": status, "amount": question.price - 1, "active": active},
             headers=get_jwt_header(user),
         )
 
@@ -281,293 +290,403 @@ class TestUpdateOffer:
         # Assert right error message is returned.
         assert response.get_json()["msg"] == "Invalid offer amount", response.get_json()
 
+        # Retrieve the current offer as dictionary
+        offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
+
+        # Assert all attributes are equal
+        for (k, v1), (k2, v2) in zip(original_offer_dict.items(), offer_dict.items()):
+            assert k == k2, f"Keys are not equal ({k} != {k2})"
+
+            if not isinstance(v1, primitives):
+                continue
+
+            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
+
     def test_update_offer_unauthorized_user(self, client_with_offer, user_jwt):
         """
         Test updating an offer with an invalid offer ID.
         """
         user, jwt = user_jwt
 
-        offer = (
-            db.session.query(Offer)
-            .filter(Offer.user_id != user.id)
-            .first()
-        )
+        offer = db.session.query(Offer).filter(Offer.user_id != user.id).first()
 
         assert offer, "User does not have any offer in Database"
-        
+
         question = offer.question
-        
+
         amount = offer.amount
         status = OfferStatusEnum.ACCEPTED
         active = True
-        
+
+        # Retrieve the original offer as dictionary
+        original_offer_dict = offer.to_dict(simplified=False)
+
         response = client_with_offer.put(
             url_for("backend.offer.update_offer", id_offer=offer.id),
-            json={"status": status, 
-                  "amount": question.price,
-                  "active": active},
+            json={"status": status, "amount": question.price, "active": active},
             headers=jwt,
         )
 
         assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json
-        
-        assert response.get_json()["msg"] == "User is not owner of the offer or the author of the question", response.json
-        
-    
-    class TestAcceptOffer():
-            
-            def test_accept_offer_success(self, client_with_offer, user_jwt):
-                """
-                Test accepting an offer successfully.
-                """
-                user, jwt = user_jwt
-    
-                offer = (
-                    db.session.query(Offer)
-                    .filter(Offer.active ==True)
-                    .first()
-                )
-    
-                assert offer, "User does not have any offer in Database"
-                user = offer.question.user
-    
-                response = client_with_offer.post(
-                    url_for("backend.offer.accept_offer", offer_id=offer.id),
-                    headers=get_jwt_header(user),
-                )
 
-                assert response.status_code == HTTPStatus.OK, response.json
-    
-                offer = db.session.query(Offer).filter(Offer.id == offer.id).first()
-    
-                assert offer.status == OfferStatusEnum.ACCEPTED, "Offer status not updated"
-                
-                question = offer.question
-                
-                other_offers_for_question = (
-                    db.session.query(Offer)
-                    .filter(Offer.question_id == question.id)
-                    .filter(Offer.id != offer.id)
-                    .all()
-                )
-                
-                for other_offer in other_offers_for_question:
-                    assert other_offer.status == OfferStatusEnum.REMOVED, "Other offer status not updated"
-                    assert other_offer.active == False, "Other offer status not updated"
-                
-                notification_offer_creator = (
-                    db.session.query(Notification)
-                    .filter(Notification.user_id == offer.user_id)
-                    .filter(Notification.question_id == question.id)
-                    .first()
-                )
-                
-                assert notification_offer_creator, "Notification not created"
-                
-                assert notification_offer_creator.message == f"Your offer to {offer.question.user.username} was accepted!", "Incorrect notification message"
-                
-                notification_question_creater = (
-                    db.session.query(Notification)
-                    .filter(Notification.user_id == question.user_id)
-                    .filter(Notification.question_id == question.id)
-                    .first()
-                )
-                
-                assert notification_question_creater, "Notification not created"
-                
-                assert notification_question_creater.message == f"You accepted {offer.user.username}'s offer!", "Incorrect notification message"
-                
-                
-            def test_accept_offer_unauthorized_user(self, client_with_offer, user_jwt):
-                """
-                Test accepting an offer with an invalid offer ID.
-                """
-                user, jwt = user_jwt
-    
-                offer = (
-                    db.session.query(Offer)
-                    .filter(Offer.user_id != user.id)
-                    .first()
-                )
+        assert (
+            response.get_json()["msg"]
+            == "User is not owner of the offer or the author of the question"
+        ), response.json
 
-                assert offer.question.user != user
-                
-                assert offer, "User does not have any offer in Database"
-    
-                response = client_with_offer.post(
-                    url_for("backend.offer.accept_offer", offer_id=offer.id),
-                    headers=jwt,
-                )
-    
-                assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json
-    
-                assert response.get_json()["msg"] == "User is not author of the question", response.json
-    
-    
-            def test_ffer_status_already_accepted_offer(self, client_with_offer, user_jwt):
-                """
-                Test accepting an offer with an invalid status.
-                """
-                user, jwt = user_jwt
-    
-                offer = (
-                    db.session.query(Offer)
-                    .filter(Offer.active ==True)
-                    .first()
-                )
-    
-                assert offer, "User does not have any offer in Database"
-                user = offer.question.user
-    
-                offer.status = OfferStatusEnum.ACCEPTED
-                db.session.commit()
-    
-                response = client_with_offer.post(
-                    url_for("backend.offer.accept_offer", offer_id=offer.id),
-                    headers=get_jwt_header(user),
-                )
-    
-                assert response.status_code == HTTPStatus.BAD_REQUEST, response.json
-    
-                # Assert right error message is returned.
-                assert response.get_json()["msg"] == "Offer is already accepted", response.get_json()
+        # Retrieve the current offer as dictionary
+        offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
 
-            
-            def test_ffer_status_already_declined_offer(self, client_with_offer, user_jwt):
-                """
-                Test accepting an offer with an invalid status.
-                """
-                user, jwt = user_jwt
-    
-                offer = (
-                    db.session.query(Offer)
-                    .filter(Offer.active ==True)
-                    .first()
-                )
-    
-                assert offer, "User does not have any offer in Database"
-                user = offer.question.user
-    
-                offer.status = OfferStatusEnum.DECLINED
-                offer.active = False
-                db.session.commit()
-    
-                response = client_with_offer.post(
-                    url_for("backend.offer.accept_offer", offer_id=offer.id),
-                    headers=get_jwt_header(user),
-                )
-    
-                assert response.status_code == HTTPStatus.BAD_REQUEST, response.json
-    
-                # Assert right error message is returned.
-                assert response.get_json()["msg"] == "Offer is not active", response.get_json()
+        # Assert all attributes are equal
+        for (k, v1), (k2, v2) in zip(original_offer_dict.items(), offer_dict.items()):
+            assert k == k2, f"Keys are not equal ({k} != {k2})"
+
+            if not isinstance(v1, primitives):
+                continue
+
+            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
 
 
-class TestDeclineOffer():
-    
-        def test_decline_offer_success(self, client_with_offer, user_jwt):
-            """
-            Test declining an offer successfully.
-            """
-            user, jwt = user_jwt
-    
-            offer = (
-                db.session.query(Offer)
-                .filter(Offer.active ==True)
-                .first()
-            )
-    
-            assert offer, "User does not have any offer in Database"
-            user = offer.question.user
-    
-            response = client_with_offer.post(
-                url_for("backend.offer.decline_offer", offer_id=offer.id),
-                headers=get_jwt_header(user),
-            )
-    
-            assert response.status_code == HTTPStatus.OK, response.json
-    
-            assert offer.status == OfferStatusEnum.DECLINED, "Offer status not updated"
-            
-            assert offer.active == False, "Offer still active"
-            
-            question = offer.question
-            
-            notification_offer_creator = (
-                db.session.query(Notification)
-                .filter(Notification.user_id == offer.user_id)
-                .filter(Notification.question_id == question.id)
-                .first()
-            )
-            
-            assert notification_offer_creator, "Notification not created"
-            
-            assert notification_offer_creator.message == f"Your offer to {offer.question.user.username} was declined!", "Incorrect notification message"
-            
-            notification_question_creater = (
-                db.session.query(Notification)
-                .filter(Notification.user_id == question.user_id)
-                .filter(Notification.question_id == question.id)
-                .first()
-            )
-            
-            assert notification_question_creater, "Notification not created"
-            
-            assert notification_question_creater.message == f"You declined {offer.user.username}'s offer!", "Incorrect notification message"
-            
-    
-        def test_decline_offer_unauthorized_user(self, client_with_offer, user_jwt):
-            """
-            Test declining an offer with an invalid offer ID.
-            """
-            user, jwt = user_jwt
-    
-            offer = (
-                db.session.query(Offer)
-                .filter(Offer.user_id != user.id)
-                .first()
-            )
+class TestAcceptOffer:
+    # TODO: make sure no fields changed, except for the status and/or active
 
-            assert offer.question.user != user
-            
-            assert offer, "User does not have any offer in Database"
+    def test_accept_offer_success(self, client_with_offer, user_jwt):
+        """
+        Test accepting an offer successfully.
+        """
+        user, jwt = user_jwt
 
-            response = client_with_offer.post(
-                url_for("backend.offer.decline_offer", offer_id=offer.id),
-                headers=jwt,
-            )
+        offer = db.session.query(Offer).filter(Offer.active == True).first()
 
-            assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json
+        assert offer, "User does not have any offer in Database"
+        user = offer.question.user
 
-            assert response.get_json()["msg"] == "User is not author of the question", response.json
-        
-        
-        def test_decline_offer_invalid_status(self, client_with_offer, user_jwt):
-            """
-            Test declining an offer with an invalid status.
-            """
-            
-            user, jwt = user_jwt
-    
-            offer = (
-                db.session.query(Offer)
-                .filter(Offer.active ==True)
-                .first()
-            )
-    
-            assert offer, "User does not have any offer in Database"
-            user = offer.question.user
-    
-            offer.status = OfferStatusEnum.DECLINED
-            offer.active = False
-            db.session.commit()
-    
-            response = client_with_offer.post(
-                url_for("backend.offer.decline_offer", offer_id=offer.id),
-                headers=get_jwt_header(user),
-            )
-    
-            assert response.status_code == HTTPStatus.BAD_REQUEST, response.json
-    
-            # Assert right error message is returned.
-            assert response.get_json()["msg"] == "Offer is not active", response.get_json()
+        response = client_with_offer.post(
+            url_for("backend.offer.accept_offer", offer_id=offer.id),
+            headers=get_jwt_header(user),
+        )
+
+        assert response.status_code == HTTPStatus.OK, response.json
+
+        offer = db.session.query(Offer).filter(Offer.id == offer.id).first()
+
+        assert offer.status == OfferStatusEnum.ACCEPTED, "Offer status not updated"
+        assert offer.active == True, "Offer is not active"
+
+        question = offer.question
+
+        other_offers_for_question = (
+            db.session.query(Offer)
+            .filter(Offer.question_id == question.id)
+            .filter(Offer.id != offer.id)
+            .all()
+        )
+
+        for other_offer in other_offers_for_question:
+            assert (
+                other_offer.status == OfferStatusEnum.REMOVED
+            ), "Other offer status not updated"
+            assert other_offer.active == False, "Other offer status not updated"
+
+        notification_offer_creator = (
+            db.session.query(Notification)
+            .filter(Notification.user_id == offer.user_id)
+            .filter(Notification.question_id == question.id)
+            .first()
+        )
+
+        assert notification_offer_creator, "Notification not created"
+
+        assert (
+            notification_offer_creator.message
+            == f"Your offer to {offer.question.user.username} was accepted!"
+        ), "Incorrect notification message"
+
+        notification_question_creater = (
+            db.session.query(Notification)
+            .filter(Notification.user_id == question.user_id)
+            .filter(Notification.question_id == question.id)
+            .first()
+        )
+
+        assert notification_question_creater, "Notification not created"
+
+        assert (
+            notification_question_creater.message
+            == f"You accepted {offer.user.username}'s offer!"
+        ), "Incorrect notification message"
+
+        # Retrieve the current offer as dictionary
+        offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
+
+        # Assert all attributes are equal, except active and status
+        for (k, v1), (k2, v2) in zip(original_offer_dict.items(), offer_dict.items()):
+            assert k == k2, f"Keys are not equal ({k} != {k2})"
+
+            if (k == "active" or k == "status") and not isinstance(v1, primitives):
+                continue
+
+            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
+
+    def test_accept_offer_unauthorized_user(self, client_with_offer, user_jwt):
+        """
+        Test accepting an offer with an invalid offer ID.
+        """
+        user, jwt = user_jwt
+
+        offer = db.session.query(Offer).filter(Offer.user_id != user.id).first()
+
+        assert offer.question.user != user
+
+        assert offer, "User does not have any offer in Database"
+
+        # Retrieve the original offer as dictionary
+        original_offer_dict = offer.to_dict(simplified=False)
+
+        response = client_with_offer.post(
+            url_for("backend.offer.accept_offer", offer_id=offer.id),
+            headers=jwt,
+        )
+
+        assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json
+
+        assert (
+            response.get_json()["msg"] == "User is not author of the question"
+        ), response.json
+
+        # Retrieve the current offer as dictionary
+        offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
+
+        # Assert all attributes are equal
+        for (k, v1), (k2, v2) in zip(original_offer_dict.items(), offer_dict.items()):
+            assert k == k2, f"Keys are not equal ({k} != {k2})"
+
+            if not isinstance(v1, primitives):
+                continue
+
+            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
+
+    def test_offer_status_already_accepted_offer(self, client_with_offer, user_jwt):
+        """
+        Test accepting an offer with an invalid status.
+        """
+        user, jwt = user_jwt
+
+        offer = db.session.query(Offer).filter(Offer.active == True).first()
+
+        assert offer, "User does not have any offer in Database"
+        user = offer.question.user
+
+        offer.status = OfferStatusEnum.ACCEPTED
+        db.session.commit()
+
+        # Retrieve the original offer as dictionary
+        original_offer_dict = offer.to_dict(simplified=False)
+
+        response = client_with_offer.post(
+            url_for("backend.offer.accept_offer", offer_id=offer.id),
+            headers=get_jwt_header(user),
+        )
+
+        assert response.status_code == HTTPStatus.BAD_REQUEST, response.json
+
+        # Assert right error message is returned.
+        assert (
+            response.get_json()["msg"] == "Offer is already accepted"
+        ), response.get_json()
+
+        # Retrieve the current offer as dictionary
+        offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
+
+        # Assert all attributes are equal
+        for (k, v1), (k2, v2) in zip(original_offer_dict.items(), offer_dict.items()):
+            assert k == k2, f"Keys are not equal ({k} != {k2})"
+
+            if not isinstance(v1, primitives):
+                continue
+
+            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
+
+    def test_offer_status_already_declined_offer(self, client_with_offer, user_jwt):
+        """
+        Test accepting an offer with an invalid status.
+        """
+        user, jwt = user_jwt
+
+        offer = db.session.query(Offer).filter(Offer.active == True).first()
+
+        assert offer, "User does not have any offer in Database"
+        user = offer.question.user
+
+        offer.status = OfferStatusEnum.DECLINED
+        offer.active = False
+        db.session.commit()
+
+        # Retrieve the original offer as dictionary
+        original_offer_dict = offer.to_dict(simplified=False)
+
+        response = client_with_offer.post(
+            url_for("backend.offer.accept_offer", offer_id=offer.id),
+            headers=get_jwt_header(user),
+        )
+
+        assert response.status_code == HTTPStatus.BAD_REQUEST, response.json
+
+        # Assert right error message is returned.
+        assert response.get_json()["msg"] == "Offer is not active", response.get_json()
+
+        # Retrieve the current offer as dictionary
+        offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
+
+        # Assert all attributes are equal
+        for (k, v1), (k2, v2) in zip(original_offer_dict.items(), offer_dict.items()):
+            assert k == k2, f"Keys are not equal ({k} != {k2})"
+
+            if not isinstance(v1, primitives):
+                continue
+
+            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
+
+
+class TestDeclineOffer:
+    # TODO: make sure no fields changed, except for the status and/or active
+
+    def test_decline_offer_success(self, client_with_offer, user_jwt):
+        """
+        Test declining an offer successfully.
+        """
+        user, jwt = user_jwt
+
+        offer = db.session.query(Offer).filter(Offer.active == True).first()
+
+        assert offer, "User does not have any offer in Database"
+        user = offer.question.user
+
+        # Retrieve the original offer as dictionary
+        original_offer_dict = offer.to_dict(simplified=False)
+
+        # Make a test API call
+        response = client_with_offer.post(
+            url_for("backend.offer.decline_offer", offer_id=offer.id),
+            headers=get_jwt_header(user),
+        )
+
+        # Check response status
+        assert response.status_code == HTTPStatus.OK, response.json
+
+        # Check updated fields
+        assert offer.status == OfferStatusEnum.DECLINED, "Offer status not updated"
+        assert offer.active == False, "Offer still active"
+
+        question = offer.question
+
+        notification_offer_creator = (
+            db.session.query(Notification)
+            .filter(Notification.user_id == offer.user_id)
+            .filter(Notification.question_id == question.id)
+            .first()
+        )
+
+        # TODO: Check notifications were created for the ...
+        assert notification_offer_creator, "Notification not created"
+
+        notification_question_author = (
+            db.session.query(Notification)
+            .filter(Notification.user_id == question.user_id)
+            .filter(Notification.question_id == question.id)
+            .first()
+        )
+
+        # TODO: Check notifications were created for the ...
+        assert notification_question_author, "Notification not created"
+
+        # Retrieve the current offer as dictionary
+        offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
+
+        # Assert all attributes are equal, except active and status
+        for (k, v1), (k2, v2) in zip(original_offer_dict.items(), offer_dict.items()):
+            assert k == k2, f"Keys are not equal ({k} != {k2})"
+
+            if (k == "active" or k == "status") and not isinstance(v1, primitives):
+                continue
+
+            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
+
+    def test_decline_offer_unauthorized_user(self, client_with_offer, user_jwt):
+        """
+        Test declining an offer with an invalid offer ID.
+        """
+        user, jwt = user_jwt
+
+        offer = db.session.query(Offer).filter(Offer.user_id != user.id).first()
+
+        assert offer.question.user != user
+
+        assert offer, "User does not have any offer in Database"
+
+        # Retrieve the original offer as dictionary
+        original_offer_dict = offer.to_dict(simplified=False)
+
+        response = client_with_offer.post(
+            url_for("backend.offer.decline_offer", offer_id=offer.id),
+            headers=jwt,
+        )
+
+        assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json
+
+        assert (
+            response.get_json()["msg"] == "User is not author of the question"
+        ), response.json
+
+        # Retrieve the current offer as dictionary
+        offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
+
+        # Assert all attributes are equal
+        for (k, v1), (k2, v2) in zip(original_offer_dict.items(), offer_dict.items()):
+            assert k == k2, f"Keys are not equal ({k} != {k2})"
+
+            if not isinstance(v1, primitives):
+                continue
+
+            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
+
+    def test_decline_offer_invalid_status(self, client_with_offer, user_jwt):
+        """
+        Test declining an offer with an invalid status.
+        """
+
+        user, jwt = user_jwt
+
+        offer = db.session.query(Offer).filter(Offer.active == True).first()
+
+        assert offer, "User does not have any offer in Database"
+        user = offer.question.user
+
+        offer.status = OfferStatusEnum.DECLINED
+        offer.active = False
+        db.session.commit()
+
+        # Retrieve the original offer as dictionary
+        original_offer_dict = offer.to_dict(simplified=False)
+
+        response = client_with_offer.post(
+            url_for("backend.offer.decline_offer", offer_id=offer.id),
+            headers=get_jwt_header(user),
+        )
+
+        assert response.status_code == HTTPStatus.BAD_REQUEST, response.json
+
+        # Assert right error message is returned.
+        assert response.get_json()["msg"] == "Offer is not active", response.get_json()
+
+        # Retrieve the current offer as dictionary
+        offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
+
+        # Assert all attributes are equal
+        for (k, v1), (k2, v2) in zip(original_offer_dict.items(), offer_dict.items()):
+            assert k == k2, f"Keys are not equal ({k} != {k2})"
+
+            if not isinstance(v1, primitives):
+                continue
+
+            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
