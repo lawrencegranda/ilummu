@@ -44,8 +44,10 @@ offer = Blueprint("offer", __name__, url_prefix="/offer")
 def create_offer(args) -> flask_typing.ResponseReturnValue:
     """
     Create an offer for a question.
+
     Args:
         args (dict): A dictionary containing the arguments for creating the offer.
+
     Returns:
         flask_typing.ResponseReturnValue: A tuple containing the new offer and HTTP status code.
     """
@@ -97,7 +99,6 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
-        print("failed")
         return error_response("Failed to create offer.", ErrorType.BAD_REQUEST)
 
     # Create notification for the new offer (user)
@@ -131,8 +132,10 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
 def get_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
     """
     Retrieve an offer by its ID.
+
     Args:
         id_offer (int): The ID of the offer to retrieve.
+
     Returns:
         flask_typing.ResponseReturnValue: The response containing the offer data.
     """
@@ -151,17 +154,18 @@ def get_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
 @jwt_required()
 @use_args(
     {
-        "amount": fields.Float(required=False),
-        "status": fields.String(required=False),
-        "active": fields.Boolean(required=False),
+        "amount": fields.Float(required=True),
     }
 )
+# TODO: only update the price, requires the offer is active and status is SENT
 def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
     """
-    Update an offer with the given arguments.
+    Update an offer price
+
     Args:
-        args (dict): The arguments containing the updated offer fields.
+        args (dict): The arguments containing the new price.
         id_offer (int): The ID of the offer to be updated.
+
     Returns:
         flask_typing.ResponseReturnValue: The updated offer details.
     """
@@ -179,23 +183,17 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
         return error_response("User does not exist", ErrorType.USER_NOT_FOUND)
 
     # Check user is author of the question or owner of the offer
-    if not (offer.user_id == user.id or offer.question.user_id == user.id):
+    if not (offer.user_id == user.id):
         return error_response(
-            "User is not owner of the offer or the author of the question",
+            "User is not owner of the offer",
             ErrorType.UNAUTHORIZED,
         )
 
     # Update offer fields from args
-    if "amount" in args:
-        if not (offer.question.price <= args["amount"] <= 2 * offer.question.price):
-            return error_response("Invalid offer amount", ErrorType.BAD_REQUEST)
-        offer.amount = args["amount"]
+    if not (offer.question.price <= args["amount"] <= 2 * offer.question.price):
+        return error_response("Invalid offer amount", ErrorType.BAD_REQUEST)
 
-    if "status" in args:
-        offer.status = args["status"]
-
-    if "active" in args:
-        offer.active = args["active"]
+    offer.amount = args["amount"]
 
     # Try adding to database
     try:
@@ -209,7 +207,7 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
     notification_user = Notification(
         type=NotificationTypeEnum.UPDATED_OFFER,
         message=f"You changed the offer amount to ${amount:.2f}!",
-        user_id=offer.user.id,
+        user_id=offer.user_id,
         question_id=offer.question.id,
     )
     db.session.add(notification_user)
@@ -234,8 +232,10 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
 def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
     """
     Delete an offer from the database.
+
     Args:
         id_offer (int): The ID of the offer to be deleted.
+
     Returns:
         flask_typing.ResponseReturnValue: The response value indicating the success or failure of the deletion.
     """
@@ -266,7 +266,7 @@ def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
     notification_user = Notification(
         type=NotificationTypeEnum.OFFER_REVOKED,
         message=f"You revoked an offer to {offer.question.user.username}!",
-        user_id=offer.user.id,
+        user_id=offer.user_id,
         question_id=offer.question.id,
     )
     db.session.add(notification_user)
@@ -291,8 +291,10 @@ def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
 def get_offers_by_user(user_id: int) -> flask_typing.ResponseReturnValue:
     """
     Retrieves offers associated with a specific user.
+
     Args:
         user_id (int): The ID of the user.
+
     Returns:
         flask_typing.ResponseReturnValue: The response containing the offers associated with the user.
     """
@@ -303,7 +305,7 @@ def get_offers_by_user(user_id: int) -> flask_typing.ResponseReturnValue:
     if not user:
         return error_response("User does not exist", ErrorType.USER_NOT_FOUND)
 
-    offers = Offer.query.filter_by(user_id=user_id).all()
+    offers = Offer.query.filter_by(user_id=user_id, active=True).all()
     return jsonify(Offer.to_dict_all(offers)), HTTPStatus.OK
 
 
@@ -313,8 +315,10 @@ def get_offers_by_user(user_id: int) -> flask_typing.ResponseReturnValue:
 def accept_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     """
     Accept an offer for a question.
+
     Args:
         offer_id (int): The ID of the offer to accept.
+
     Returns:
         flask_typing.ResponseReturnValue: The response containing the accepted offer.
     """
@@ -336,10 +340,12 @@ def accept_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     # Check if question exists
     if not question:
         return error_response("Question does not exist", ErrorType.NOT_FOUND)
-    
+
     # Check if user is author of the question
     if not question.user_id == user.id:
-        return error_response("User is not author of the question", ErrorType.UNAUTHORIZED)
+        return error_response(
+            "User is not author of the question", ErrorType.UNAUTHORIZED
+        )
 
     # Check if question is visible and unsolved
     if question.solved:
@@ -358,10 +364,10 @@ def accept_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     # Check if offer has already been declined
     if offer.status == OfferStatusEnum.DECLINED:
         return error_response("Offer is already declined", ErrorType.BAD_REQUEST)
-    
+
     # Update offer status to accepted
     offer.status = OfferStatusEnum.ACCEPTED
-    
+
     # Get other offers for same question, decline them and make them inactive
     other_offers_for_question = (
         db.session.query(Offer)
@@ -370,22 +376,25 @@ def accept_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
         .filter(Offer.active == True)
         .all()
     )
-    
+
     for other_offer in other_offers_for_question:
-        other_offer.status = OfferStatusEnum.REMOVED
+        other_offer.status = OfferStatusEnum.DECLINED
         other_offer.active = False
-    
+
+    # Set question to solved after an offer has been accepted
+    question.solved = True
+
     try:
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
         return error_response("Couldn't accept offer", ErrorType.BAD_REQUEST)
-    
+
     # Create notification for the updated offer (user)
     notification_user = Notification(
         type=NotificationTypeEnum.OFFER_ACCEPTED,
-        message=f"Your offer to {offer.question.user.username} was accepted!",
-        user_id=offer.user.id,
+        message=f"Your offer to {offer.question.user.username} was accepted! Check the question informaation as soon as possible to get in touch with them.",
+        user_id=offer.user_id,
         question_id=offer.question.id,
     )
     db.session.add(notification_user)
@@ -400,8 +409,20 @@ def accept_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     )
     db.session.add(notification_author)
     db.session.commit()
-    
+
+    for other_offer in other_offers_for_question:
+        # Create notification for the other offers rejeted
+        notification_declined = Notification(
+            type=NotificationTypeEnum.OFFER_DECLINED,
+            message=f"Your offer to {offer.question.user.username} was declined!",
+            user_id=other_offer.user_id,
+            question_id=offer.question.id,
+        )
+        db.session.add(notification_declined)
+        db.session.commit()
+
     return jsonify(offer.to_dict()), HTTPStatus.OK
+
 
 # Endpoint: /backend/offer/decline/<int:offer_id>
 @offer.route("/decline/<int:offer_id>", methods=["POST"])
@@ -432,10 +453,12 @@ def decline_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     # Check if question exists
     if not question:
         return error_response("Question does not exist", ErrorType.NOT_FOUND)
-    
+
     # Check if user is author of the question
     if not question.user_id == user.id:
-        return error_response("User is not author of the question", ErrorType.UNAUTHORIZED)
+        return error_response(
+            "User is not author of the question", ErrorType.UNAUTHORIZED
+        )
 
     # Check if question is visible and unsolved
     if question.solved:
@@ -453,7 +476,7 @@ def decline_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
 
     # Update offer status to DECLINED
     offer.status = OfferStatusEnum.DECLINED
-    
+
     # Make offer inactive
     offer.active = False
 
@@ -462,12 +485,12 @@ def decline_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     except IntegrityError:
         db.session.rollback()
         return error_response("Couldn't decline offer", ErrorType.BAD_REQUEST)
-    
+
     # Create notification for the updated offer (user)
     notification_user = Notification(
         type=NotificationTypeEnum.OFFER_DECLINED,
         message=f"Your offer to {offer.question.user.username} was declined!",
-        user_id=offer.user.id,
+        user_id=offer.user_id,
         question_id=offer.question.id,
     )
     db.session.add(notification_user)
@@ -482,5 +505,5 @@ def decline_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     )
     db.session.add(notification_author)
     db.session.commit()
-    
+
     return jsonify(offer.to_dict()), HTTPStatus.OK
