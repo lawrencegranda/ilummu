@@ -62,6 +62,25 @@ user = Blueprint("user", __name__, url_prefix="/user")
 # -----------------------------------------------------------------------------
 
 
+# Endpoint: /backend/user
+@user.route("/", methods=["GET"])
+@jwt_required(optional=True)
+def get_user() -> flask_typing.ResponseReturnValue:
+    """
+    Endpoint to get the current user's information.
+
+    Returns:
+        Response: JSON response with the user's information or None if not found.
+    """
+    user = get_current_user()
+    if user:
+        return jsonify(user.to_dict(simplified=False)), HTTPStatus.OK
+    return jsonify(None), HTTPStatus.NOT_FOUND
+
+
+# TOKENS            %------------------------------------------------------------------%
+
+
 # Endpoint: /backend/user/logout
 @user.route("/logout", methods=["POST"])
 def logout() -> flask_typing.ResponseReturnValue:
@@ -93,22 +112,6 @@ def refresh() -> flask_typing.ResponseReturnValue:
     response = jsonify({"access_token": token})
     set_access_cookies(response, token)
     return (response, HTTPStatus.OK)
-
-
-# Endpoint: /backend/user
-@user.route("/", methods=["GET"])
-@jwt_required(optional=True)
-def get_user() -> flask_typing.ResponseReturnValue:
-    """
-    Endpoint to get the current user's information.
-
-    Returns:
-        Response: JSON response with the user's information or None if not found.
-    """
-    user = get_current_user()
-    if user:
-        return jsonify(user.to_dict(simplified=False)), HTTPStatus.OK
-    return jsonify(None), HTTPStatus.NOT_FOUND
 
 
 # Endpoint: /backend/user/login
@@ -319,6 +322,9 @@ def signup(args) -> flask_typing.ResponseReturnValue:
         )
 
     return (response, HTTPStatus.CREATED)
+
+
+# RESET EMAIL       %------------------------------------------------------------------%
 
 
 # Endpoint: /backend/user/reset-email
