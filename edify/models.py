@@ -223,6 +223,26 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
 
         return user
 
+    def generate_auth_token(self):
+        serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+
+        return serializer.dumps(self.id)
+
+    @staticmethod
+    def validate_auth_token(token: str):
+        serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+        try:
+            user_id = serializer.loads(
+                token,
+                max_age=current_app.config["AUTH_TOKEN_MAX_AGE"],
+            )
+        except (BadSignature, SignatureExpired):
+            return None
+
+        user = db.session.get(User, user_id)
+
+        return user
+
     def __repr__(self):
         return f"({self.id}, {self.username}, {self.email}\n"
 
