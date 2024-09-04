@@ -1,0 +1,88 @@
+{% extends "bases/layout.jinja" %}
+
+{% block title %}
+  {{ title | default("Authentication") }}
+{% endblock title %}
+
+{% block javascript %}
+  {{ super() }}
+{% endblock javascript %}
+
+{% block headers %}
+  <style>
+      .footer {
+          display: none;
+      }
+
+      body {
+          background-color: var(--blue--base);
+      }
+  </style>
+{% endblock headers %}
+
+{% block content %}
+  <div class="signup-wrapper">
+    <div class="signup-container">
+      <form class="signup-body" id="{{ form_id }}" method="post" 
+        {% if form_disabled | default(False) %}disabled{% endif %}
+        >
+        <div class="signup-top">
+          <div class="logo-wrapper">
+            <div class="signup-logo">
+              <a class="brand" href='{{ url_for("frontend.home") }}'>
+                <img class="image brand-image"
+                     src="{{ url_for('static', filename='logo.svg') }}"
+                     alt=""
+                     width="auto"
+                     height="auto" />
+              </a>
+              <div class="brand-name" onclick="location.href='/home';">
+                Edify
+              </div>
+            </div>
+            <p class="made-students">
+              Made by <strong style="color: var(--red)">Cornell</strong> Students
+            </p>
+          </div>
+          <p class="signup-title">
+            {{ title_text }}
+          </p>
+          <p id="{{ description_id }}" style="text-align: center;">
+            {{ description_text }}
+          </p>
+        </div>
+
+        {% if not form_disabled %}
+          <div class="signup-middle">
+
+            {% block form_content %}
+            {% endblock form_content %}
+
+            <p id="error-msg">
+            </p>
+          </div>
+        {% endif %}
+
+        <div class="signup-bottom">
+
+          {% if has_button | default(False) %}
+            <button id="{{ button_id }}"
+                    form="{{ form_id }}"
+                    type="submit"
+                    class="btn btn-primary"
+                    type="button">
+              {{ button_text }}
+            </button>
+          {% endif %}
+
+          {% block additional_links %}
+          {% endblock additional_links %}
+
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block footer %}
+{% endblock footer %}
