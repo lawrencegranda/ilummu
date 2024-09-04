@@ -481,3 +481,92 @@ def reset_password(args) -> flask_typing.ResponseReturnValue:
     )
 
     return response, HTTPStatus.OK
+
+
+# VERIFY EMAIL      %------------------------------------------------------------------%
+
+
+# Endpoint: /backend/user/verify-email
+@user.route("/verify-email", methods=["POST"])
+@use_args(
+    {
+        "email": fields.Email(required=True),
+    }
+)
+def verify_email(args) -> flask_typing.ResponseReturnValue:
+    """
+    Endpoint to reset send an email to verify email.
+
+    Args:
+        args (dict): The login arguments containing email.
+
+    Returns:
+        Response: Send email.
+    """
+    # Get the user corresponding to the email that is logging in
+    user = (
+        db.session.query(User)
+        .filter_by(email=args["email"].lower(), is_mock=False)
+        .first()
+    )
+
+    # If user not found, error.
+    if not user:
+        return error_response("User not found", ErrorType.USER_NOT_FOUND)
+
+    # Generate token.
+    token = user.generate_auth_token()
+
+    # Format url with token
+    url = url_for("frontend.verify_email", token=token, _external=True)
+
+    # Render html
+    html = render_template("/verify_email.jinja", name=user.username, action_url=url)
+
+    # Send email
+    send(subject="Edify: Verify your email", html=html, recipients=[user.email])
+
+    # Create a notification for the forgot password
+    notif = Notification(
+        type=NotificationTypeEnum.PASSWORD_RESET,
+        message=f"You verification email sent!",
+        user_id=user.id,
+    )
+    db.session.add(notif)
+    db.session.commit()
+
+    return jsonify({}), HTTPStatus.OK
+
+
+# Endpoint: /backend/user/check-auth-token
+@user.route("/check-auth-token", methods=["POST"])
+@use_args(
+    {
+        "token": fields.Str(required=True),
+    },
+    location="query",
+)
+def check_auth_token(args) -> flask_typing.ResponseReturnValue:
+    """
+    Endpoint to check an identity verification auth token.
+
+    Args:
+        args (dict): The token.
+
+    Returns:
+        Response: Tuple. Success or failure.
+    """
+    token = args["token"]
+    user = User.validate_auth_token(token)
+
+    # Check if user exists
+    if not user:
+        return error_response(
+            "Invalid or expired reset link. Please try again.", ErrorType.BAD_REQUEST
+        )
+
+    # Set verified status
+    user.mail_is_verified = True
+    db.session.commit()
+
+    return jsonify({}), HTTPStatus.OK
