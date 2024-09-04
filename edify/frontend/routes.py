@@ -115,47 +115,7 @@ question = Blueprint("question", __name__, url_prefix="/question")
 # Blueprint Endpoints (frontend)
 # -----------------------------------------------------------------------------
 
-
-# Endpoint: /forgot-password
-@frontend.route("/forgot-password")
-def forgot_password() -> flask_typing.ResponseReturnValue:
-    """
-    Forgot password route.
-
-    Returns:
-        str: Rendered route.
-    """
-    next_url = request.args.get("next_url", url_for("frontend.index"))
-    http_method = request.args.get("http_method", "GET")
-
-    return render_template(
-        "/forgot_password.jinja", next_url=next_url, http_method=http_method
-    )
-
-
-# Endpoint: /reset-password
-@frontend.route("/reset-password")
-def reset_password() -> flask_typing.ResponseReturnValue:
-    """
-    Reset password route.
-
-    Returns:
-        str: Rendered route.
-    """
-    token = request.args.get("token", "")
-
-    if not token:
-        forgot_password()
-
-    success = (
-        internal_request(url_for("backend.user.check_token", token=token)).status_code
-        == HTTPStatus.OK
-    )
-
-    if not success:
-        return render_template("/invalid_reset.jinja")
-
-    return render_template("/reset_password.jinja", token=token)
+# PAGES             %------------------------------------------------------------------%
 
 
 # Endpoint: /
@@ -201,6 +161,39 @@ def home() -> flask_typing.ResponseReturnValue:
         time_intervals=time_intervals,
         home=True,
     )
+
+
+# Endpoint: /dashboard
+@frontend.route("/dashboard")
+@jwt_required(optional=True)
+def dashboard() -> flask_typing.ResponseReturnValue:
+    """
+    Dashboard route displaying user data and related questions.
+
+    Returns:
+        str: Rendered dashboard template with user data.
+    """
+    user = get_user()
+
+    subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
+    subjects.sort(key=lambda d: d["name"])
+
+    methods = fetch_data(url_for("backend.data.fetch_methods"), "GET")
+    methods.sort(key=lambda d: d["name"])
+
+    time_intervals = fetch_data(url_for("backend.data.fetch_intervals"), "GET")
+
+    return render_template(
+        "dashboard.jinja",
+        subjects=subjects,
+        methods=methods,
+        time_intervals=time_intervals,
+        user=user,
+        question_list=list_questions([], ""),
+    )
+
+
+# TOKENS            %------------------------------------------------------------------%
 
 
 # Endpoint: /logout
@@ -266,6 +259,10 @@ def signup() -> flask_typing.ResponseReturnValue:
     )
 
 
+# QUESTION CREATION %------------------------------------------------------------------%
+
+
+# Endpoint: /store_question
 @frontend.route("/store_question", methods=["POST"])
 @use_args(QuestionSchema)
 @jwt_required(optional=True)
@@ -284,6 +281,7 @@ def store_question(args) -> flask_typing.ResponseReturnValue:
     )
 
 
+# Endpoint: /submit_question_after_login
 @frontend.route("/submit_question_after_login", methods=["POST"])
 @jwt_required()
 def submit_question_after_login() -> flask_typing.ResponseReturnValue:
@@ -304,34 +302,52 @@ def submit_question_after_login() -> flask_typing.ResponseReturnValue:
     return response
 
 
-# Endpoint: /dashboard
-@frontend.route("/dashboard")
-@jwt_required(optional=True)
-def dashboard() -> flask_typing.ResponseReturnValue:
+# PASSWORD RESET    %------------------------------------------------------------------%
+
+
+# Endpoint: /forgot-password
+@frontend.route("/forgot-password")
+def forgot_password() -> flask_typing.ResponseReturnValue:
     """
-    Dashboard route displaying user data and related questions.
+    Forgot password route.
 
     Returns:
-        str: Rendered dashboard template with user data.
+        str: Rendered route.
     """
-    user = get_user()
-
-    subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
-    subjects.sort(key=lambda d: d["name"])
-
-    methods = fetch_data(url_for("backend.data.fetch_methods"), "GET")
-    methods.sort(key=lambda d: d["name"])
-
-    time_intervals = fetch_data(url_for("backend.data.fetch_intervals"), "GET")
+    next_url = request.args.get("next_url", url_for("frontend.index"))
+    http_method = request.args.get("http_method", "GET")
 
     return render_template(
-        "dashboard.jinja",
-        subjects=subjects,
-        methods=methods,
-        time_intervals=time_intervals,
-        user=user,
-        question_list=list_questions([], ""),
+        "/forgot_password.jinja", next_url=next_url, http_method=http_method
     )
+
+
+# Endpoint: /reset-password
+@frontend.route("/reset-password")
+def reset_password() -> flask_typing.ResponseReturnValue:
+    """
+    Reset password route.
+
+    Returns:
+        str: Rendered route.
+    """
+    token = request.args.get("token", "")
+
+    if not token:
+        forgot_password()
+
+    success = (
+        internal_request(url_for("backend.user.check_token", token=token)).status_code
+        == HTTPStatus.OK
+    )
+
+    if not success:
+        return render_template("/invalid_reset.jinja")
+
+    return render_template("/reset_password.jinja", token=token)
+
+
+# QUESTION SEARCH   %------------------------------------------------------------------%
 
 
 # Endpoint: /list
