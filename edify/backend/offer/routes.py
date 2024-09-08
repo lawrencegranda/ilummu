@@ -157,7 +157,7 @@ def get_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
         "amount": fields.Float(required=True),
     }
 )
-# TODO: only update the price, requires the offer is active and status is SENT
+
 def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
     """
     Update an offer price
@@ -188,6 +188,14 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
             "User is not owner of the offer",
             ErrorType.UNAUTHORIZED,
         )
+        
+    # Check if offer is active
+    if not offer.active:
+        return error_response("Offer is not active", ErrorType.BAD_REQUEST)
+    
+    # Check that offer status is SENT
+    if not offer.status == OfferStatusEnum.SENT:
+        return error_response("Offer status is not SENT", ErrorType.BAD_REQUEST)
 
     # Update offer fields from args
     if not (offer.question.price <= args["amount"] <= 2 * offer.question.price):
