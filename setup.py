@@ -34,6 +34,4 @@ if __name__ == "__main__":
         populate_constants()
         db.session.commit()
 
-        # Temporary
-        populate_fake()
-        db.session.commit()
+        print("Added constants.")

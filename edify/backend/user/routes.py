@@ -4,7 +4,7 @@ from http import HTTPStatus
 from typing import Optional, Any, Tuple
 
 # Third-Party Framework imports
-from flask import Blueprint, url_for, jsonify, current_app, request
+from flask import Blueprint, url_for, jsonify, current_app, request, render_template
 from flask import typing as flask_typing
 from flask_jwt_extended import (
     jwt_required,
@@ -45,13 +45,10 @@ from edify.utils.utils import (
     validate_phone,
     generate_funny_username,
     format_phone,
+    validate_password,
 )
-from edify.backend.user.utils import (
-    get_current_user,
-    generate_access_token,
-    generate_refresh_token,
-)
-
+from edify.backend.user.utils import get_current_user, generate_refresh_token
+from edify.backend.mail.utils import send
 
 # -----------------------------------------------------------------------------
 # Route Blueprint
@@ -91,7 +88,7 @@ def refresh() -> flask_typing.ResponseReturnValue:
     """
     user = get_current_user()
     print(f"Refreshing token... User {user.id}")
-    token = generate_access_token(user)
+    token = user.get_access_token()
     db.session.commit()
     response = jsonify({"access_token": token})
     set_access_cookies(response, token)
@@ -149,7 +146,7 @@ def login(args) -> flask_typing.ResponseReturnValue:
     #     return error_response("Phone not verified", ErrorType.USER_NOT_VERIFIED)
 
     # Generate and commit the access token for the user
-    access_token = generate_access_token(user)
+    access_token = user.get_access_token()
     db.session.commit()
 
     if user.auth_level in [AuthLevelEnum.SCHOOL_ADMIN, AuthLevelEnum.SUPER_ADMIN]:
@@ -253,8 +250,15 @@ def signup(args) -> flask_typing.ResponseReturnValue:
     if not major:
         return error_response("Invalid Major.", ErrorType.BAD_REQUEST)
 
+    # Check password
+    password = args["password"]
+    valid, msg = validate_password(password)
+
+    if not valid:
+        return error_response(msg, ErrorType.BAD_REQUEST)
+
     # Hash password before storing it in the db for privacy purposes
-    hashed_password = User.hash_password(args["password"])
+    hashed_password = User.hash_password(password)
 
     # Generate a unique and funny username
     n = 3
@@ -291,7 +295,7 @@ def signup(args) -> flask_typing.ResponseReturnValue:
     db.session.commit()
 
     # Generate the access token for the user
-    access_token = generate_access_token(user)
+    access_token = user.get_access_token()
 
     # Create a notification for the new user
     notif = Notification(
@@ -315,3 +319,159 @@ def signup(args) -> flask_typing.ResponseReturnValue:
         )
 
     return (response, HTTPStatus.CREATED)
+
+
+# Endpoint: /backend/user/reset-email
+@user.route("/reset-email", methods=["POST"])
+@use_args(
+    {
+        "email": fields.Email(required=True),
+    }
+)
+def reset_email(args) -> flask_typing.ResponseReturnValue:
+    """
+    Endpoint to reset send an email to reset password.
+
+    Args:
+        args (dict): The login arguments containing email.
+
+    Returns:
+        Response: Send email.
+    """
+    # Get the user corresponding to the email that is logging in
+    user = (
+        db.session.query(User)
+        .filter_by(email=args["email"].lower(), is_mock=False)
+        .first()
+    )
+
+    # If user not found, do not send email.
+    if not user:
+        return jsonify({}), HTTPStatus.OK
+
+    # Generate token.
+    token = user.generate_reset_token()
+
+    # Format url with token
+    url = url_for("frontend.reset_password", token=token, _external=True)
+
+    # Render html
+    html = render_template("/reset_email.jinja", name=user.username, action_url=url)
+
+    # Send email
+    send(subject="Edify: Password reset request", html=html, recipients=[user.email])
+
+    # Create a notification for the forgot password
+    notif = Notification(
+        type=NotificationTypeEnum.PASSWORD_RESET,
+        message=f'You initated the password reset process on {datetime.now().strftime("%m/%d/%Y %H:%M")}.',
+        user_id=user.id,
+    )
+    db.session.add(notif)
+    db.session.commit()
+
+    return jsonify({}), HTTPStatus.OK
+
+
+# Endpoint: /backend/user/check-reset-token
+@user.route("/check-reset-token", methods=["GET"])
+@use_args(
+    {
+        "token": fields.Str(required=True),
+    },
+    location="query",
+)
+def check_token(args) -> flask_typing.ResponseReturnValue:
+    """
+    Endpoint to check a reset token.
+
+    Args:
+        args (dict): The token.
+
+    Returns:
+        Response: Tuple. Success or failure.
+    """
+    token = args["token"]
+    user = User.validate_reset_token(token)
+
+    # Check if user exists
+    if not user:
+        return error_response(
+            "Invalid or expired reset link. Please try again.", ErrorType.BAD_REQUEST
+        )
+
+    return jsonify({}), HTTPStatus.OK
+
+
+# Endpoint: /backend/user/reset-password
+@user.route("/reset-password", methods=["POST"])
+@use_args(
+    {
+        "password": fields.Str(required=True),
+        "token": fields.Str(required=True),
+    }
+)
+def reset_password(args) -> flask_typing.ResponseReturnValue:
+    """
+    Endpoint to reset a password.
+
+    Args:
+        args (dict): The new password and the token.
+
+    Returns:
+        Response: Tuple. Access token and user, and code.
+    """
+    token = args["token"]
+    user = User.validate_reset_token(token)
+
+    # Check if user exists
+    if not user:
+        return error_response(
+            "Invalid or expired reset link. Please try again.", ErrorType.BAD_REQUEST
+        )
+
+    password = args["password"]
+
+    # Make sure it is a new password
+    if user.check_password(password):
+        return error_response(
+            "Password must be different from your last password.", ErrorType.BAD_REQUEST
+        )
+
+    # Check password
+    valid, msg = validate_password(password)
+
+    if not valid:
+        return error_response(msg, ErrorType.BAD_REQUEST)
+
+    # Hash password before storing it in the db for privacy purposes
+    user.password = User.hash_password(password)
+    user.password_last_reset = datetime.utcnow()
+    db.session.commit()
+
+    # Create a notification for the password reset
+    notif = Notification(
+        type=NotificationTypeEnum.PASSWORD_RESET,
+        message=f'Your password was reset on {datetime.now().strftime("%m/%d/%Y %H:%M")}.',
+        user_id=user.id,
+    )
+    db.session.add(notif)
+    db.session.commit()
+
+    # Generate the access token for the user
+    access_token = user.get_access_token()
+
+    # Return access token and user
+    response = jsonify(
+        {"access_token": access_token, "user": user.to_dict(simplified=True)}
+    )
+
+    # Set up cookies
+    set_access_cookies(response, access_token)
+    set_refresh_cookies(
+        response,
+        generate_refresh_token(user),
+        max_age=current_app.config["JWT_REFRESH_TOKEN_EXPIRES"],
+    )
+
+    return response, HTTPStatus.OK

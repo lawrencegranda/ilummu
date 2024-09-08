@@ -5,7 +5,6 @@ import datetime
 # Third-Party Framework imports
 from faker import Faker
 from flask import Flask, url_for
-from flask_jwt_extended import create_access_token
 import pytest
 
 # Local Application imports
