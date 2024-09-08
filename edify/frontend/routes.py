@@ -116,6 +116,48 @@ question = Blueprint("question", __name__, url_prefix="/question")
 # -----------------------------------------------------------------------------
 
 
+# Endpoint: /forgot-password
+@frontend.route("/forgot-password")
+def forgot_password() -> flask_typing.ResponseReturnValue:
+    """
+    Forgot password route.
+
+    Returns:
+        str: Rendered route.
+    """
+    next_url = request.args.get("next_url", url_for("frontend.index"))
+    http_method = request.args.get("http_method", "GET")
+
+    return render_template(
+        "/forgot_password.jinja", next_url=next_url, http_method=http_method
+    )
+
+
+# Endpoint: /reset-password
+@frontend.route("/reset-password")
+def reset_password() -> flask_typing.ResponseReturnValue:
+    """
+    Reset password route.
+
+    Returns:
+        str: Rendered route.
+    """
+    token = request.args.get("token", "")
+
+    if not token:
+        forgot_password()
+
+    success = (
+        internal_request(url_for("backend.user.check_token", token=token)).status_code
+        == HTTPStatus.OK
+    )
+
+    if not success:
+        return render_template("/invalid_reset.jinja")
+
+    return render_template("/reset_password.jinja", token=token)
+
+
 # Endpoint: /
 @frontend.route("/")
 @jwt_required(optional=True)

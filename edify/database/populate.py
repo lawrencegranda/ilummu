@@ -172,7 +172,10 @@ def populate_majors():
 
         for major_data in majors_data:
             # Check for existing major by name
-            existing_major = Major.query.filter_by(name=major_data["major"]).first()
+            existing_major = Major.query.filter_by(
+                name=major_data["major"].strip().title()
+            ).first()
+
             if not existing_major and school:
                 # Associate major with the correct academic field
                 academic_field = AcademicField.query.filter_by(

@@ -18,9 +18,15 @@ class Config:
     ENV = os.environ["ENV"]
 
     if ENV == EdifyEnvironments.PRODUCTION.value:
-        raise Exception("Production environment not in service.")
+        SQLALCHEMY_DATABASE_URI = os.environ["DB_URL"]
+
+        # Web settings
+        HOST = os.environ["HOST"]
+        PORT = os.environ["PORT"]
+
     elif ENV == EdifyEnvironments.LOCAL.value:
         SQLALCHEMY_DATABASE_URI = os.environ["DB_URL"]
+
     elif ENV == EdifyEnvironments.TEST.value:
         TESTING = True
         SQLALCHEMY_DATABASE_URI = "sqlite:///site.db"
@@ -55,3 +61,6 @@ class Config:
     MAIL_PASSWORD = os.environ["MAIL_PASSWORD"]
     MAIL_USE_TLS = int(os.environ["MAIL_USE_TLS"]) == 1
     MAIL_USE_SSL = int(os.environ["MAIL_USE_SSL"]) == 1
+
+    # Reset password length
+    RESET_PASS_TOKEN_MAX_AGE: int = int(timedelta(minutes=10).total_seconds())

@@ -44,7 +44,7 @@
       // Handle success
 
       let http_method = "{{ http_method | default('GET') }}"
-      let next_url = "{{ next_url }}";
+      let next_url = "{{ next_url | default(url_for("frontend.dashboard")) }}";
 
       if (http_method === "POST") {
           $.ajax({
@@ -346,7 +346,7 @@
 
             {% if login == true %}
               <p class="signup-forgot">
-                <a href='{{ url_for("frontend.signup") }}'>Forgot Password?</a>
+                <a href='{{ url_for("frontend.forgot_password", next_url=next_url, http_method=http_method) }}'>Forgot Password?</a>
               </p>
             {% endif %}
 
