@@ -59,7 +59,7 @@ class TestCreateOffer:
 
         # Assert that the offer user ID matches the current user ID
         assert offer.user_id == user.id, f"User ID does not match {offer.user_id}"
-        
+
         # Query for a notification created for the offer creator
         notification_offer_creator = (
             db.session.query(Notification)
@@ -70,7 +70,9 @@ class TestCreateOffer:
 
         # Assert that notification was created for the offer creator
         assert notification_offer_creator, "Notification not created"
-        assert notification_offer_creator.user_id == offer.user_id, "Notification user is not offer_creator"
+        assert (
+            notification_offer_creator.user_id == offer.user_id
+        ), "Notification user is not offer_creator"
 
         # Query for a notification created for the question author
         notification_question_author = (
@@ -82,7 +84,9 @@ class TestCreateOffer:
 
         # Assert that notification was created for the question author
         assert notification_question_author, "Notification not created"
-        assert notification_question_author.user_id == question.user_id, "Notification user is not question_author"
+        assert (
+            notification_question_author.user_id == question.user_id
+        ), "Notification user is not question_author"
 
     def test_create_offer_invalid_question(self, client_with_question, user_jwt):
         """
@@ -102,7 +106,6 @@ class TestCreateOffer:
 
         # Assert that the response message indicates the question does not exist
         assert response.get_json()["msg"] == "Question does not exist"
-        
 
     def test_create_offer_existing_offer(self, client_with_question, user_jwt):
         """
@@ -220,6 +223,7 @@ class TestCreateOffer:
         # Assert that the response message indicates the question is already solved
         assert response.get_json()["msg"] == "Question is already solved"
 
+
 class TestGetOffer:
 
     def test_get_offer_success(self, client_with_offer, user_jwt):
@@ -267,6 +271,7 @@ class TestGetOffer:
             "msg" in response.get_json()
             and "Offer not found" in response.get_json()["msg"]
         ), response.get_json()
+
 
 class TestUpdateOffer:
 
@@ -394,8 +399,7 @@ class TestUpdateOffer:
 
         # Assert that the correct error message is returned
         assert (
-            response.get_json()["msg"]
-            == "User is not owner of the offer"
+            response.get_json()["msg"] == "User is not owner of the offer"
         ), response.json
 
         # Retrieve the current offer as a dictionary
@@ -411,8 +415,8 @@ class TestUpdateOffer:
 
             # Assert that all values remain unchanged
             assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
-            
-            
+
+
 class TestAcceptOffer:
 
     def test_accept_offer_success(self, client_with_offer, user_jwt):
@@ -476,7 +480,9 @@ class TestAcceptOffer:
 
         # Assert that a notification was created and it is associated with the offer creator.
         assert notification_offer_creator, "Notification not created"
-        assert notification_offer_creator.user_id == offer.user_id, "Notification user is not offer_creator"
+        assert (
+            notification_offer_creator.user_id == offer.user_id
+        ), "Notification user is not offer_creator"
 
         # Check if a notification was created for the question's author.
         notification_question_author = (
@@ -488,7 +494,9 @@ class TestAcceptOffer:
 
         # Assert that a notification was created and it is associated with the question author.
         assert notification_question_author, "Notification not created"
-        assert notification_question_author.user_id == question.user_id, "Notification user is not question_author"
+        assert (
+            notification_question_author.user_id == question.user_id
+        ), "Notification user is not question_author"
 
         # Reload the current offer's details and convert them to a dictionary.
         offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
@@ -645,6 +653,7 @@ class TestAcceptOffer:
 
             assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
 
+
 class TestDeclineOffer:
 
     def test_decline_offer_success(self, client_with_offer, user_jwt):
@@ -658,7 +667,7 @@ class TestDeclineOffer:
 
         # Verify that there is an offer in the database
         assert offer, "User does not have any offer in Database"
-        
+
         # Ensure that the user is the author of the question
         user = offer.question.user
 
@@ -691,7 +700,9 @@ class TestDeclineOffer:
 
         # Assert that a notification was created for the offer creator
         assert notification_offer_creator, "Notification not created"
-        assert notification_offer_creator.user_id == offer.user_id, "Notification user is not offer_creator"
+        assert (
+            notification_offer_creator.user_id == offer.user_id
+        ), "Notification user is not offer_creator"
 
         # Check for the creation of a notification for the question author
         notification_question_author = (
@@ -703,7 +714,9 @@ class TestDeclineOffer:
 
         # Assert that a notification was created for the question author
         assert notification_question_author, "Notification not created"
-        assert notification_question_author.user_id == question.user_id, "Notification user is not question_author"
+        assert (
+            notification_question_author.user_id == question.user_id
+        ), "Notification user is not question_author"
 
         # Retrieve the current offer as a dictionary for comparison
         offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
@@ -775,7 +788,7 @@ class TestDeclineOffer:
 
         # Verify that there is an offer in the database
         assert offer, "User does not have any offer in Database"
-        
+
         # Ensure the user is the author of the question
         user = offer.question.user
 
