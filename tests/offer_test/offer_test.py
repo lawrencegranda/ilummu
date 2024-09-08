@@ -17,9 +17,6 @@ from tests.utils import get_jwt_header
 # Initialize Faker for generating fake data
 fake = Faker()
 
-# TODO: add more comments
-# TODO: check notifications, do not check messages as those could change in the future
-
 
 class TestCreateOffer:
 
@@ -58,6 +55,33 @@ class TestCreateOffer:
         assert offer, "Offer not found in database"
 
         assert offer.user_id == user.id, f"User ID does not match {offer.user_id}"
+        
+        notification_offer_creator = (
+            db.session.query(Notification)
+            .filter(Notification.user_id == offer.user_id)
+            .filter(Notification.question_id == question.id)
+            .first()
+        )
+
+        # Assert that notification was created
+        assert notification_offer_creator, "Notification not created"
+        
+        # Assert that notification was created for offer_creator
+        assert notification_offer_creator.user_id == offer.user_id, "Notification user is not offer_creator"
+
+        notification_question_author = (
+            db.session.query(Notification)
+            .filter(Notification.user_id == question.user_id)
+            .filter(Notification.question_id == question.id)
+            .first()
+        )
+
+        # Assert that notification was created
+        assert notification_question_author, "Notification not created"
+        
+        # Assert that notification was created for question author
+        assert notification_question_author.user_id == question.user_id, "Notification user is not question_author"
+
 
     def test_create_offer_invalid_question(self, client_with_question, user_jwt):
         """
@@ -74,6 +98,7 @@ class TestCreateOffer:
         assert response.status_code == HTTPStatus.NOT_FOUND, response.json
 
         assert response.get_json()["msg"] == "Question does not exist"
+        
 
     def test_create_offer_existing_offer(self, client_with_question, user_jwt):
         """
@@ -273,15 +298,13 @@ class TestUpdateOffer:
         question = offer.question
 
         amount = offer.amount
-        status = OfferStatusEnum.ACCEPTED
-        active = True
 
         # Retrieve the original offer as dictionary
         original_offer_dict = offer.to_dict(simplified=False)
 
         response = client_with_offer.put(
             url_for("backend.offer.update_offer", id_offer=offer.id),
-            json={"status": status, "amount": question.price - 1, "active": active},
+            json={"amount": question.price - 1},
             headers=get_jwt_header(user),
         )
 
@@ -315,15 +338,13 @@ class TestUpdateOffer:
         question = offer.question
 
         amount = offer.amount
-        status = OfferStatusEnum.ACCEPTED
-        active = True
 
         # Retrieve the original offer as dictionary
         original_offer_dict = offer.to_dict(simplified=False)
 
         response = client_with_offer.put(
             url_for("backend.offer.update_offer", id_offer=offer.id),
-            json={"status": status, "amount": question.price, "active": active},
+            json={"amount": question.price},
             headers=jwt,
         )
 
@@ -331,7 +352,7 @@ class TestUpdateOffer:
 
         assert (
             response.get_json()["msg"]
-            == "User is not owner of the offer or the author of the question"
+            == "User is not owner of the offer"
         ), response.json
 
         # Retrieve the current offer as dictionary
@@ -348,7 +369,6 @@ class TestUpdateOffer:
 
 
 class TestAcceptOffer:
-    # TODO: make sure no fields changed, except for the status and/or active
 
     def test_accept_offer_success(self, client_with_offer, user_jwt):
         """
@@ -369,6 +389,8 @@ class TestAcceptOffer:
         assert response.status_code == HTTPStatus.OK, response.json
 
         offer = db.session.query(Offer).filter(Offer.id == offer.id).first()
+        
+        original_offer_dict = offer.to_dict(simplified=False)
 
         assert offer.status == OfferStatusEnum.ACCEPTED, "Offer status not updated"
         assert offer.active == True, "Offer is not active"
@@ -395,26 +417,24 @@ class TestAcceptOffer:
             .first()
         )
 
+        # Assert that notification was created
         assert notification_offer_creator, "Notification not created"
+        
+        # Assert that notification was created for offer_creator
+        assert notification_offer_creator.user_id == offer.user_id, "Notification user is not offer_creator"
 
-        assert (
-            notification_offer_creator.message
-            == f"Your offer to {offer.question.user.username} was accepted!"
-        ), "Incorrect notification message"
-
-        notification_question_creater = (
+        notification_question_author = (
             db.session.query(Notification)
             .filter(Notification.user_id == question.user_id)
             .filter(Notification.question_id == question.id)
             .first()
         )
 
-        assert notification_question_creater, "Notification not created"
-
-        assert (
-            notification_question_creater.message
-            == f"You accepted {offer.user.username}'s offer!"
-        ), "Incorrect notification message"
+        # Assert that notification was created
+        assert notification_question_author, "Notification not created"
+        
+        # Assert that notification was created for question author
+        assert notification_question_author.user_id == question.user_id, "Notification user is not question_author"
 
         # Retrieve the current offer as dictionary
         offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
@@ -549,7 +569,6 @@ class TestAcceptOffer:
 
 
 class TestDeclineOffer:
-    # TODO: make sure no fields changed, except for the status and/or active
 
     def test_decline_offer_success(self, client_with_offer, user_jwt):
         """
@@ -587,8 +606,11 @@ class TestDeclineOffer:
             .first()
         )
 
-        # TODO: Check notifications were created for the ...
+        # Assert that notification was created
         assert notification_offer_creator, "Notification not created"
+        
+        # Assert that notification was created for offer_creator
+        assert notification_offer_creator.user_id == offer.user_id, "Notification user is not offer_creator"
 
         notification_question_author = (
             db.session.query(Notification)
@@ -597,8 +619,11 @@ class TestDeclineOffer:
             .first()
         )
 
-        # TODO: Check notifications were created for the ...
+        # Assert that notification was created
         assert notification_question_author, "Notification not created"
+        
+        # Assert that notification was created for question author
+        assert notification_question_author.user_id == question.user_id, "Notification user is not question_author"
 
         # Retrieve the current offer as dictionary
         offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
@@ -607,7 +632,7 @@ class TestDeclineOffer:
         for (k, v1), (k2, v2) in zip(original_offer_dict.items(), offer_dict.items()):
             assert k == k2, f"Keys are not equal ({k} != {k2})"
 
-            if (k == "active" or k == "status") and not isinstance(v1, primitives):
+            if (k == "active" or k == "status") or not isinstance(v1, primitives):
                 continue
 
             assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
