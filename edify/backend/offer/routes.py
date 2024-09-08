@@ -157,7 +157,6 @@ def get_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
         "amount": fields.Float(required=True),
     }
 )
-
 def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
     """
     Update an offer price
@@ -188,11 +187,11 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
             "User is not owner of the offer",
             ErrorType.UNAUTHORIZED,
         )
-        
+
     # Check if offer is active
     if not offer.active:
         return error_response("Offer is not active", ErrorType.BAD_REQUEST)
-    
+
     # Check that offer status is SENT
     if not offer.status == OfferStatusEnum.SENT:
         return error_response("Offer status is not SENT", ErrorType.BAD_REQUEST)
@@ -260,6 +259,10 @@ def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
         return error_response(
             "User not permited to delete offer", ErrorType.UNAUTHORIZED
         )
+
+    # Check that offer status is SENT
+    if not offer.status == OfferStatusEnum.SENT:
+        return error_response("Offer status is not SENT", ErrorType.BAD_REQUEST)
 
     offer.status = OfferStatusEnum.REMOVED
     offer.active = False
@@ -373,6 +376,10 @@ def accept_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     if offer.status == OfferStatusEnum.DECLINED:
         return error_response("Offer is already declined", ErrorType.BAD_REQUEST)
 
+    # Check that offer status is SENT
+    if not offer.status == OfferStatusEnum.SENT:
+        return error_response("Offer status is not SENT", ErrorType.BAD_REQUEST)
+
     # Update offer status to accepted
     offer.status = OfferStatusEnum.ACCEPTED
 
@@ -401,7 +408,7 @@ def accept_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     # Create notification for the updated offer (user)
     notification_user = Notification(
         type=NotificationTypeEnum.OFFER_ACCEPTED,
-        message=f"Your offer to {offer.question.user.username} was accepted! Check the question informaation as soon as possible to get in touch with them.",
+        message=f"Your offer to {offer.question.user.username} was accepted! Check the question information as soon as possible to get in touch with them.",
         user_id=offer.user_id,
         question_id=offer.question.id,
     )
@@ -411,7 +418,7 @@ def accept_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     # Create notification for the updated offer (question author)
     notification_author = Notification(
         type=NotificationTypeEnum.OFFER_ACCEPTED,
-        message=f"You accepted {offer.user.username}'s offer!",
+        message=f"You accepted {offer.user.username}'s offer! Check the question information as soon as possible to get in touch with them.",
         user_id=offer.question.user_id,
         question_id=offer.question.id,
     )
@@ -481,6 +488,10 @@ def decline_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     # Check if offer is not already declined
     if offer.status == OfferStatusEnum.DECLINED:
         return error_response("Offer is already declined", ErrorType.BAD_REQUEST)
+
+    # Check that offer status is SENT
+    if not offer.status == OfferStatusEnum.SENT:
+        return error_response("Offer status is not SENT", ErrorType.BAD_REQUEST)
 
     # Update offer status to DECLINED
     offer.status = OfferStatusEnum.DECLINED
