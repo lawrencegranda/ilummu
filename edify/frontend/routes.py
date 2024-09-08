@@ -347,6 +347,49 @@ def reset_password() -> flask_typing.ResponseReturnValue:
     return render_template("/reset_password.jinja", token=token)
 
 
+# VERIFY EMAIL      %------------------------------------------------------------------%
+
+
+# Endpoint: /email-verification
+@frontend.route("/email-verification")
+def email_verification() -> flask_typing.ResponseReturnValue:
+    """
+    Route to verify email.
+
+    Returns:
+        str: Rendered route.
+    """
+
+    return render_template("/email_verification.jinja")
+
+
+# Endpoint: /verify-email
+@frontend.route("/verify-email")
+def verify_email() -> flask_typing.ResponseReturnValue:
+    """
+    Email verification.
+
+    Returns:
+        str: Rendered route.
+    """
+    token = request.args.get("token", "")
+
+    if not token:
+        return render_template("/invalid_verification.jinja")
+
+    success = (
+        internal_request(
+            url_for("backend.user.check_auth_token", token=token)
+        ).status_code
+        == HTTPStatus.OK
+    )
+
+    if not success:
+        return render_template("/invalid_verification.jinja")
+
+    return dashboard()
+
+
 # QUESTION SEARCH   %------------------------------------------------------------------%
 
 
