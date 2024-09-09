@@ -818,7 +818,6 @@ class Course(BaseModel):
         Index("ix_course_code", "code"),
         Index("ix_course_academic_field_id", "academic_field_id"),
         UniqueConstraint("code", "name", "academic_field_id", name="_course_field_uc"),
-        UniqueConstraint("code", "name", "school_id", name="_course_school_uc"),
     )
 
     # Primary key that identifies the course

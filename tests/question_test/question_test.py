@@ -11,6 +11,7 @@ import pytest
 from edify import db
 from edify.models import User, AcademicField, Course, Method, Question
 from tests.utils import get_jwt_header
+from edify.utils.constants import primitives
 
 # Initialize Faker for generating fake data
 fake = Faker()
@@ -302,9 +303,6 @@ class TestDeleteQuestion:
 
         # Convert to dict
         question_dict = question.to_dict(simplified=False)
-
-        # Data types to check
-        primitives = (bool, str, int, float, type(None))
 
         # Assert all attributes are equal except for visibility
         for (k, v1), (k2, v2) in zip(

@@ -100,7 +100,7 @@ class OfferStatusEnum(EnumBase):
     EDITED = "EDITED"
     REMOVED = "REMOVED"
 
-    inactive = [REMOVED]
+    inactive = [REMOVED, DECLINED]
 
 
 class NotificationTypeEnum(EnumBase):
@@ -171,3 +171,7 @@ QuestionSchema = {
     "price": fields.Float(required=True, validate=validate.Range(min=0)),
     "request_message": fields.Str(required=True, validate=validate.Length(min=1)),
 }
+
+
+# Primitive datatypes
+primitives = (bool, str, int, float, type(None))
