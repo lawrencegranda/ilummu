@@ -1,1 +1,1 @@
-web: gunicorn -b 0.0.0.0:6000 app:app
+web: gunicorn -b ${HOST}:${PORT} app:app

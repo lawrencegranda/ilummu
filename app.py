@@ -9,11 +9,9 @@ app = create_app(Config)
 
 # Run the Flask app
 if __name__ == "__main__":
-    if app.config["ENV"] == EdifyEnvironments.PRODUCTION.value:
-        print("Running on production...\n")
-        app.run(host=app.config["HOST"], port=app.config["PORT"])
+    print("Running on production...\n")
 
-    elif app.config["ENV"] == EdifyEnvironments.LOCAL.value:
+    if app.config["ENV"] == EdifyEnvironments.LOCAL.value:
         print("Running locally...\n")
         app.run(debug=False)
 
