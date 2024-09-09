@@ -1,1 +1,1 @@
-web: poetry run gunicorn -b ${HOST}:${PORT} app:app
+web: gunicorn -b ${HOST}:${PORT} app:app
