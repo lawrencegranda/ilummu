@@ -65,7 +65,7 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
     # Check if user has made an unresolved offer to question
     existing_offer = (
         db.session.query(Offer)
-        .filter_by(question_id=question_id, user_id=user.id)
+        .filter_by(question_id=question_id, user_id=user.id, active=True)
         .first()
     )
     if existing_offer:
