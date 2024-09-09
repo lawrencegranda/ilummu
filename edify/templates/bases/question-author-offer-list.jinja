@@ -1,3 +1,36 @@
+<script>
+  function acceptOffer(id){
+      let url = '{{ url_for("backend.offer.accept_offer", offer_id="0") }}'.replace('0', id);
+
+      $.ajax({
+          url: url,
+          type: 'POST',
+          success: function (response) {
+              // Reload the page
+              location.reload()
+          },
+          error: function(xhr, status, error) {
+              console.error('Error: ', error);
+          }
+      });
+  } 
+  
+  function declineOffer(id){
+      let url = '{{ url_for("backend.offer.decline_offer", offer_id="0") }}'.replace('0', id);
+      
+      $.ajax({
+          url: url,
+          type: 'POST',
+          success: function (response) {
+              // Reload the page
+              location.reload()
+          },
+          error: function(xhr, status, error) {
+              console.error('Error: ', error);
+          }
+      });
+  } 
+</script>
 <div class="your-offers-wrapper">
   <p class="offer-title">
     Your Offers:
@@ -47,10 +80,16 @@
               ${{ '%.2f' % offer['amount'] }}
             </div>
             <div class="offer-buttons">
-              <button id="btn-accept-offer" class="btn btn-my-offer" type="button">
+              <button id="btn-accept-offer"
+                      class="btn btn-my-offer"
+                      type="button"
+                      onclick="acceptOffer({{ offer['id'] }})">
                 accept
               </button>
-              <button id="btn-decline-offer" class="btn btn-my-offer" type="button">
+              <button id="btn-decline-offer"
+                      class="btn btn-my-offer"
+                      type="button"
+                      onclick="declineOffer({{ offer['id'] }})">
                 decline
               </button>
             </div>
