@@ -1107,7 +1107,7 @@ img.image-preview {
   min-width: 20px;
   min-height: 20px;
   height: 60%;
-  width: fit-content;
+  width: auto;
   filter: invert(100%);
   vertical-align: middle;
   margin-top: auto;
