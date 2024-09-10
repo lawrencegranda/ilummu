@@ -32,6 +32,11 @@
   white-space: normal;
 }
 
+input {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
 html {
   font-family: Inter, sans-serif;
   height: 100%;
