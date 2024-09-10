@@ -316,21 +316,6 @@ strong:hover {
 }
 
 @media only screen and (min-width: 0px) and (max-width: 700px) {
-  .navbar {
-    height: 75px;
-  }
-
-  .navbar.logged {
-    height: 115px;
-  }
-
-  .navigation-center {
-    top: 55px;
-    position: absolute;
-    align-items: center;
-    width: 100%;
-  }
-
   #search-box {
     font-size: 0.9rem;
     height: 35px;
@@ -345,12 +330,36 @@ strong:hover {
     font-size: 22px;
   }
 
-  .bell {
-    height: 22px !important;
+  .navbar {
+    height: 75px !important;
+  }
+  .navbar.logged {
+    height: 115px !important;
   }
 
+  .navigation-center {
+    top: 55px !important;
+  }
+}
+
+@media only screen and (min-width: 0px) and (max-width: 900px) {
   .cornell-login-brand {
     display: none;
+  }
+
+  .navbar {
+    height: 95px;
+  }
+
+  .navbar.logged {
+    height: 135px;
+  }
+
+  .navigation-center {
+    top: 70px;
+    position: absolute;
+    align-items: center;
+    width: 100%;
   }
 }
 
@@ -1740,6 +1749,7 @@ button.btn-reply:hover {
 
 .bell {
   height: 27px;
+  min-width: 22px;
 }
 
 #notification:active,
