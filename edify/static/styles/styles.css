@@ -32,6 +32,19 @@
   white-space: normal;
 }
 
+select {
+  padding: 1px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='black'><polygon points='0,0 100,0 50,50'/></svg>")
+    no-repeat;
+  background-size: 12px;
+  background-position: right 0.3em top 85%;
+  background-repeat: no-repeat;
+  padding-right: 20px !important;
+}
+
 html {
   font-family: Inter, sans-serif;
   height: 100%;
@@ -316,21 +329,6 @@ strong:hover {
 }
 
 @media only screen and (min-width: 0px) and (max-width: 700px) {
-  .navbar {
-    height: 75px;
-  }
-
-  .navbar.logged {
-    height: 115px;
-  }
-
-  .navigation-center {
-    top: 55px;
-    position: absolute;
-    align-items: center;
-    width: 100%;
-  }
-
   #search-box {
     font-size: 0.9rem;
     height: 35px;
@@ -345,12 +343,36 @@ strong:hover {
     font-size: 22px;
   }
 
-  .bell {
-    height: 22px !important;
+  .navbar {
+    height: 75px !important;
+  }
+  .navbar.logged {
+    height: 115px !important;
   }
 
+  .navigation-center {
+    top: 55px !important;
+  }
+}
+
+@media only screen and (min-width: 0px) and (max-width: 900px) {
   .cornell-login-brand {
     display: none;
+  }
+
+  .navbar {
+    height: 95px;
+  }
+
+  .navbar.logged {
+    height: 135px;
+  }
+
+  .navigation-center {
+    top: 70px;
+    position: absolute;
+    align-items: center;
+    width: 100%;
   }
 }
 
@@ -1107,7 +1129,7 @@ img.image-preview {
   min-width: 20px;
   min-height: 20px;
   height: 60%;
-  width: fit-content;
+  width: auto;
   filter: invert(100%);
   vertical-align: middle;
   margin-top: auto;
@@ -1740,6 +1762,7 @@ button.btn-reply:hover {
 
 .bell {
   height: 27px;
+  min-width: 22px;
 }
 
 #notification:active,
@@ -2752,8 +2775,9 @@ input#signup-terms-box {
   align-self: flex-start;
   height: 19px !important;
   max-width: 19px !important;
-  width: 100% !important;
+  width: 19px !important;
   margin: 0;
+  flex-shrink: 0;
 }
 
 p.signup-terms-text {
