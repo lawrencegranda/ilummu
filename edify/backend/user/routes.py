@@ -488,12 +488,8 @@ def reset_password(args) -> flask_typing.ResponseReturnValue:
 
 # Endpoint: /backend/user/verify-email
 @user.route("/verify-email", methods=["POST"])
-@use_args(
-    {
-        "email": fields.Email(required=True),
-    }
-)
-def verify_email(args) -> flask_typing.ResponseReturnValue:
+@jwt_required()
+def verify_email() -> flask_typing.ResponseReturnValue:
     """
     Endpoint to reset send an email to verify email.
 
@@ -503,50 +499,43 @@ def verify_email(args) -> flask_typing.ResponseReturnValue:
     Returns:
         Response: Send email.
     """
-    # Get the user corresponding to the email that is logging in
-    user = (
-        db.session.query(User)
-        .filter_by(email=args["email"].lower(), is_mock=False)
-        .first()
-    )
+    user = get_current_user()
 
     # If user not found, error.
     if not user:
         return error_response("User not found", ErrorType.USER_NOT_FOUND)
 
-    # Generate token.
-    token = user.generate_auth_token()
-
-    # Format url with token
-    url = url_for("frontend.verify_email", token=token, _external=True)
+    # Generate code.
+    code = user.generate_session_auth_code()
 
     # Render html
-    html = render_template("/verify_email.jinja", name=user.username, action_url=url)
+    html = render_template("/verify_email.jinja", name=user.username, code=code)
 
     # Send email
     send(subject="Edify: Verify your email", html=html, recipients=[user.email])
 
-    # Create a notification for the forgot password
-    notif = Notification(
+    # Create a notification for the email sent
+    notification = Notification(
         type=NotificationTypeEnum.PASSWORD_RESET,
-        message=f"You verification email sent!",
+        message=f"A verification code was sent to your email!",
         user_id=user.id,
     )
-    db.session.add(notif)
+    db.session.add(notification)
     db.session.commit()
 
     return jsonify({}), HTTPStatus.OK
 
 
-# Endpoint: /backend/user/check-auth-token
-@user.route("/check-auth-token", methods=["POST"])
+# Endpoint: /backend/user/check-auth-code
+@user.route("/check-auth-code", methods=["POST"])
+@jwt_required()
 @use_args(
     {
-        "token": fields.Str(required=True),
+        "code": fields.Str(required=True),
     },
     location="query",
 )
-def check_auth_token(args) -> flask_typing.ResponseReturnValue:
+def check_auth_code(args) -> flask_typing.ResponseReturnValue:
     """
     Endpoint to check an identity verification auth token.
 
@@ -556,14 +545,15 @@ def check_auth_token(args) -> flask_typing.ResponseReturnValue:
     Returns:
         Response: Tuple. Success or failure.
     """
-    token = args["token"]
-    user = User.validate_auth_token(token)
+    code = args["code"]
+    user = get_current_user()
 
-    # Check if user exists
+    # If user not found, error.
     if not user:
-        return error_response(
-            "Invalid or expired reset link. Please try again.", ErrorType.BAD_REQUEST
-        )
+        return error_response("User not found", ErrorType.USER_NOT_FOUND)
+
+    if not user.validate_session_auth_code(code):
+        return error_response("Invalid or expired code", ErrorType.BAD_REQUEST)
 
     # Set verified status
     user.mail_is_verified = True
