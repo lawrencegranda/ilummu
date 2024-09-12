@@ -106,8 +106,9 @@ def create_question(args):
         # Commit and roll back if there's a database error
         try:
             db.session.commit()
-        except IntegrityError:
+        except IntegrityError as e:
             db.session.rollback()
+            print(f"IntegrityError: {e}")
             return error_response("Failed to create course.", ErrorType.BAD_REQUEST)
 
     # Create a new question associated with the user and course
@@ -126,8 +127,9 @@ def create_question(args):
     # Commit and roll back if there's a database error
     try:
         db.session.commit()
-    except IntegrityError:
+    except IntegrityError as e:
         db.session.rollback()
+        print(f"IntegrityError: {e}")
         return error_response("Failed to create question.", ErrorType.BAD_REQUEST)
 
     # Create a notification for the new question
