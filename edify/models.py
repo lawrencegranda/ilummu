@@ -6,9 +6,10 @@ from functools import wraps
 from http import HTTPStatus
 import json
 from typing import Optional, Dict, Any, List
+import random
 
 # Third-Party Framework imports
-from flask import current_app, jsonify, url_for
+from flask import current_app, jsonify, url_for, session
 from flask_jwt_extended import create_access_token, decode_token, create_refresh_token
 from flask_login import UserMixin
 from itsdangerous.url_safe import URLSafeTimedSerializer
@@ -223,25 +224,41 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
 
         return user
 
-    def generate_auth_token(self):
-        serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+    def generate_session_auth_code(self):
+        # Generate a random 6-digit code
+        auth_code = random.randint(100000, 999999)
 
-        return serializer.dumps(self.id)
+        # Store the code in the session
+        session["auth"] = {
+            "code": auth_code,
+            "id": self.id,
+            "expiration": datetime.utcnow()
+            + timedelta(seconds=current_app.AUTH_TOKEN_MAX_AGE),
+        }
 
-    @staticmethod
-    def validate_auth_token(token: str):
-        serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
-        try:
-            user_id = serializer.loads(
-                token,
-                max_age=current_app.config["AUTH_TOKEN_MAX_AGE"],
-            )
-        except (BadSignature, SignatureExpired):
-            return None
+        return auth_code
 
-        user = db.session.get(User, user_id)
+    def validate_session_auth_code(self):
+        # Retrieve the stored code and timestamp from the session
+        auth = session.get("auth")
 
-        return user
+        # Check if the data is stored in the session
+        if not auth:
+            return False
+
+        # Check if the code has expired
+        if datetime.utcnow() > auth["expiration"]:
+            return False
+
+        # Check if the input code matches the stored code
+        if str(auth["code"]) != str(input_code):
+            return False
+
+        # Check the identity
+        if auth["id"] != self.id:
+            return False
+
+        return True
 
     def __repr__(self):
         return f"({self.id}, {self.username}, {self.email}\n"
