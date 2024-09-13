@@ -1,6 +1,7 @@
 # Standard Library imports
 from http import HTTPStatus
 from typing import Optional, Any, Tuple
+from datetime import datetime, timedelta
 
 # Third-Party Framework imports
 from flask import Blueprint, Flask, jsonify
@@ -76,6 +77,21 @@ def create_question(args):
     if academic_field is None:
         return error_response(
             f"Invalid academic field or not in {user.school.name}",
+            ErrorType.BAD_REQUEST,
+        )
+
+    # No double requests
+    recent_question = (
+        db.session.query(Question)
+        .filter_by(user_id=user.id)
+        .order_by(Question.created_at.desc())
+        .first()
+    )
+    if recent_question and datetime.utcnow() - recent_question.created_at < timedelta(
+        seconds=1
+    ):
+        return error_response(
+            f"Too many requests, wait",
             ErrorType.BAD_REQUEST,
         )
 
