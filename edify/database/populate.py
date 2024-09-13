@@ -60,7 +60,7 @@ def populate_academic_fields():
         {"value": "cals", "name": "Agriculture and Life Sciences"},
         {"value": "aap", "name": "Architecture, Art and Planning"},
         {"value": "as", "name": "Arts and Sciences"},
-        {"value": "dyson", "name": "Dyson"},
+        {"value": "dyson", "name": "Dyson School of Applied Economics"},
         {"value": "cis", "name": "Bowers CIS"},
         {"value": "engineering", "name": "Engineering"},
         {"value": "human-ecology", "name": "Human Ecology"},
