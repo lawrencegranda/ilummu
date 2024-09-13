@@ -465,6 +465,10 @@ def fetch_question(id_question: int) -> flask_typing.ResponseReturnValue:
 
     question = question[0]
 
+    question["user"]["username"] = (
+        "You" if question["is_author"] else question["user"]["username"]
+    )
+
     return render_template(
         "question.jinja",
         subjects=subjects,
