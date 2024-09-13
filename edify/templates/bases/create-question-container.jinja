@@ -58,14 +58,12 @@
       var allowSubmit = true;
 
       const disableSubmit = () => {
-          console.log("Disabled")
           allowSubmit = false;
           $("#create-question-button").prop("disabled", true);
           return;
       }
       
       const enableSubmit = () => {
-          console.log("Enabled")
           allowSubmit = true;
           $("#create-question-button").prop("disabled", false);
           return;
