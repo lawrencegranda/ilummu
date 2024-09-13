@@ -61,6 +61,7 @@ def populate_academic_fields():
         {"value": "aap", "name": "Architecture, Art and Planning"},
         {"value": "as", "name": "Arts and Sciences"},
         {"value": "dyson", "name": "Dyson"},
+        {"value": "cis", "name": "Bowers CIS"},
         {"value": "engineering", "name": "Engineering"},
         {"value": "human-ecology", "name": "Human Ecology"},
         {"value": "ilr", "name": "Industrial and Labor Relations"},
