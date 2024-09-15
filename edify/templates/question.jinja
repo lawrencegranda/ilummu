@@ -340,6 +340,7 @@
                 No offers received.
               </p>
             {% else %}
+              {% include "bases/question-author-offer-list.jinja" %}
               <div class="bid-wrapper">
                 <div class="bid-body">
                   <p id="question-wait-header" class="offer-title">
@@ -382,7 +383,6 @@
                   </p>
                 </div>
               </div>
-              {% include "bases/question-author-offer-list.jinja" %}
             {% endif %}
           {% endif %}
 

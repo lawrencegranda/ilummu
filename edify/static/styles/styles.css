@@ -318,7 +318,7 @@ strong:hover {
 }
 
 .brand-name {
-  margin-left: 20px;
+  margin-left: 15px;
   font-family: "Lato", sans-serif;
   font-size: 25px;
   cursor: pointer;
@@ -343,6 +343,7 @@ strong:hover {
 
   .brand-name {
     font-size: 22px;
+    margin-left: 10px;
   }
 
   .navbar {
@@ -458,9 +459,19 @@ strong:hover {
 }
 
 #button-nav-question {
-  font-weight: 600;
+  font-weight: 500;
   /* color: var(--blue--base) !important; */
-  color: var(--yellow--base) !important;
+  /* color: var(--yellow--base) !important; */
+  color: black;
+  background-color: var(--neutral--300) !important;
+  height: 37px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+#button-nav-question:hover {
+  background-color: black !important;
+  color: white !important;
 }
 
 #button-log-out {
