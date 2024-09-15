@@ -57,15 +57,15 @@ def populate_universities():
 def populate_academic_fields():
     """Populate the database with predefined academic fields."""
     academic_fields = [
-        {"value": "cals", "name": "Agriculture and Life Sciences"},
-        {"value": "aap", "name": "Architecture, Art and Planning"},
-        {"value": "as", "name": "Arts and Sciences"},
+        {"value": "cals", "name": "Agriculture And Life Sciences"},
+        {"value": "aap", "name": "Architecture, Art And Planning"},
+        {"value": "as", "name": "Arts And Sciences"},
         {"value": "dyson", "name": "Dyson: Applied Economics"},
         {"value": "nolan", "name": "Nolan: Hotel Administration"},
         {"value": "cis", "name": "Bowers CIS"},
         {"value": "engineering", "name": "Engineering"},
         {"value": "human-ecology", "name": "Human Ecology"},
-        {"value": "ilr", "name": "Industrial and Labor Relations"},
+        {"value": "ilr", "name": "Industrial And Labor Relations"},
         {"value": "public-policy", "name": "Public Policy"},
     ]
 
