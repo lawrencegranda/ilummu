@@ -107,8 +107,8 @@
             if (!request_message) {
                 showError("Fill out the textarea.");
                 return;
-            } else if (request_message.length < 50) {
-                showError("Request is too short (minimum of 50 characters).");
+            } else if (request_message.length < 20) {
+                showError("Request is too short (minimum of 20 characters).");
                 return;
             } else if (request_message.length > 5000) {
                 showError("Request is too long (maximum of 5000 characters).");
@@ -197,8 +197,19 @@
                             }, 300);
                         }
 
+                        console.log(response)
+
+                        try {
+                          if ("id" in response) {
+                            let id = response["id"];
+                            location.href = "/question/"+id;
+                            return;
+                          } 
+                        }
+                        catch(err) {}
+
                         // Refresh the page
-                        location.reload();
+                        location.href = '{{url_for("frontend.dashboard")}}';
 
                         return;
                     {% endif %}
