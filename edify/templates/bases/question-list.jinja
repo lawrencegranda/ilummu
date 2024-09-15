@@ -1,5 +1,5 @@
 {% for q in questions %}
-  <div class="element-box {{ 'solved' if q.solved else 'unsolved' }}">
+  <div class="element-box {{ 'solved' if q.solved else 'unsolved' }} {{ 'is_author' if q.is_author }}">
     <div class="element-content-wrapper"
          onclick="location.href='/question/{{ q.id }}';">
       <div class="element-content">

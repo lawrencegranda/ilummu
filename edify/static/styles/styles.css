@@ -10,6 +10,8 @@
 
 :root {
   --red: #b31b1b;
+  --yellow--base: #ffc105;
+  --yellow--light: #ffec7f;
   --blue--base: #3eacf3;
   --blue--light: #91cef7;
   --neutral--100: #f9f9fb;
@@ -457,6 +459,8 @@ strong:hover {
 
 #button-nav-question {
   font-weight: 600;
+  /* color: var(--blue--base) !important; */
+  color: var(--yellow--base) !important;
 }
 
 #button-log-out {
@@ -992,6 +996,10 @@ button.category:hover {
   border: 2px solid transparent !important;
 }
 
+.is_author {
+  border-left-color: var(--yellow--base) !important;
+}
+
 .unsolved {
   border-left: 10px solid var(--blue--base);
   border-bottom: 7px solid var(--blue--base);
@@ -1110,7 +1118,8 @@ img.image-preview {
   height: max(6vw, 6vh);
   width: fit-content;
   max-height: 70px;
-  background-color: var(--blue--base);
+  /* background-color: var(--blue--base); */
+  background-color: var(--yellow--base);
   color: black;
   border-radius: 80px;
   text-align: center;
@@ -1169,21 +1178,25 @@ img.image-preview {
 .add-button:active,
 .add-button:hover {
   background-color: white !important;
-  border: 2px solid var(--blue--base) !important;
+  /* border: 2px solid var(--blue--base) !important; */
+  border: 2px solid var(--yellow--base) !important;
   color: var(--blue--base);
 }
 
 .add-button:visited > .plus-add,
 .add-button:active > .plus-add,
 .add-button:hover > .plus-add {
-  filter: invert(62%) sepia(29%) saturate(1717%) hue-rotate(176deg)
-    brightness(94%) contrast(104%);
+  /* filter: invert(62%) sepia(29%) saturate(1717%) hue-rotate(176deg)
+    brightness(94%) contrast(104%); */
+  filter: invert(75%) sepia(91%) saturate(989%) hue-rotate(347deg)
+    brightness(97%) contrast(110%);
 }
 
 .add-button:visited > p,
 .add-button:active > p,
 .add-button:hover > p {
-  color: var(--blue--base);
+  /* color: var(--blue--base); */
+  color: var(--yellow--base);
 }
 
 /* 
