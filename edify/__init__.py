@@ -92,7 +92,10 @@ def create_app(config_class):
     def invalid_user(e):
         # Possible fix: logout to unset cookies
         print(f"User not found: {e}")
-        return redirect(url_for("frontend.logout"))
+        response = redirect(url_for("frontend.logout"))
+        unset_jwt_cookies(response)
+
+        return response
 
     @frontend.errorhandler(ExpiredSignatureError)
     def expired_jwt(e):
