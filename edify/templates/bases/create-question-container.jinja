@@ -178,7 +178,7 @@
                 success: function (response) {
                     // Handle success
                     {% if home %}
-                        let login = "{{ url_for('frontend.login') }}"
+                        let login = "{{ url_for('frontend.signup') }}"
 
                         if ('next' in response) {
                             let next = response["next"]
