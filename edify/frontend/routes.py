@@ -186,6 +186,9 @@ def home() -> flask_typing.ResponseReturnValue:
     Returns:
         str: Rendered home template.
     """
+    # Fetch the logged user if any, else None
+    user = get_user()
+
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
     subjects.sort(key=lambda d: d["name"])
 
@@ -199,7 +202,7 @@ def home() -> flask_typing.ResponseReturnValue:
         subjects=subjects,
         methods=methods,
         time_intervals=time_intervals,
-        home=True,
+        user=user,
     )
 
 
