@@ -73,7 +73,7 @@ def get_user() -> Optional[Dict[str, Any]]:
     return response.get_json()
 
 
-def is_verified() -> Optional[Dict[str, Any]]:
+def is_verified() -> bool:
     """
     Retrieve the current user's details.
 
@@ -370,6 +370,7 @@ def reset_password() -> flask_typing.ResponseReturnValue:
 
 # Endpoint: /email-verification
 @frontend.route("/email-verification")
+@jwt_required()
 def email_verification() -> flask_typing.ResponseReturnValue:
     """
     Route to verify email.
@@ -377,6 +378,10 @@ def email_verification() -> flask_typing.ResponseReturnValue:
     Returns:
         str: Rendered route.
     """
+    user = get_user()
+
+    if is_verified():
+        return dashboard()
 
     return render_template("/email_verification.jinja")
 
