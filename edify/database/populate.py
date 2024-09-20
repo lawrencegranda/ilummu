@@ -1,5 +1,10 @@
 # Standard Library imports
 import json
+import string
+from random import choice, choices
+
+# Third-Party Framework imports
+from faker import Faker
 
 # Local Application imports
 from edify import db
@@ -57,13 +62,15 @@ def populate_universities():
 def populate_academic_fields():
     """Populate the database with predefined academic fields."""
     academic_fields = [
-        {"value": "cals", "name": "Agriculture and Life Sciences"},
-        {"value": "aap", "name": "Architecture, Art and Planning"},
-        {"value": "as", "name": "Arts and Sciences"},
-        {"value": "dyson", "name": "Dyson"},
+        {"value": "cals", "name": "Agriculture And Life Sciences"},
+        {"value": "aap", "name": "Architecture, Art And Planning"},
+        {"value": "as", "name": "Arts And Sciences"},
+        {"value": "dyson", "name": "Dyson: Applied Economics"},
+        {"value": "nolan", "name": "Nolan: Hotel Administration"},
+        {"value": "cis", "name": "Bowers CIS"},
         {"value": "engineering", "name": "Engineering"},
         {"value": "human-ecology", "name": "Human Ecology"},
-        {"value": "ilr", "name": "Industrial and Labor Relations"},
+        {"value": "ilr", "name": "Industrial And Labor Relations"},
         {"value": "public-policy", "name": "Public Policy"},
     ]
 
@@ -269,6 +276,57 @@ def populate_enums():
     print("Enums populated.")
 
 
+def generate_test_users(num_users):
+    """Generate test users for the database."""
+    # Initialize Faker for generating fake data
+    fake = Faker()
+
+    # Retrieve the specific school and all majors from the database
+    school = db.session.query(School).filter_by(name="Cornell University").first()
+    majors = db.session.query(Major).all()
+
+    # Loop to create the specified number of test users
+    for i in range(num_users):
+        # Generate test email
+        email = f"user{i}@{school.email_postfix}"
+
+        # Skip to the next iteration if email already exists
+        if db.session.query(User).filter_by(email=email).first():
+            continue
+
+        # Generate a valid phone number, ensuring it's unique and valid
+        phone = f"+1 {''.join(choices(string.digits, k=10))}"
+        while (
+            not validate_phone(phone)
+            or db.session.query(User).filter_by(phone=phone).first()
+        ):
+            phone = f"+1 {''.join(choices(string.digits, k=10))}"
+
+        # Hash the password for the user before saving
+        password = User.hash_password(f"password_user{i}")
+        print(f"password_user{i}")
+
+        # Create a new user instance with the fake data
+        user = User(
+            username=f"testUser{i}",
+            firstname=fake.first_name(),
+            lastname=fake.last_name(),
+            school_id=school.id,
+            major_id=choice(majors).id,
+            graduation=fake.future_date(end_date="+4y"),
+            email=email,
+            phone=phone,
+            password=password,
+            mail_is_verified=fake.boolean(),
+            phone_is_verified=fake.boolean(),
+            is_mock=False,
+            is_test=True,
+        )
+        db.session.add(user)
+
+    print("Test users populated.")
+
+
 def populate_constants():
     """Function to populate all constants into the database."""
     populate_enums()
@@ -279,6 +337,8 @@ def populate_constants():
     populate_notification_types()
     populate_majors()
     populate_courses()
+
+    generate_test_users(3)
 
 
 if __name__ == "__main__":

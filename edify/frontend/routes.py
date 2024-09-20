@@ -146,6 +146,9 @@ def home() -> flask_typing.ResponseReturnValue:
     Returns:
         str: Rendered home template.
     """
+    # Fetch the logged user if any, else None
+    user = get_user()
+
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
     subjects.sort(key=lambda d: d["name"])
 
@@ -159,7 +162,7 @@ def home() -> flask_typing.ResponseReturnValue:
         subjects=subjects,
         methods=methods,
         time_intervals=time_intervals,
-        home=True,
+        user=user,
     )
 
 
@@ -211,7 +214,7 @@ def logout() -> flask_typing.ResponseReturnValue:
     if response.status_code != HTTPStatus.OK:
         print("Unsuccessful logout.")
 
-    response = redirect(url_for("frontend.login"))
+    response = redirect(url_for("frontend.home"))
     unset_jwt_cookies(response)
     return response
 
@@ -523,6 +526,10 @@ def fetch_question(id_question: int) -> flask_typing.ResponseReturnValue:
         return error_response("Not a valid question", HTTPStatus.NOT_FOUND)
 
     question = question[0]
+
+    question["user"]["username"] = (
+        "You" if question["is_author"] else question["user"]["username"]
+    )
 
     return render_template(
         "question.jinja",

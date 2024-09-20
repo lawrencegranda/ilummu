@@ -97,8 +97,9 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
     # Commit and roll back if there's a database error
     try:
         db.session.commit()
-    except IntegrityError:
+    except IntegrityError as e:
         db.session.rollback()
+        print(f"IntegrityError: {e}")
         return error_response("Failed to create offer.", ErrorType.BAD_REQUEST)
 
     # Create notification for the new offer (user)
@@ -205,8 +206,9 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
     # Try adding to database
     try:
         db.session.commit()
-    except IntegrityError:
+    except IntegrityError as e:
         db.session.rollback()
+        print(f"IntegrityError: {e}")
         return error_response("Couldn't update offer", ErrorType.BAD_REQUEST)
 
     amount = offer.amount
@@ -269,8 +271,9 @@ def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
 
     try:
         db.session.commit()
-    except IntegrityError:
+    except IntegrityError as e:
         db.session.rollback()
+        print(f"IntegrityError: {e}")
         return error_response("Couldn't delete offer", ErrorType.BAD_REQUEST)
 
     # Create notification for the updated offer (user)
@@ -401,8 +404,9 @@ def accept_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
 
     try:
         db.session.commit()
-    except IntegrityError:
+    except IntegrityError as e:
         db.session.rollback()
+        print(f"IntegrityError: {e}")
         return error_response("Couldn't accept offer", ErrorType.BAD_REQUEST)
 
     # Create notification for the updated offer (user)
@@ -501,8 +505,9 @@ def decline_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
 
     try:
         db.session.commit()
-    except IntegrityError:
+    except IntegrityError as e:
         db.session.rollback()
+        print(f"IntegrityError: {e}")
         return error_response("Couldn't decline offer", ErrorType.BAD_REQUEST)
 
     # Create notification for the updated offer (user)

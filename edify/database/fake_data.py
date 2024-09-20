@@ -18,7 +18,7 @@ from edify.models import (
     School,
     TimeInterval,
     User,
-    Method
+    Method,
 )
 from edify.utils.constants import AuthLevelEnum, OfferStatusEnum, SupportedLanguagesEnum
 from edify.utils.utils import validate_phone
@@ -26,53 +26,6 @@ from edify.utils.utils import validate_phone
 
 # Initialize Faker for generating fake data
 fake = Faker()
-
-
-def generate_test_users(num_users):
-    """Generate test users for the database."""
-    # Retrieve the specific school and all majors from the database
-    school = db.session.query(School).filter_by(name="Cornell University").first()
-    majors = db.session.query(Major).all()
-
-    # Loop to create the specified number of test users
-    for i in range(num_users):
-        # Generate a valid phone number, ensuring it's unique and valid
-        phone = f"+1 {''.join(choices(string.digits, k=10))}"
-        while (
-            not validate_phone(phone)
-            or db.session.query(User).filter_by(phone=phone).first()
-        ):
-            phone = f"+1 {''.join(choices(string.digits, k=10))}"
-
-        # Generate a unique email based on the school email postfix
-        email = f"user{i}@{school.email_postfix}"
-
-        # Skip to the next iteration if email already exists
-        if db.session.query(User).filter_by(email=email).first():
-            continue
-
-        # Hash the password for the user before saving
-        password = User.hash_password(f"password_user{i}")
-        print(f"password_user{i}")
-
-        # Create a new user instance with the fake data
-        user = User(
-            username=fake.user_name(),
-            firstname=fake.first_name(),
-            lastname=fake.last_name(),
-            school_id=school.id,
-            major_id=choice(majors).id,
-            graduation=fake.future_date(end_date="+4y"),
-            email=email,
-            phone=phone,
-            password=password,
-            mail_is_verified=fake.boolean(),
-            phone_is_verified=fake.boolean(),
-            is_mock=False,
-            is_test=True,
-        )
-        db.session.add(user)
-    return
 
 
 def generate_fake_users(num_users):
@@ -213,8 +166,6 @@ def populate_fake():
 
     # Use a database session to bulk add mock data
     with db.session.begin():
-        generate_test_users(num_test_users)
-
         generate_fake_users(num_users)
 
         questions = generate_fake_questions(num_questions)
