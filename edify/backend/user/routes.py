@@ -78,6 +78,23 @@ def get_user() -> flask_typing.ResponseReturnValue:
     return jsonify(None), HTTPStatus.NOT_FOUND
 
 
+# Endpoint: /backend/user/is_verified
+@user.route("/is_verified", methods=["GET"])
+@jwt_required(optional=True)
+def is_verified() -> flask_typing.ResponseReturnValue:
+    """
+    Endpoint to check whether the current user is verified.
+
+    Returns:
+        Response: true or false.
+    """
+    user = get_current_user()
+    if user and (user.mail_is_verified or user.phone_is_verified):
+        return jsonify(True), HTTPStatus.OK
+
+    return jsonify(False), HTTPStatus.OK
+
+
 # TOKENS            %------------------------------------------------------------------%
 
 

@@ -73,6 +73,18 @@ def get_user() -> Optional[Dict[str, Any]]:
     return response.get_json()
 
 
+def is_verified() -> Optional[Dict[str, Any]]:
+    """
+    Retrieve the current user's details.
+
+    Returns:
+        Optional[Dict]: User data if authenticated, else None.
+    """
+    response = internal_request(url_for("backend.user.is_verified"), "GET")
+
+    return response.get_json() == True
+
+
 def filter_list(dlist: List[Dict], field: str, search: Optional[str]) -> List[Dict]:
     """
     Filters the list of dicts based on the provided field and search text.
@@ -177,6 +189,9 @@ def dashboard() -> flask_typing.ResponseReturnValue:
         str: Rendered dashboard template with user data.
     """
     user = get_user()
+
+    if not is_verified():
+        print("Not verified!")
 
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
     subjects.sort(key=lambda d: d["name"])
