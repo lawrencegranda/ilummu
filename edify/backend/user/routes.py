@@ -531,7 +531,7 @@ def verify_email() -> flask_typing.ResponseReturnValue:
 @jwt_required()
 @use_args(
     {
-        "code": fields.Str(required=True),
+        "code": fields.Int(required=True, validate=validate.Range(min=1)),
     },
     location="query",
 )
@@ -540,7 +540,7 @@ def check_auth_code(args) -> flask_typing.ResponseReturnValue:
     Endpoint to check an identity verification auth token.
 
     Args:
-        args (dict): The token.
+        args (dict): The code.
 
     Returns:
         Response: Tuple. Success or failure.
@@ -557,6 +557,15 @@ def check_auth_code(args) -> flask_typing.ResponseReturnValue:
 
     # Set verified status
     user.mail_is_verified = True
+    db.session.commit()
+
+    # Create a notification for account verification
+    notification = Notification(
+        type=NotificationTypeEnum.ACCOUNT_VERIFIED,
+        message=f"Your email was verified successfully!",
+        user_id=user.id,
+    )
+    db.session.add(notification)
     db.session.commit()
 
     return jsonify({}), HTTPStatus.OK
