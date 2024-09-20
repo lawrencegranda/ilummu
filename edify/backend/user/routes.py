@@ -365,7 +365,7 @@ def reset_email(args) -> flask_typing.ResponseReturnValue:
     html = render_template("/reset_email.jinja", name=user.username, action_url=url)
 
     # Send email
-    send(subject="Edify: Password reset request", html=html, recipients=[user.email])
+    send(subject="ilummu: Password reset request", html=html, recipients=[user.email])
 
     # Create a notification for the forgot password
     notif = Notification(
@@ -512,7 +512,7 @@ def verify_email() -> flask_typing.ResponseReturnValue:
     html = render_template("/verify_email.jinja", name=user.username, code=code)
 
     # Send email
-    send(subject="Edify: Verify your email", html=html, recipients=[user.email])
+    send(subject="ilummu: Verify your email", html=html, recipients=[user.email])
 
     # Create a notification for the email sent
     notification = Notification(
