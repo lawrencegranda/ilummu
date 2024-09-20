@@ -5,7 +5,18 @@
 {% endblock title %}
 
 {% block navbar %}
-    {% include "bases/navbar-not-logged.jinja" %}
+    {% include "bases/navbar-logged.jinja" if user else "bases/navbar-not-logged.jinja" %}
+    <style>
+        input#search-box,
+        #button-nav-question {
+            display: none !important;
+            pointer-events: none !important;
+        }
+
+        .navbar.logged {
+            height: initial !important;
+        }
+    </style>
 {% endblock navbar %}
 
 {% block content %}
