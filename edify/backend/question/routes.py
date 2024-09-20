@@ -1,6 +1,7 @@
 # Standard Library imports
 from http import HTTPStatus
 from typing import Optional, Any, Tuple
+from datetime import datetime, timedelta
 
 # Third-Party Framework imports
 from flask import Blueprint, Flask, jsonify
@@ -79,6 +80,21 @@ def create_question(args):
             ErrorType.BAD_REQUEST,
         )
 
+    # No double requests
+    recent_question = (
+        db.session.query(Question)
+        .filter_by(user_id=user.id)
+        .order_by(Question.created_at.desc())
+        .first()
+    )
+    if recent_question and datetime.utcnow() - recent_question.created_at < timedelta(
+        seconds=1
+    ):
+        return error_response(
+            f"Too many requests, wait",
+            ErrorType.BAD_REQUEST,
+        )
+
     # Format code to uppercase
     args["class_code"] = args["class_code"].upper()
 
@@ -106,8 +122,9 @@ def create_question(args):
         # Commit and roll back if there's a database error
         try:
             db.session.commit()
-        except IntegrityError:
+        except IntegrityError as e:
             db.session.rollback()
+            print(f"IntegrityError: {e}")
             return error_response("Failed to create course.", ErrorType.BAD_REQUEST)
 
     # Create a new question associated with the user and course
@@ -126,8 +143,9 @@ def create_question(args):
     # Commit and roll back if there's a database error
     try:
         db.session.commit()
-    except IntegrityError:
+    except IntegrityError as e:
         db.session.rollback()
+        print(f"IntegrityError: {e}")
         return error_response("Failed to create question.", ErrorType.BAD_REQUEST)
 
     # Create a notification for the new question

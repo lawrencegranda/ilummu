@@ -63,7 +63,7 @@ $(document).ready(function () {
 
   $("#offer-fare").on("input", function () {
     $("#button-make-offer").text(
-      "Offer $" + parseFloat($(this).val()).toFixed(2)
+      "Counter $" + parseFloat($(this).val()).toFixed(2)
     );
   });
 });

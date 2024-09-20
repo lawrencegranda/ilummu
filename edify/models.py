@@ -821,7 +821,6 @@ class AcademicField(BaseModel):
 
 # Attach event listeners
 event.listen(AcademicField.value, "set", format_lower_case, retval=True)
-event.listen(AcademicField.name, "set", format_title_case, retval=True)
 
 
 class Course(BaseModel):

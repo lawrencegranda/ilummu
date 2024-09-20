@@ -275,7 +275,7 @@
         <div class="separator">
         </div>
         <p class="question-statement">
-          Please <a href='{{ url_for("frontend.login") }}'>log in</a> to see more details or interact with this
+          Please <a href='{{ url_for("frontend.signup") }}'>sign up</a> to see more details or interact with this
           question.
         </p>
       {% else %}
@@ -340,6 +340,7 @@
                 No offers received.
               </p>
             {% else %}
+              {% include "bases/question-author-offer-list.jinja" %}
               <div class="bid-wrapper">
                 <div class="bid-body">
                   <p id="question-wait-header" class="offer-title">
@@ -382,7 +383,6 @@
                   </p>
                 </div>
               </div>
-              {% include "bases/question-author-offer-list.jinja" %}
             {% endif %}
           {% endif %}
 
@@ -464,7 +464,7 @@
                       Accept for ${{ '%.2f' % question.price | float }}
                     </button>
                     <button id="button-make-offer" class="btn btn-dark btn-offer" type="button">
-                      Offer ${{ '%.2f' % question.price | float }}
+                      Counter ${{ '%.2f' % question.price | float }}
                     </button>
                   </div>
                 </div>
