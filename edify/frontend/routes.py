@@ -190,8 +190,8 @@ def dashboard() -> flask_typing.ResponseReturnValue:
     """
     user = get_user()
 
-    if not is_verified():
-        print("Not verified!")
+    if user and not is_verified():
+        return email_verification()
 
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
     subjects.sort(key=lambda d: d["name"])
