@@ -330,34 +330,6 @@ strong:hover {
   text-align: center;
 }
 
-@media only screen and (min-width: 0px) and (max-width: 700px) {
-  #search-box {
-    font-size: 0.9rem;
-    height: 35px;
-  }
-
-  .brand-image {
-    width: 50px;
-    height: 50px;
-  }
-
-  .brand-name {
-    font-size: 22px;
-    margin-left: 10px;
-  }
-
-  .navbar {
-    height: 75px !important;
-  }
-  .navbar.logged {
-    height: 115px !important;
-  }
-
-  .navigation-center {
-    top: 55px !important;
-  }
-}
-
 @media only screen and (min-width: 0px) and (max-width: 900px) {
   .cornell-login-brand {
     display: none;
@@ -394,6 +366,35 @@ strong:hover {
     min-width: 85px;
     height: 38px;
     font-size: 13px;
+  }
+}
+
+@media only screen and (min-width: 0px) and (max-width: 700px) {
+  #search-box {
+    font-size: 0.9rem;
+    height: 35px;
+  }
+
+  .brand-image {
+    width: 50px;
+    height: 50px;
+  }
+
+  .brand-name {
+    font-size: 22px;
+    margin-left: 10px;
+  }
+
+  .navbar {
+    height: 75px !important;
+  }
+
+  .navbar.logged {
+    height: 115px !important;
+  }
+
+  .navigation-center {
+    top: 55px !important;
   }
 }
 
@@ -3103,7 +3104,8 @@ p.made-students {
 }
 
 .wait-offer {
-  flex: 1; /* take up remaining space */
+  flex: 1;
+  /* take up remaining space */
   text-align: left !important;
   margin: 0 10px;
 }
@@ -3118,6 +3120,7 @@ p.made-students {
   .wait-offer {
     text-align: center !important;
   }
+
   .double-col {
     flex-direction: column;
     row-gap: 20px;
