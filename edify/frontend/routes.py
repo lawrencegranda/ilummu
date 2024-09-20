@@ -221,7 +221,7 @@ def logout() -> flask_typing.ResponseReturnValue:
     if response.status_code != HTTPStatus.OK:
         print("Unsuccessful logout.")
 
-    response = redirect(url_for("frontend.login"))
+    response = redirect(url_for("frontend.home"))
     unset_jwt_cookies(response)
     return response
 
