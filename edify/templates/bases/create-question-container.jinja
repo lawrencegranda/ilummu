@@ -163,7 +163,7 @@
                 price: price, 
             };
 
-            {% if home %}
+            {% if user is none %}
             let question_url = "{{url_for('frontend.store_question')}}"
             {% else %}
             let question_url = "{{url_for('backend.question.create_question')}}"
@@ -177,7 +177,7 @@
                 data: JSON.stringify(data), // Data to be sent
                 success: function (response) {
                     // Handle success
-                    {% if home %}
+                    {% if user is none %}
                         let login = "{{ url_for('frontend.signup') }}"
 
                         if ('next' in response) {
