@@ -1,0 +1,116 @@
+{% set title = "Verify your Email" %}
+{% set title_text = "We sent you a code!" %}
+{% set description_id = "verify-text" %}
+{% set description_text = "We just sent you an email with a verification code only valid for the next few minutes. Please insert the code below." %}
+{% set has_button = True %}
+{% set button_id = "send-email" %}
+{% set button_text = "Send email again!" %}
+{% set form_id = "verification-form" %}
+{% set form_disabled = False %}
+{% extends "auth_template.jinja" %}
+
+{% block javascript %}
+  {{ super() }}
+  <script>
+    var errorMsg;
+
+    // Function to reset error messages
+    const reset = () => {
+      errorMsg.text("");
+      errorMsg.hide();
+    };
+
+    // Function to display error messages
+    const showError = (msg) => {
+      console.log(msg);
+      errorMsg.text(msg);
+      errorMsg.show();
+    };
+
+    // Ensure the document is ready before executing the script
+    $(document).ready(() => {
+      errorMsg = $("#error-msg");
+      reset();
+    });
+
+    function handleSuccess(response) {
+        // Handle success
+
+        let http_method = "{{ http_method | default('GET') }}"
+        let next_url = "{{ next_url | default(url_for("frontend.dashboard")) }}";
+
+        if (http_method === "POST") {
+            $.ajax({
+                url: next_url,
+                type: 'POST',
+                success: function (response) {
+                  window.location.href = '{{url_for("frontend.dashboard")}}';
+                  return;
+                },
+                error: async function (error) {
+                  console.log(error);
+                  // Handle error (e.g., display error message)
+                  showError("An error occurred cresting a question. Please create it later.");
+                  await new Promise(resolve => setTimeout(resolve, 2000));
+                  showError("Redirecting...");
+                  await new Promise(resolve => setTimeout(resolve, 2000));
+                  window.location.href = '{{url_for("frontend.dashboard")}}';
+                }
+                  });
+            return
+        }
+
+        window.location.href = next_url;
+        return;
+    }
+
+    function handleError(str) {
+        return function (error) {
+            let error_msg = getErrorResponse(error);
+
+            if (!error_msg) {
+              error_msg = "An error occurred during " + str + ". Please try again.";
+            }
+
+            showError(error_msg);
+        }
+    }
+
+    $(document).ready(() => {
+      // Form submission event handler for login form
+      $("#verification-form").on("submit", function (event) {
+        event.preventDefault(); // Prevent default form submission
+        reset();
+
+        var code = $("#code-input").val().trim();
+        try {
+          code = parseInt(code);
+        } catch (error) {
+          showError("Invalid number.");
+          return;
+        }
+
+        // Send the data via AJAX POST request
+        $.ajax({
+          url: '{{url_for("backend.user.check_auth_code")}}?code='+code,
+          type: 'POST',
+          success: handleSuccess,
+          error: handleError("verification"),
+        });
+      });
+    });
+
+  </script>
+{% endblock javascript %}
+
+{% block form_content %}
+  <input id="code-input"
+         type="number"
+         autocomplete="off"
+         min="1"
+         placeholder="Enter your code..."
+         required />
+{% endblock form_content %}
+
+{% block additional_links %}
+{% endblock additional_links %}
