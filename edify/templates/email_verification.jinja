@@ -3,8 +3,8 @@
 {% set description_id = "verify-text" %}
 {% set description_text = "We just sent you an email with a verification code only valid for the next few minutes. Please insert the code below." %}
 {% set has_button = True %}
-{% set button_id = "send-email" %}
-{% set button_text = "Send email again!" %}
+{% set button_id = "verify-code" %}
+{% set button_text = "Verify code" %}
 {% set form_id = "verification-form" %}
 {% set form_disabled = False %}
 {% extends "auth_template.jinja" %}
@@ -35,7 +35,6 @@
 
     function handleSuccess(response) {
         // Handle success
-
         let http_method = "{{ http_method | default('GET') }}"
         let next_url = "{{ next_url | default(url_for("frontend.dashboard")) }}";
 
@@ -77,9 +76,9 @@
     }
 
     $(document).ready(() => {
-      // Form submission event handler for login form
+      // Form submission event handler
       $("#verification-form").on("submit", function (event) {
-        event.preventDefault(); // Prevent default form submission
+        event.preventDefault();
         reset();
 
         var code = $("#code-input").val().trim();
@@ -100,6 +99,62 @@
       });
     });
 
+    $(document).ready(() => {
+        const allowSend = true;
+        const secondsTimeout = 60
+
+        function sendEmailWait() {
+            let allowSend = false;
+            
+            $("#send-email").prop("disabled", true);
+
+            let endTime = Math.floor(Date.now() / 1000 + 0.5) + secondsTimeout;
+
+            // Update the timer every half second
+            var interval = setInterval(function () {
+                let currentTime = Math.floor(Date.now() / 1000 + 0.5);
+                let secondsLeft = endTime - currentTime;
+
+                // Update the button text with remaining seconds
+                $("#send-email").text(`Send email! (${secondsLeft}s)`);
+
+                // Stop the interval if the time is up
+                if (secondsLeft <= 0) {
+                    clearInterval(interval);
+                }
+            }, 500);
+
+            console.log('3');
+
+            // Re-enable the button after the timeout
+            setTimeout(function () {
+                clearInterval(interval);
+                $("#send-email").prop("disabled", false);
+
+                allowSend = true;
+                $("#send-email").text("Send email!");
+            }, secondsTimeout * 1000);
+        }
+
+        function sendEmail() {
+            if (!allowSend) {
+              return;
+            }
+            sendEmailWait();
+
+            $.ajax({
+                url: '{{url_for("backend.user.verify_email")}}',
+                type: 'POST',
+                success: (data) => {},
+                error: (data) => {},
+            });
+        }
+
+         $("#send-email").on('click', sendEmail)
+
+         sendEmail();
+    });
+
   </script>
 {% endblock javascript %}
 
@@ -110,6 +165,9 @@
          min="1"
          placeholder="Enter your code..."
          required />
+  <button id="send-email" class="btn btn-primary" type="button">
+    Send email!
+  </button>
 {% endblock form_content %}
 
 {% block additional_links %}
