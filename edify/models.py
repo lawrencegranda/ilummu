@@ -1,7 +1,7 @@
 # Standard Library imports
 from abc import ABCMeta, ABC, abstractmethod
 from collections import OrderedDict, defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 from http import HTTPStatus
 import json
@@ -232,8 +232,8 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
         session["auth"] = {
             "code": auth_code,
             "id": self.id,
-            "expiration": datetime.utcnow()
-            + timedelta(seconds=current_app.AUTH_TOKEN_MAX_AGE),
+            "expiration": datetime.now(timezone.utc)
+            + timedelta(seconds=current_app.config["AUTH_TOKEN_MAX_AGE"]),
         }
 
         return auth_code
@@ -247,7 +247,7 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
             return False
 
         # Check if the code has expired
-        if datetime.utcnow() > auth["expiration"]:
+        if datetime.now(timezone.utc) > auth["expiration"]:
             return False
 
         # Check if the input code matches the stored code
