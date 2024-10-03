@@ -238,7 +238,7 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
 
         return auth_code
 
-    def validate_session_auth_code(self):
+    def validate_session_auth_code(self, input_code: int):
         # Retrieve the stored code and timestamp from the session
         auth = session.get("auth")
 
