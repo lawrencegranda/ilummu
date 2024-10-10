@@ -40,6 +40,7 @@ from edify.utils.utils import (
     validate_email,
     validate_email_postfix,
     validate_phone,
+    validate_auth_data,
 )
 
 
@@ -225,16 +226,30 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
         return user
 
     def generate_session_auth_code(self):
+        # Retrieve the stored code and timestamp from the session
+        auth = session.get("auth")
+
+        # Check if the data is stored in the session
+        if auth:
+            del session["auth"]
+
         # Generate a random 6-digit code
         auth_code = random.randint(100000, 999999)
 
-        # Store the code in the session
+        current_time = datetime.now(timezone.utc)
+        expiration_time = current_time + timedelta(
+            seconds=current_app.config["AUTH_TOKEN_MAX_AGE"]
+        )
+
+        # Store the code in the session with ISO 8601 formatted datetime strings
         session["auth"] = {
             "code": auth_code,
             "id": self.id,
-            "expiration": datetime.now(timezone.utc)
-            + timedelta(seconds=current_app.config["AUTH_TOKEN_MAX_AGE"]),
+            "issued": current_time.isoformat(),
+            "expiration": expiration_time.isoformat(),
         }
+
+        assert validate_auth_data(session["auth"])
 
         return auth_code
 
@@ -246,8 +261,11 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
         if not auth:
             return False
 
-        # Check if the code has expired
-        if datetime.now(timezone.utc) > auth["expiration"]:
+        # Check if the code is invalid or has expired
+        if not validate_auth_data(auth) or datetime.now(
+            timezone.utc
+        ) > datetime.fromisoformat(auth["expiration"]):
+            del session["auth"]
             return False
 
         # Check if the input code matches the stored code
@@ -256,6 +274,7 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
 
         # Check the identity
         if auth["id"] != self.id:
+            del session["auth"]
             return False
 
         return True

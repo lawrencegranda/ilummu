@@ -162,6 +162,7 @@ class NotificationTypeEnum(EnumBase):
         raise ValueError(f"{notification_type} is not a valid notification type.")
 
 
+# Question stored as dict.
 QuestionSchema = {
     "class_code": fields.Str(required=True, validate=validate.Length(min=4)),
     "class_name": fields.Str(required=True, validate=validate.Length(min=1)),
@@ -172,6 +173,13 @@ QuestionSchema = {
     "request_message": fields.Str(required=True, validate=validate.Length(min=1)),
 }
 
+# AuthSchema in dictionary form
+AuthSchema = {
+    "code": fields.Int(required=True),
+    "id": fields.Int(required=True),
+    "issued": fields.DateTime(required=True, format="iso"),
+    "expiration": fields.DateTime(required=True, format="iso"),
+}
 
 # Primitive datatypes
 primitives = (bool, str, int, float, type(None))
