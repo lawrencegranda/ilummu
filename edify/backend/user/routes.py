@@ -72,9 +72,13 @@ def get_user() -> flask_typing.ResponseReturnValue:
     Returns:
         Response: JSON response with the user's information or None if not found.
     """
-    user = get_current_user()
-    if user:
-        return jsonify(user.to_dict(simplified=False)), HTTPStatus.OK
+    try:
+        user = get_current_user()
+        if user:
+            return jsonify({"user": user.to_dict(simplified=False)}), HTTPStatus.OK
+    except:
+        pass
+
     return jsonify(None), HTTPStatus.NOT_FOUND
 
 

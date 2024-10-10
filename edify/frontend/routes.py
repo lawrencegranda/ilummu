@@ -69,8 +69,12 @@ def get_user() -> Optional[Dict[str, Any]]:
     Returns:
         Optional[Dict]: User data if authenticated, else None.
     """
-    response = internal_request(url_for("backend.user.get_user"), "GET")
-    return response.get_json()
+    response = internal_request(url_for("backend.user.get_user"), "GET").get_json()
+
+    if response and isinstance(response, dict) and "user" in response:
+        return response["user"]
+
+    return None
 
 
 def is_verified() -> bool:
@@ -371,7 +375,9 @@ def reset_password() -> flask_typing.ResponseReturnValue:
 # Endpoint: /email-verification
 @frontend.route("/email-verification")
 @jwt_required()
-def email_verification() -> flask_typing.ResponseReturnValue:
+def email_verification(
+    http_method: str = None, next_url: str = None
+) -> flask_typing.ResponseReturnValue:
     """
     Route to verify email.
 
@@ -380,10 +386,15 @@ def email_verification() -> flask_typing.ResponseReturnValue:
     """
     user = get_user()
 
-    if is_verified():
-        return dashboard()
+    if next_url is None:
+        next_url = request.args.get("next_url", url_for("frontend.dashboard"))
 
-    return render_template("/email_verification.jinja")
+    if http_method is None:
+        http_method = request.args.get("http_method", "GET")
+
+    return render_template(
+        "/email_verification.jinja", http_method="GET", next_url=next_url
+    )
 
 
 # Endpoint: /verify-email
@@ -559,6 +570,32 @@ def fetch_question(id_question: int) -> flask_typing.ResponseReturnValue:
         user=user,
         question=question,
     )
+
+
+# -----------------------------------------------------------------------------
+# Children Blueprints
+# -----------------------------------------------------------------------------
+
+
+# List of endpoints that exclude email verification
+verification_excluded_endpoints = ["frontend.logout"]
+
+
+@frontend.before_request
+def ensure_verified():
+    # Only apply email verification logic for specific endpoints
+    if request.endpoint in verification_excluded_endpoints:
+        return
+
+    # New user
+    user = get_user()
+
+    if not user or user["mail_is_verified"] is True:
+        return
+
+    print(request.url)
+
+    return email_verification(http_method=request.method, next_url=request.url)
 
 
 # -----------------------------------------------------------------------------
