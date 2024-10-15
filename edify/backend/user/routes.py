@@ -522,11 +522,18 @@ def verify_email() -> flask_typing.ResponseReturnValue:
     """
     user = get_current_user()
 
-    # If user not found, error.
+    # If user not found, error
     if not user:
         return error_response("User not found", ErrorType.USER_NOT_FOUND)
 
-    # Generate code.
+    # If there is a valid code, sent recently, do not send
+    if user.has_valid_session_auth_code() and user.sec_since_issued_auth_code() < 50:
+        return (
+            jsonify({"msg": "Email was already sent before and is still valid."}),
+            HTTPStatus.OK,
+        )
+
+    # Generate code
     code = user.generate_session_auth_code()
 
     # Render html
