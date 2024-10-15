@@ -23,6 +23,7 @@ from flask_jwt_extended import (
     jwt_required,
     unset_jwt_cookies,
 )
+from urllib.parse import quote
 from webargs import fields, validate
 from webargs.flaskparser import use_args
 
@@ -69,8 +70,24 @@ def get_user() -> Optional[Dict[str, Any]]:
     Returns:
         Optional[Dict]: User data if authenticated, else None.
     """
-    response = internal_request(url_for("backend.user.get_user"), "GET")
-    return response.get_json()
+    response = internal_request(url_for("backend.user.get_user"), "GET").get_json()
+
+    if response and isinstance(response, dict) and "user" in response:
+        return response["user"]
+
+    return None
+
+
+def is_verified() -> bool:
+    """
+    Retrieve the current user's details.
+
+    Returns:
+        Optional[Dict]: User data if authenticated, else None.
+    """
+    response = internal_request(url_for("backend.user.is_verified"), "GET")
+
+    return response.get_json() == True
 
 
 def filter_list(dlist: List[Dict], field: str, search: Optional[str]) -> List[Dict]:
@@ -115,47 +132,7 @@ question = Blueprint("question", __name__, url_prefix="/question")
 # Blueprint Endpoints (frontend)
 # -----------------------------------------------------------------------------
 
-
-# Endpoint: /forgot-password
-@frontend.route("/forgot-password")
-def forgot_password() -> flask_typing.ResponseReturnValue:
-    """
-    Forgot password route.
-
-    Returns:
-        str: Rendered route.
-    """
-    next_url = request.args.get("next_url", url_for("frontend.index"))
-    http_method = request.args.get("http_method", "GET")
-
-    return render_template(
-        "/forgot_password.jinja", next_url=next_url, http_method=http_method
-    )
-
-
-# Endpoint: /reset-password
-@frontend.route("/reset-password")
-def reset_password() -> flask_typing.ResponseReturnValue:
-    """
-    Reset password route.
-
-    Returns:
-        str: Rendered route.
-    """
-    token = request.args.get("token", "")
-
-    if not token:
-        forgot_password()
-
-    success = (
-        internal_request(url_for("backend.user.check_token", token=token)).status_code
-        == HTTPStatus.OK
-    )
-
-    if not success:
-        return render_template("/invalid_reset.jinja")
-
-    return render_template("/reset_password.jinja", token=token)
+# PAGES             %------------------------------------------------------------------%
 
 
 # Endpoint: /
@@ -204,6 +181,42 @@ def home() -> flask_typing.ResponseReturnValue:
         time_intervals=time_intervals,
         user=user,
     )
+
+
+# Endpoint: /dashboard
+@frontend.route("/dashboard")
+@jwt_required(optional=True)
+def dashboard() -> flask_typing.ResponseReturnValue:
+    """
+    Dashboard route displaying user data and related questions.
+
+    Returns:
+        str: Rendered dashboard template with user data.
+    """
+    user = get_user()
+
+    if user and not is_verified():
+        return email_verification()
+
+    subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
+    subjects.sort(key=lambda d: d["name"])
+
+    methods = fetch_data(url_for("backend.data.fetch_methods"), "GET")
+    methods.sort(key=lambda d: d["name"])
+
+    time_intervals = fetch_data(url_for("backend.data.fetch_intervals"), "GET")
+
+    return render_template(
+        "dashboard.jinja",
+        subjects=subjects,
+        methods=methods,
+        time_intervals=time_intervals,
+        user=user,
+        question_list=list_questions([], ""),
+    )
+
+
+# TOKENS            %------------------------------------------------------------------%
 
 
 # Endpoint: /logout
@@ -269,6 +282,10 @@ def signup() -> flask_typing.ResponseReturnValue:
     )
 
 
+# QUESTION CREATION %------------------------------------------------------------------%
+
+
+# Endpoint: /store_question
 @frontend.route("/store_question", methods=["POST"])
 @use_args(QuestionSchema)
 @jwt_required(optional=True)
@@ -282,11 +299,23 @@ def store_question(args) -> flask_typing.ResponseReturnValue:
 
     # Return the data endpoint
     return (
-        jsonify({"next": url_for("frontend.submit_question_after_login")}),
+        jsonify(
+            {
+                "next_url": quote(
+                    url_for(
+                        "frontend.email_verification",
+                        next_url=url_for("frontend.submit_question_after_login"),
+                        http_method="POST",
+                    )
+                ),
+                "http_method": "GET",
+            }
+        ),
         HTTPStatus.OK,
     )
 
 
+# Endpoint: /submit_question_after_login
 @frontend.route("/submit_question_after_login", methods=["POST"])
 @jwt_required()
 def submit_question_after_login() -> flask_typing.ResponseReturnValue:
@@ -307,34 +336,111 @@ def submit_question_after_login() -> flask_typing.ResponseReturnValue:
     return response
 
 
-# Endpoint: /dashboard
-@frontend.route("/dashboard")
-@jwt_required(optional=True)
-def dashboard() -> flask_typing.ResponseReturnValue:
+# PASSWORD RESET    %------------------------------------------------------------------%
+
+
+# Endpoint: /forgot-password
+@frontend.route("/forgot-password")
+def forgot_password() -> flask_typing.ResponseReturnValue:
     """
-    Dashboard route displaying user data and related questions.
+    Forgot password route.
 
     Returns:
-        str: Rendered dashboard template with user data.
+        str: Rendered route.
+    """
+    next_url = request.args.get("next_url", url_for("frontend.index"))
+    http_method = request.args.get("http_method", "GET")
+
+    return render_template(
+        "/forgot_password.jinja", next_url=next_url, http_method=http_method
+    )
+
+
+# Endpoint: /reset-password
+@frontend.route("/reset-password")
+def reset_password() -> flask_typing.ResponseReturnValue:
+    """
+    Reset password route.
+
+    Returns:
+        str: Rendered route.
+    """
+    token = request.args.get("token", "")
+
+    if not token:
+        forgot_password()
+
+    success = (
+        internal_request(url_for("backend.user.check_token", token=token)).status_code
+        == HTTPStatus.OK
+    )
+
+    if not success:
+        return render_template("/invalid_reset.jinja")
+
+    return render_template("/reset_password.jinja", token=token)
+
+
+# VERIFY EMAIL      %------------------------------------------------------------------%
+
+
+# Endpoint: /email-verification
+@frontend.route("/email-verification")
+@jwt_required()
+def email_verification(
+    next_url: str = None, http_method: str = None
+) -> flask_typing.ResponseReturnValue:
+    """
+    Route to verify email.
+
+    Returns:
+        str: Rendered route.
     """
     user = get_user()
 
-    subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
-    subjects.sort(key=lambda d: d["name"])
+    if user and user["mail_is_verified"] is True:
+        print(user)
+        return redirect(url_for("frontend.dashboard"))
 
-    methods = fetch_data(url_for("backend.data.fetch_methods"), "GET")
-    methods.sort(key=lambda d: d["name"])
+    if next_url is None:
+        next_url = request.args.get("next_url", url_for("frontend.dashboard"))
 
-    time_intervals = fetch_data(url_for("backend.data.fetch_intervals"), "GET")
+    if http_method is None:
+        http_method = request.args.get("http_method", "GET")
 
     return render_template(
-        "dashboard.jinja",
-        subjects=subjects,
-        methods=methods,
-        time_intervals=time_intervals,
-        user=user,
-        question_list=list_questions([], ""),
+        "/email_verification.jinja", next_url=next_url, http_method=http_method
     )
+
+
+# Endpoint: /verify-email
+@frontend.route("/verify-email")
+def verify_email() -> flask_typing.ResponseReturnValue:
+    """
+    Email verification.
+
+    Returns:
+        str: Rendered route.
+    """
+    token = request.args.get("token", "")
+
+    if not token:
+        return render_template("/invalid_verification.jinja")
+
+    success = (
+        internal_request(
+            url_for("backend.user.check_auth_token", token=token)
+        ).status_code
+        == HTTPStatus.OK
+    )
+
+    if not success:
+        return render_template("/invalid_verification.jinja")
+
+    return dashboard()
+
+
+# QUESTION SEARCH   %------------------------------------------------------------------%
 
 
 # Endpoint: /list
@@ -480,6 +586,34 @@ def fetch_question(id_question: int) -> flask_typing.ResponseReturnValue:
         user=user,
         question=question,
     )
+
+
+# -----------------------------------------------------------------------------
+# Children Blueprints
+# -----------------------------------------------------------------------------
+
+
+# List of endpoints that exclude email verification
+verification_excluded_endpoints = [
+    "frontend.email_verification",
+    "frontend.logout",
+    "frontend.store_question",
+]
+
+
+@frontend.before_request
+def ensure_verified():
+    # Only apply email verification logic for specific endpoints
+    if request.endpoint in verification_excluded_endpoints:
+        return
+
+    # New user
+    user = get_user()
+
+    if request.method == "POST" or not user or user["mail_is_verified"] is True:
+        return
+
+    return email_verification(http_method=request.method, next_url=request.url)
 
 
 # -----------------------------------------------------------------------------

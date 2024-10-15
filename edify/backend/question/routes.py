@@ -433,7 +433,7 @@ def change_price(args, id_question: int) -> flask_typing.ResponseReturnValue:
         return error_response("New price is too low", ErrorType.BAD_REQUEST)
 
     # If new price is too high, error
-    if price > 2 * question.original_price:
+    if price > 3 * question.original_price:
         return error_response("New price is too high", ErrorType.BAD_REQUEST)
 
     question.price = price

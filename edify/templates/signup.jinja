@@ -175,7 +175,11 @@
         type: 'POST',
         contentType: 'application/json',
         data: JSON.stringify(data),
-        success: handleSuccess,
+        success: function(data) {
+            // TODO: Redirect to verify email
+            // {{ url_for("frontend.signup", next_url=next_url, http_method=http_method) }}
+            return handleSuccess(data);
+        },
         error: handleError("signup"),
       });
     });
