@@ -1,14 +1,15 @@
 # Standard Library imports
 from abc import ABCMeta, ABC, abstractmethod
 from collections import OrderedDict, defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 from http import HTTPStatus
 import json
 from typing import Optional, Dict, Any, List
+import random
 
 # Third-Party Framework imports
-from flask import current_app, jsonify, url_for
+from flask import current_app, jsonify, url_for, session
 from flask_jwt_extended import create_access_token, decode_token, create_refresh_token
 from flask_login import UserMixin
 from itsdangerous.url_safe import URLSafeTimedSerializer
@@ -39,6 +40,7 @@ from edify.utils.utils import (
     validate_email,
     validate_email_postfix,
     validate_phone,
+    validate_auth_data,
 )
 
 
@@ -222,6 +224,90 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
             return None
 
         return user
+
+    def generate_session_auth_code(self) -> int:
+        # Retrieve the stored code and timestamp from the session
+        auth = session.get("auth")
+
+        # Check if the data is stored in the session
+        if auth:
+            del session["auth"]
+
+        # Generate a random 6-digit code
+        auth_code = random.randint(100000, 999999)
+
+        current_time = datetime.now(timezone.utc)
+        expiration_time = current_time + timedelta(
+            seconds=current_app.config["AUTH_TOKEN_MAX_AGE"]
+        )
+
+        # Store the code in the session with ISO 8601 formatted datetime strings
+        session["auth"] = {
+            "code": auth_code,
+            "id": self.id,
+            "issued": current_time.isoformat(),
+            "expiration": expiration_time.isoformat(),
+        }
+
+        assert validate_auth_data(session["auth"])
+
+        return auth_code
+
+    def has_valid_session_auth_code(self) -> bool:
+        # Retrieve the stored code and timestamp from the session
+        auth = session.get("auth")
+
+        # Check if the data is stored in the session
+        if not auth:
+            return False
+
+        # Check if the code is invalid or has expired
+        if not validate_auth_data(auth) or datetime.now(
+            timezone.utc
+        ) > datetime.fromisoformat(auth["expiration"]):
+            del session["auth"]
+            return False
+
+        # Check the identity
+        if auth["id"] != self.id:
+            del session["auth"]
+            return False
+
+        return True
+
+    def sec_since_issued_auth_code(self) -> float:
+        # Check for valid code
+        if not self.has_valid_session_auth_code():
+            return -1
+
+        # Retrieve the stored code
+        auth = session.get("auth")
+
+        # Parse the issued timestamp from ISO format
+        issued_time = datetime.fromisoformat(auth["issued"])
+
+        # Get the current time
+        current_time = datetime.now(timezone.utc)
+
+        # Calculate the difference in seconds
+        time_diff = current_time - issued_time
+        seconds_since_issued = time_diff.total_seconds()
+
+        return seconds_since_issued
+
+    def validate_session_auth_code(self, input_code: int) -> bool:
+        # Check for valid code
+        if not self.has_valid_session_auth_code():
+            return False
+
+        # Retrieve the stored code
+        auth = session.get("auth")
+
+        # Check if the input code matches the stored code
+        if str(auth["code"]) != str(input_code):
+            return False
+
+        return True
 
     def __repr__(self):
         return f"({self.id}, {self.username}, {self.email}\n"

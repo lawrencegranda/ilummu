@@ -438,6 +438,22 @@ strong:hover {
   border-color: var(--blue--base);
 }
 
+.btn-yellow,
+.btn-yellow:focus,
+.btn-yellow.disabled,
+.btn-yellow:disabled {
+  background-color: var(--yellow--base) !important;
+  border-color: var(--yellow--base) !important;
+}
+
+.btn-yellow:visited,
+.btn-yellow:active,
+.btn-yellow:hover {
+  color: var(--yellow--base) !important;
+  border-color: var(--yellow--base) !important;
+  background-color: #fff !important;
+}
+
 .btn-dark,
 .btn-dark:focus {
   color: black !important;
