@@ -1,4 +1,4 @@
-## The Edify Database model 
+## The ilummu Database model
 
 The database model is defined under `models.py` using SQLAlchemy package.
 
@@ -39,11 +39,13 @@ This command applies the migration script to the database, making the necessary 
 #### Additional Commands
 
 - **Downgrade**: Roll back the last applied migration.
+
   ```bash
   flask db downgrade
   ```
 
 - **Show Current Revision**: Display the current revision of the database.
+
   ```bash
   flask db current
   ```

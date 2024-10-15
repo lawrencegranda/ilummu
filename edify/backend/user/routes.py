@@ -62,6 +62,46 @@ user = Blueprint("user", __name__, url_prefix="/user")
 # -----------------------------------------------------------------------------
 
 
+# Endpoint: /backend/user
+@user.route("/", methods=["GET"])
+@jwt_required(optional=True)
+def get_user() -> flask_typing.ResponseReturnValue:
+    """
+    Endpoint to get the current user's information.
+
+    Returns:
+        Response: JSON response with the user's information or None if not found.
+    """
+    try:
+        user = get_current_user()
+        if user:
+            return jsonify({"user": user.to_dict(simplified=False)}), HTTPStatus.OK
+    except:
+        pass
+
+    return jsonify(None), HTTPStatus.NOT_FOUND
+
+
+# Endpoint: /backend/user/is_verified
+@user.route("/is_verified", methods=["GET"])
+@jwt_required(optional=True)
+def is_verified() -> flask_typing.ResponseReturnValue:
+    """
+    Endpoint to check whether the current user is verified.
+
+    Returns:
+        Response: true or false.
+    """
+    user = get_current_user()
+    if user and (user.mail_is_verified or user.phone_is_verified):
+        return jsonify(True), HTTPStatus.OK
+
+    return jsonify(False), HTTPStatus.OK
+
+
+# TOKENS            %------------------------------------------------------------------%
+
+
 # Endpoint: /backend/user/logout
 @user.route("/logout", methods=["POST"])
 def logout() -> flask_typing.ResponseReturnValue:
@@ -93,22 +133,6 @@ def refresh() -> flask_typing.ResponseReturnValue:
     response = jsonify({"access_token": token})
     set_access_cookies(response, token)
     return (response, HTTPStatus.OK)
-
-
-# Endpoint: /backend/user
-@user.route("/", methods=["GET"])
-@jwt_required(optional=True)
-def get_user() -> flask_typing.ResponseReturnValue:
-    """
-    Endpoint to get the current user's information.
-
-    Returns:
-        Response: JSON response with the user's information or None if not found.
-    """
-    user = get_current_user()
-    if user:
-        return jsonify(user.to_dict(simplified=False)), HTTPStatus.OK
-    return jsonify(None), HTTPStatus.NOT_FOUND
 
 
 # Endpoint: /backend/user/login
@@ -321,6 +345,9 @@ def signup(args) -> flask_typing.ResponseReturnValue:
     return (response, HTTPStatus.CREATED)
 
 
+# RESET EMAIL       %------------------------------------------------------------------%
+
+
 # Endpoint: /backend/user/reset-email
 @user.route("/reset-email", methods=["POST"])
 @use_args(
@@ -359,7 +386,7 @@ def reset_email(args) -> flask_typing.ResponseReturnValue:
     html = render_template("/reset_email.jinja", name=user.username, action_url=url)
 
     # Send email
-    send(subject="Edify: Password reset request", html=html, recipients=[user.email])
+    send(subject="ilummu: Password reset request", html=html, recipients=[user.email])
 
     # Create a notification for the forgot password
     notif = Notification(
@@ -475,3 +502,98 @@ def reset_password(args) -> flask_typing.ResponseReturnValue:
     )
 
     return response, HTTPStatus.OK
+
+
+# VERIFY EMAIL      %------------------------------------------------------------------%
+
+
+# Endpoint: /backend/user/verify-email
+@user.route("/verify-email", methods=["POST"])
+@jwt_required()
+def verify_email() -> flask_typing.ResponseReturnValue:
+    """
+    Endpoint to reset send an email to verify email.
+
+    Args:
+        args (dict): The login arguments containing email.
+
+    Returns:
+        Response: Send email.
+    """
+    user = get_current_user()
+
+    # If user not found, error
+    if not user:
+        return error_response("User not found", ErrorType.USER_NOT_FOUND)
+
+    # If there is a valid code, sent recently, do not send
+    if user.has_valid_session_auth_code() and user.sec_since_issued_auth_code() < 50:
+        return (
+            jsonify({"msg": "Email was already sent before and is still valid."}),
+            HTTPStatus.OK,
+        )
+
+    # Generate code
+    code = user.generate_session_auth_code()
+
+    # Render html
+    html = render_template("/verify_email.jinja", name=user.username, code=code)
+
+    # Send email
+    send(subject="ilummu: Verify your email", html=html, recipients=[user.email])
+
+    # Create a notification for the email sent
+    notification = Notification(
+        type=NotificationTypeEnum.PASSWORD_RESET,
+        message=f"A verification code was sent to your email!",
+        user_id=user.id,
+    )
+    db.session.add(notification)
+    db.session.commit()
+
+    return jsonify({}), HTTPStatus.OK
+
+
+# Endpoint: /backend/user/check-auth-code
+@user.route("/check-auth-code", methods=["POST"])
+@jwt_required()
+@use_args(
+    {
+        "code": fields.Int(required=True, validate=validate.Range(min=1)),
+    },
+    location="query",
+)
+def check_auth_code(args) -> flask_typing.ResponseReturnValue:
+    """
+    Endpoint to check an identity verification auth token.
+
+    Args:
+        args (dict): The code.
+
+    Returns:
+        Response: Tuple. Success or failure.
+    """
+    code = args["code"]
+    user = get_current_user()
+
+    # If user not found, error.
+    if not user:
+        return error_response("User not found", ErrorType.USER_NOT_FOUND)
+
+    if not user.validate_session_auth_code(code):
+        return error_response("Invalid or expired code", ErrorType.BAD_REQUEST)
+
+    # Set verified status
+    user.mail_is_verified = True
+    db.session.commit()
+
+    # Create a notification for account verification
+    notification = Notification(
+        type=NotificationTypeEnum.ACCOUNT_VERIFIED,
+        message=f"Your email was verified successfully!",
+        user_id=user.id,
+    )
+    db.session.add(notification)
+    db.session.commit()
+
+    return jsonify({}), HTTPStatus.OK
