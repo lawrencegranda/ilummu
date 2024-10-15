@@ -14,7 +14,7 @@ from flask_jwt_extended import (
     verify_jwt_in_request,
     set_access_cookies,
 )
-from flask_jwt_extended.exceptions import UserLookupError
+from flask_jwt_extended.exceptions import UserLookupError, NoAuthorizationError
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
@@ -98,6 +98,7 @@ def create_app(config_class):
         return response
 
     @frontend.errorhandler(ExpiredSignatureError)
+    @frontend.errorhandler(NoAuthorizationError)
     def expired_jwt(e):
         response = redirect(url_for("frontend.logout"))
         unset_jwt_cookies(response)
