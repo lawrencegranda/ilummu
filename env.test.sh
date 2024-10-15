@@ -1,6 +1,6 @@
 #!/bin/bash
 #-------------------------------------------------------------------------------
-# Edify
+# ilummu
 # env.sh: Environment variables for dev 
 #
 # Duplicate this file, rename it "env.sh", edit it and run it to initialize

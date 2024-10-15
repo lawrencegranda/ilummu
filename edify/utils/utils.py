@@ -12,10 +12,11 @@ import flask
 import phonenumbers
 from flask import current_app, jsonify, request, url_for
 from flask import typing as flask_typing
+from marshmallow import Schema
 from werkzeug.test import EnvironBuilder
 
 # Local Application imports
-from edify.utils.constants import ErrorType
+from edify.utils.constants import ErrorType, AuthSchema
 
 
 # Extracts the access token from the request headers
@@ -424,3 +425,17 @@ def validate_password(password: str) -> Tuple[bool, str]:
         return False, "Password must contain at least one special character."
 
     return True, "Password is valid."
+
+
+def validate_auth_data(input_data: dict) -> bool:
+    """
+    Validates input data against the AuthSchema. Returns true if successful.
+    """
+    try:
+        # Dynamically create a marshmallow schema from the dictionary
+        schema = Schema.from_dict(AuthSchema)()
+        result = schema.load(input_data)  # Validate the input data
+        return True
+    except Exception as e:
+        print(e)
+        return False
