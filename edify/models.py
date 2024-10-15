@@ -225,7 +225,7 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
 
         return user
 
-    def generate_session_auth_code(self):
+    def generate_session_auth_code(self) -> int:
         # Retrieve the stored code and timestamp from the session
         auth = session.get("auth")
 
@@ -253,7 +253,7 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
 
         return auth_code
 
-    def validate_session_auth_code(self, input_code: int):
+    def has_valid_session_auth_code(self) -> bool:
         # Retrieve the stored code and timestamp from the session
         auth = session.get("auth")
 
@@ -268,13 +268,43 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
             del session["auth"]
             return False
 
-        # Check if the input code matches the stored code
-        if str(auth["code"]) != str(input_code):
-            return False
-
         # Check the identity
         if auth["id"] != self.id:
             del session["auth"]
+            return False
+
+        return True
+
+    def sec_since_issued_auth_code(self) -> float:
+        # Check for valid code
+        if not self.has_valid_session_auth_code():
+            return -1
+
+        # Retrieve the stored code
+        auth = session.get("auth")
+
+        # Parse the issued timestamp from ISO format
+        issued_time = datetime.fromisoformat(auth["issued"])
+
+        # Get the current time
+        current_time = datetime.now(timezone.utc)
+
+        # Calculate the difference in seconds
+        time_diff = current_time - issued_time
+        seconds_since_issued = time_diff.total_seconds()
+
+        return seconds_since_issued
+
+    def validate_session_auth_code(self, input_code: int) -> bool:
+        # Check for valid code
+        if not self.has_valid_session_auth_code():
+            return False
+
+        # Retrieve the stored code
+        auth = session.get("auth")
+
+        # Check if the input code matches the stored code
+        if str(auth["code"]) != str(input_code):
             return False
 
         return True
