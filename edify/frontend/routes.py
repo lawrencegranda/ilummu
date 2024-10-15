@@ -23,6 +23,7 @@ from flask_jwt_extended import (
     jwt_required,
     unset_jwt_cookies,
 )
+from urllib.parse import quote
 from webargs import fields, validate
 from webargs.flaskparser import use_args
 
@@ -298,7 +299,18 @@ def store_question(args) -> flask_typing.ResponseReturnValue:
 
     # Return the data endpoint
     return (
-        jsonify({"next": url_for("frontend.submit_question_after_login")}),
+        jsonify(
+            {
+                "next_url": quote(
+                    url_for(
+                        "frontend.email_verification",
+                        next_url=url_for("frontend.submit_question_after_login"),
+                        http_method="POST",
+                    )
+                ),
+                "http_method": "GET",
+            }
+        ),
         HTTPStatus.OK,
     )
 
@@ -376,7 +388,7 @@ def reset_password() -> flask_typing.ResponseReturnValue:
 @frontend.route("/email-verification")
 @jwt_required()
 def email_verification(
-    http_method: str = None, next_url: str = None
+    next_url: str = None, http_method: str = None
 ) -> flask_typing.ResponseReturnValue:
     """
     Route to verify email.
@@ -386,6 +398,10 @@ def email_verification(
     """
     user = get_user()
 
+    if user and user["mail_is_verified"] is True:
+        print(user)
+        return redirect(url_for("frontend.dashboard"))
+
     if next_url is None:
         next_url = request.args.get("next_url", url_for("frontend.dashboard"))
 
@@ -393,7 +409,7 @@ def email_verification(
         http_method = request.args.get("http_method", "GET")
 
     return render_template(
-        "/email_verification.jinja", http_method="GET", next_url=next_url
+        "/email_verification.jinja", next_url=next_url, http_method=http_method
     )
 
 
@@ -578,7 +594,11 @@ def fetch_question(id_question: int) -> flask_typing.ResponseReturnValue:
 
 
 # List of endpoints that exclude email verification
-verification_excluded_endpoints = ["frontend.logout"]
+verification_excluded_endpoints = [
+    "frontend.email_verification",
+    "frontend.logout",
+    "frontend.store_question",
+]
 
 
 @frontend.before_request
@@ -590,10 +610,8 @@ def ensure_verified():
     # New user
     user = get_user()
 
-    if not user or user["mail_is_verified"] is True:
+    if request.method == "POST" or not user or user["mail_is_verified"] is True:
         return
-
-    print(request.url)
 
     return email_verification(http_method=request.method, next_url=request.url)
 
