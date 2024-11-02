@@ -259,6 +259,11 @@
           </div>
         </div>
         <div class="question-bottom">
+          {% if question.image_url %}
+            <div class="question-image">
+              <img src="{{ question.image_url }}" alt="Question Image" class="question-img" width="auto" height="auto" />
+            </div>
+          {% endif %}
           <p class="question-class">
             {{ question.course_code }}: {{ question.course_name }}
           </p>

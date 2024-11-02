@@ -3,8 +3,13 @@ from http import HTTPStatus
 from typing import Optional, Any, Tuple
 from datetime import datetime, timedelta
 
+from dotenv import load_dotenv
+import os
+import boto3
+load_dotenv()
+
 # Third-Party Framework imports
-from flask import Blueprint, Flask, jsonify
+from flask import Blueprint, Flask, jsonify, request
 from flask import typing as flask_typing
 from flask_jwt_extended import jwt_required
 from sqlalchemy.exc import IntegrityError
@@ -43,7 +48,7 @@ question = Blueprint("question", __name__, url_prefix="/question")
 # Endpoint: /backend/question/new
 @question.route("/new", methods=["POST"])
 @jwt_required()
-@use_args(QuestionSchema)
+@use_args(QuestionSchema, location="form")
 def create_question(args):
     """
     Create a new question and post it in the database.
@@ -61,6 +66,42 @@ def create_question(args):
         dict: A JSON response containing a success message or an error message.
     """
     # Retrieve the current user. Return an error if no user is found
+    #TODO: DEBUGGING
+    print("Args received:", args)
+    image_file = request.files.get("image")
+    if image_file:
+        s3_client = boto3.client(
+            's3',
+            endpoint_url='https://s3.filebase.com',
+            aws_access_key_id=os.getenv("FILEBASE_ACCESS_KEY"),
+            aws_secret_access_key=os.getenv("FILEBASE_SECRET_KEY")
+        )
+        bucket_name = "test2985012941"
+        
+        # Generate a unique key name for the image
+        key_name = f"images/{image_file.filename}" 
+
+        # Upload image to Filebase
+        try:
+            aws_response = s3_client.put_object(Body=image_file, Bucket=bucket_name, Key=key_name)
+            print("Full Response Metadata:", aws_response)
+            
+            # Try to get the CID from the response headers
+            cid = aws_response['ResponseMetadata']['HTTPHeaders'].get('x-amz-meta-cid')
+            if cid:
+                # Construct the IPFS Gateway URL using the CID
+                image_url = f"https://upset-orange-halibut.myfilebase.com/ipfs/{cid}"
+                print("Image URL:", image_url)
+            else:
+                print("CID not found in response metadata.")
+                image_url = None
+        except Exception as e:
+            print(f"Error uploading to Filebase: {e}")
+            return error_response("Failed to upload image.", ErrorType.SERVER_ERROR)
+    else:
+        image_url = None
+
+    
     user = get_current_user()
     if user is None:
         return error_response("User not found", ErrorType.USER_NOT_FOUND)
@@ -136,6 +177,7 @@ def create_question(args):
         price=args["price"],
         method_id=method.id,
         solved=False,  # Question is initially unsolved
+        image_url=image_url
     )
 
     db.session.add(question)

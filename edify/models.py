@@ -431,7 +431,7 @@ class Question(BaseModel):
 
     # Entry updated date (to keep track)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-
+    image_url = db.Column(db.String(255), nullable=True)
     def __repr__(self):
         return f"Question({self.id}, {self.user_id}, {self.course_id}, {self.solved})"
 
@@ -447,6 +447,7 @@ class Question(BaseModel):
             "solved": self.solved,
             "created_at": date_to_int(self.created_at),
             "updated_at": date_to_int(self.updated_at),
+            "image_url": self.image_url
         }
 
         if simplified == False:
