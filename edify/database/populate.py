@@ -317,8 +317,8 @@ def generate_test_users(num_users):
             email=email,
             phone=phone,
             password=password,
-            mail_is_verified=fake.boolean(),
-            phone_is_verified=fake.boolean(),
+            mail_is_verified=True,
+            phone_is_verified=True,
             is_mock=False,
             is_test=True,
         )
