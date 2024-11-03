@@ -65,7 +65,7 @@ def upload_question(image_file) -> Optional[str]:
 
         if cid:
             # Construct the IPFS Gateway URL using the CID
-            image_url = f"https://upset-orange-halibut.myfilebase.com/ipfs/{cid}"
+            image_url = f"{current_app.config['FILEBASE_URL']}{cid}"
             return image_url
     except Exception as e:
         print(e)
