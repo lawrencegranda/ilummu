@@ -73,3 +73,4 @@ class Config:
     FILEBASE_SECRET_KEY: str = os.environ["FILEBASE_SECRET_KEY"]
     FILEBASE_BUCKET: str = os.environ["FILEBASE_BUCKET"]
     FILEBASE_ENDPOINT: str = os.environ["FILEBASE_ENDPOINT"]
+    FILEBASE_URL: str = os.environ["FILEBASE_URL"]
