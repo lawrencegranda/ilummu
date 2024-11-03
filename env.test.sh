@@ -28,6 +28,7 @@ export SECRET_KEY='test_key'
 #-------------------------------------------------------------------------------
 export DB_URL=''
 
+
 #-------------------------------------------------------------------------------
 # Mail Information
 #-------------------------------------------------------------------------------
@@ -38,6 +39,7 @@ export MAIL_PASSWORD=''
 export MAIL_USE_TLS=0
 export MAIL_USE_SSL=0
 
+
 #-------------------------------------------------------------------------------
 # Filebase Information
 #-------------------------------------------------------------------------------
@@ -45,3 +47,4 @@ export FILEBASE_ACCESS_KEY=''
 export FILEBASE_SECRET_KEY=''
 export FILEBASE_BUCKET=''
 export FILEBASE_ENDPOINT=''
+export FILEBASE_URL=''
