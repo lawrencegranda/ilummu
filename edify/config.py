@@ -67,3 +67,9 @@ class Config:
 
     # Auth token time
     AUTH_TOKEN_MAX_AGE: int = int(timedelta(minutes=30).total_seconds())
+
+    # Filebase credentials
+    FILEBASE_ACCESS_KEY: str = os.environ["FILEBASE_ACCESS_KEY"]
+    FILEBASE_SECRET_KEY: str = os.environ["FILEBASE_SECRET_KEY"]
+    FILEBASE_BUCKET: str = os.environ["FILEBASE_BUCKET"]
+    FILEBASE_ENDPOINT: str = os.environ["FILEBASE_ENDPOINT"]
