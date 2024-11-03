@@ -37,3 +37,11 @@ export MAIL_USERNAME=''
 export MAIL_PASSWORD=''
 export MAIL_USE_TLS=0
 export MAIL_USE_SSL=0
+
+#-------------------------------------------------------------------------------
+# Filebase Information
+#-------------------------------------------------------------------------------
+export FILEBASE_ACCESS_KEY=''
+export FILEBASE_SECRET_KEY=''
+export FILEBASE_BUCKET=''
+export FILEBASE_ENDPOINT=''
