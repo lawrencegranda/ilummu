@@ -287,12 +287,7 @@
         <input id="create-question-file"
                type="file"
                style="display: none"
-               accept="image/*, .pdf, .docx, .doc" 
-               onchange="showFilePreview(event)" />
-        <div class="file-preview">
-          <img id="image-preview" src="" alt="Image Preview" style="display: none; max-width: 100%; height: auto;">
-          <p id="file-name" style="display: none;"></p>
-        </div>
+               accept="image/*, .pdf" />
       </div>
       <div class="create-question-column-wrapper">
         <div class="create-question-input-background">
@@ -362,33 +357,9 @@
               form="create-question-form"
               type="submit"
               class="btn btn-primary"
-              type="button"
+              type="button">
         Create
       </button>
     </div>
   </form>
 </div>
-<script>
-function showFilePreview(event) {
-    const file = event.target.files[0];
-    const imagePreview = document.getElementById("image-preview");
-    const fileNameDisplay = document.getElementById("file-name");
-
-    if (file) {
-        imagePreview.style.display = "none";
-        fileNameDisplay.style.display = "none";
-        if (file.type.startsWith("image/")) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                imagePreview.src = e.target.result;
-                imagePreview.style.display = "block";
-            };
-            reader.readAsDataURL(file);
-        } else {
-            // If it's a non-image file, display the file name
-            fileNameDisplay.textContent = `Selected file: ${file.name}`;
-            fileNameDisplay.style.display = "block";
-        }
-    }
-}
-</script>
