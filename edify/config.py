@@ -16,6 +16,7 @@ class Config:
         raise Exception(f"Invalid Environment {os.environ['ENV']}")
 
     ENV = os.environ["ENV"]
+    TESTING = False
 
     if ENV == EdifyEnvironments.PRODUCTION.value:
         SQLALCHEMY_DATABASE_URI = os.environ["DB_URL"]
