@@ -3,6 +3,7 @@ from http import HTTPStatus
 import traceback
 
 # Third-Party Framework imports
+import boto3
 from flask import Flask, request, jsonify, session, url_for, redirect, current_app
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import (
@@ -31,11 +32,20 @@ bcrypt = Bcrypt()
 jwt = JWTManager()
 migrate = Migrate()
 mail = Mail()
+s3_client = None
 
 
 def create_app(config_class):
     app = Flask(__name__)
     app.config.from_object(config_class)
+
+    global s3_client
+    s3_client = boto3.client(
+        "s3",
+        endpoint_url=app.config["FILEBASE_ENDPOINT"],
+        aws_access_key_id=app.config["FILEBASE_ACCESS_KEY"],
+        aws_secret_access_key=app.config["FILEBASE_SECRET_KEY"],
+    )
 
     # Passing app as a parameter here instead of on initialization
     # (FlaskDoc)

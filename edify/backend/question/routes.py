@@ -17,7 +17,7 @@ from webargs import fields, validate
 from webargs.flaskparser import use_args
 
 # Local Application imports
-from edify import db
+from edify import db, s3_client
 from edify.backend.question.utils import question_dictionary
 from edify.backend.user.utils import get_current_user, check_author
 from edify.models import (
@@ -46,12 +46,7 @@ question = Blueprint("question", __name__, url_prefix="/question")
 
 
 def upload_question(file) -> Optional[str]:
-    s3_client = boto3.client(
-        "s3",
-        endpoint_url=current_app.config["FILEBASE_ENDPOINT"],
-        aws_access_key_id=current_app.config["FILEBASE_ACCESS_KEY"],
-        aws_secret_access_key=current_app.config["FILEBASE_SECRET_KEY"],
-    )
+    global s3_client
     bucket_name = current_app.config["FILEBASE_BUCKET"]
 
     # Generate a unique key by combining a UUID, timestamp, and original filename
