@@ -477,13 +477,18 @@ strong:hover {
 
 #button-nav-question {
   font-weight: 500;
-  /* color: var(--blue--base) !important; */
-  /* color: var(--yellow--base) !important; */
   color: black;
   background-color: var(--neutral--300) !important;
   height: 37px;
   padding-left: 10px;
   padding-right: 10px;
+}
+
+@media only screen and (max-width: 420px) {
+  #button-nav-question {
+    display: none;
+    visibility: hidden;
+  }
 }
 
 #button-nav-question:hover {
