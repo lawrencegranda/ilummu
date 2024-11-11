@@ -336,6 +336,22 @@ def submit_question_after_login() -> flask_typing.ResponseReturnValue:
     return response
 
 
+# REIDRECT HANDLER  %------------------------------------------------------------------%
+
+
+# Endpoint: /redirect_handler
+@frontend.route("/redirect_handler")
+def redirect_handler():
+    # Get `next_url` and `http_method` from query parameters
+    next_url = request.args.get("next_url", url_for("frontend.dashboard"))
+    http_method = request.args.get("http_method", "GET").upper()
+
+    # Render the template with the redirection logic
+    return render_template(
+        "redirect_handler.jinja", next_url=next_url, http_method=http_method
+    )
+
+
 # PASSWORD RESET    %------------------------------------------------------------------%
 
 
@@ -398,15 +414,20 @@ def email_verification(
     """
     user = get_user()
 
-    if user and user["mail_is_verified"] is True:
-        print(user)
-        return redirect(url_for("frontend.dashboard"))
-
+    # Check if next_url and http_method are provided in the request
     if next_url is None:
         next_url = request.args.get("next_url", url_for("frontend.dashboard"))
 
     if http_method is None:
         http_method = request.args.get("http_method", "GET")
+
+    if user and user["mail_is_verified"] is True:
+        # Use the redirect handler template
+        return redirect(
+            url_for(
+                "frontend.redirect_handler", next_url=next_url, http_method=http_method
+            )
+        )
 
     return render_template(
         "/email_verification.jinja", next_url=next_url, http_method=http_method
