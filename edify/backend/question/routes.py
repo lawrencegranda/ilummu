@@ -9,12 +9,15 @@ import boto3
 from flask import Blueprint, Flask, current_app, jsonify, request
 from flask import typing as flask_typing
 from flask_jwt_extended import jwt_required
+from io import BytesIO
+from PIL import Image
 from sqlalchemy.exc import IntegrityError
+import uuid
 from webargs import fields, validate
 from webargs.flaskparser import use_args
 
 # Local Application imports
-from edify import db
+from edify import db, s3_client
 from edify.backend.question.utils import question_dictionary
 from edify.backend.user.utils import get_current_user, check_author
 from edify.models import (
@@ -42,23 +45,38 @@ question = Blueprint("question", __name__, url_prefix="/question")
 # -----------------------------------------------------------------------------
 
 
-def upload_question(image_file) -> Optional[str]:
-    s3_client = boto3.client(
-        "s3",
-        endpoint_url=current_app.config["FILEBASE_ENDPOINT"],
-        aws_access_key_id=current_app.config["FILEBASE_ACCESS_KEY"],
-        aws_secret_access_key=current_app.config["FILEBASE_SECRET_KEY"],
-    )
+def upload_question(file) -> Optional[str]:
+    global s3_client
     bucket_name = current_app.config["FILEBASE_BUCKET"]
 
-    # Generate a unique key name for the image
-    key_name = f"images/{image_file.filename}"
+    # Generate a unique key by combining a UUID, timestamp, and original filename
+    timestamp = datetime.utcnow()
+    key_name = f"images/{uuid.uuid4().hex}_{timestamp}_{file.filename}"
 
     # Upload image to Filebase
     try:
-        aws_response = s3_client.put_object(
-            Body=image_file, Bucket=bucket_name, Key=key_name
-        )
+
+        # If it is an image, resize
+        try:
+            image = Image.open(file)
+
+            # Resize image (e.g., to 800x800 or any size as needed)
+            max_size = (1024, 1024)
+            image.thumbnail(max_size)  # This keeps the aspect ratio
+
+            # Save the resized image to a BytesIO object
+            image_bytes = BytesIO()
+            image.save(image_bytes, format=image.format)
+            image_bytes.seek(0)
+
+            file = image_bytes
+        except Exception as e:
+            print("Not worked")
+            print(e)
+            pass
+
+        # Upload the file to S3 with the generated key
+        aws_response = s3_client.put_object(Body=file, Bucket=bucket_name, Key=key_name)
 
         # Try to get the CID from the response headers
         cid = aws_response["ResponseMetadata"]["HTTPHeaders"].get("x-amz-meta-cid")
