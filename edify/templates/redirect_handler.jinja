@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta name="description" content="ilummu - Redirecting...">
+        <meta name="keywords"
+              content="edify, homework, cornell, university, chegg, quizlet, brainly">
+        <meta charset="UTF-8">
+        <title>Redirecting...</title>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    </head>
+    <body>
+        <script>
+        function showError(message) {
+            alert(message);
+        }
+
+        function redirect() {
+            let http_method = "{{ http_method | default('GET') }}";
+            let next_url = "{{ next_url | default(url_for('frontend.dashboard')) }}";
+
+            if (http_method === "POST") {
+                $.ajax({
+                    url: next_url,
+                    type: 'POST',
+                    success: function () {
+                        // Redirect to dashboard after successful POST
+                        window.location.href = "{{ url_for('frontend.dashboard') }}";
+                    },
+                    error: async function (error) {
+                        console.error("Error:", error);
+                        showError("An error occurred. Redirecting to dashboard...");
+                        // Show error for 2 seconds, then redirect to dashboard
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        window.location.href = "{{ url_for('frontend.dashboard') }}";
+                    }
+                });
+            } else {
+                // For GET requests, directly redirect to the next URL
+                window.location.href = next_url;
+            }
+        }
+
+        // Trigger the success handler immediately on page load
+        window.onload = redirect;
+        </script>
+    </body>
+</html>
