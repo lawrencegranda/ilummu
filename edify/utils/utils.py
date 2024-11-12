@@ -65,7 +65,7 @@ def get_request_cookie(request: flask.Request) -> Optional[str]:
 
 # Creates an internal request within the Flask application using test request context
 def internal_request(
-    url: str, method: str = "GET", data: Any = None
+    url: str, method: str = "GET", data: Any = None, is_form: bool = False
 ) -> flask_typing.ResponseReturnValue:
     """
     Creates an internal request within the Flask application using test request context.
@@ -74,34 +74,59 @@ def internal_request(
         url (str): The URL to request.
         method (str, optional): The HTTP method to use. Defaults to "GET".
         data (Any, optional): The data to send.
+        is_form (bool, optional): Whether to include data as form or not.
 
     Returns:
         flask.Response: The response from the requested URL.
     """
-    # Build the environment
+    # Include JWT cookies if present
+    token = get_request_cookie(request)
+
+    # Check if the user has a JWT refresh token
+    refresh_token = request.cookies.get("refresh_token_cookie", default=None)
+
+    if data and is_form and method == "POST":
+        with current_app.test_client() as client:
+            # Set the cookies on the client
+            if token:
+                client.set_cookie("localhost", "access_token_cookie", token)
+            if refresh_token:
+                client.set_cookie("localhost", "refresh_token_cookie", refresh_token)
+
+            # Optionally add headers for authorization, etc.
+            headers = {"Authorization": f"Bearer {token}"}
+
+            # Send the POST request with form data and headers
+            response = client.post("/backend/question/new", data=data, headers=headers)
+
+        return response
+
+    # Build environment
     builder = EnvironBuilder(path=url, method=method)
     env = builder.get_environ()
     env["HTTP_COOKIE"] = ""
 
-    # Check if the user has a JWT token cookie and add it to the environment
-    token = get_request_cookie(request)
+    # Set cookies in the environment
     if token:
         env["HTTP_COOKIE"] = f"access_token_cookie={token}"
-
-    # Check if the user has a JWT refresh token
-    refresh_token = request.cookies.get("refresh_token_cookie")
     if refresh_token:
         env["HTTP_COOKIE"] = (
             f'{env["HTTP_COOKIE"]}; refresh_token_cookie={refresh_token}'
         )
 
-    # Include JSON data if provided
-    if data is not None and method == "POST":
+    # Set up the body depending on data type
+    if data and method == "POST":
+        # JSON body
         env["wsgi.input"] = io.BytesIO(json.dumps(data).encode("utf-8"))
         env["CONTENT_TYPE"] = "application/json"
 
-    # Create the test request context with the environment
-    with current_app.test_request_context(json=data, environ_overrides=env):
+        with current_app.test_request_context(environ_overrides=env, json=data):
+            response = current_app.full_dispatch_request()
+
+        return response
+
+    # GET or other methods without data
+    with current_app.test_request_context(environ_overrides=env):
         response = current_app.full_dispatch_request()
 
     return response
