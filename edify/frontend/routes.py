@@ -331,7 +331,10 @@ def submit_question_after_login() -> flask_typing.ResponseReturnValue:
     # Submit the question using the existing endpoint
     # Create a request to submit the question to /backend/question/new
     response = internal_request(
-        url_for("backend.question.create_question"), method="POST", data=question_data
+        url_for("backend.question.create_question"),
+        method="POST",
+        data=question_data,
+        is_form=True,
     )
 
     return response
