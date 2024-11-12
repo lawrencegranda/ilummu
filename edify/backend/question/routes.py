@@ -59,9 +59,15 @@ def upload_question(file) -> Optional[str]:
 
         # If it is an image, resize
         try:
-            image = Image.open(file)
+            # Create a copy of the original file in memory
+            file_copy = BytesIO(file.read())
+            file_copy.seek(0)
+            file.seek(0)
 
-            # Resize image (e.g., to 800x800 or any size as needed)
+            # Open and process the image
+            image = Image.open(file_copy)
+
+            # Resize image (e.g., to 1024x1024 while keeping the aspect ratio)
             max_size = (1024, 1024)
             image.thumbnail(max_size)  # This keeps the aspect ratio
 
