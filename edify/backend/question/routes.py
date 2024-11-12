@@ -117,7 +117,7 @@ def create_question(args):
     image_url = None
 
     # Retrive the file
-    image_file = request.files.get("image")
+    image_file = request.files.get("image", default=None)
     if image_file:
         image_url = upload_question(image_file)
         if not image_url:
