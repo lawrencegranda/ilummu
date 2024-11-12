@@ -271,10 +271,20 @@
 
           {% if question.image_url %}
             <div class="question-image">
-              <iframe src="{{ question.image_url }}"
-                      alt="Question Image"
-                      class="question-img">
-              </iframe>
+
+              {% if question.is_image %}
+                <img src="{{ question.image_url }}"
+                     alt="Question Image"
+                     class="question-img"
+                     width="100%"
+                     height="auto" />
+              {% else %}
+                <iframe src="{{ question.image_url }}"
+                        alt="Question Image"
+                        class="question-file">
+                </iframe>
+              {% endif %}
+
             </div>
           {% endif %}
 

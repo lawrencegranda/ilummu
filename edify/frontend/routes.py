@@ -26,6 +26,7 @@ from flask_jwt_extended import (
     unset_jwt_cookies,
 )
 from tempfile import mkdtemp
+import urllib.request
 from urllib.parse import quote
 from webargs import fields, validate
 from webargs.flaskparser import use_args
@@ -637,6 +638,18 @@ def fetch_question(id_question: int) -> flask_typing.ResponseReturnValue:
     question["user"]["username"] = (
         "You" if question["is_author"] else question["user"]["username"]
     )
+
+    question["is_image"] = False
+    if question["image_url"]:
+        # Fetch the MIME type of question
+        try:
+            req = urllib.request.Request(question["image_url"], method="HEAD")
+            with urllib.request.urlopen(req) as response:
+                question["is_image"] = response.headers.get(
+                    "Content-Type", ""
+                ).startswith("image")
+        except Exception as e:
+            print(f"Error fetching MIME type: {e}")
 
     return render_template(
         "question.jinja",
