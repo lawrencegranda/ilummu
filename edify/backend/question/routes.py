@@ -9,6 +9,7 @@ import boto3
 from flask import Blueprint, Flask, current_app, jsonify, request
 from flask import typing as flask_typing
 from flask_jwt_extended import jwt_required
+import mimetypes
 from io import BytesIO
 from PIL import Image
 from sqlalchemy.exc import IntegrityError
@@ -71,12 +72,23 @@ def upload_question(file) -> Optional[str]:
 
             file = image_bytes
         except Exception as e:
-            print("Not worked")
             print(e)
             pass
 
-        # Upload the file to S3 with the generated key
-        aws_response = s3_client.put_object(Body=file, Bucket=bucket_name, Key=key_name)
+        # Determine the MIME type of the file
+        content_type, _ = mimetypes.guess_type(key_name)
+        print(content_type)
+        if not content_type:
+            # Fallback if MIME type can't be determined
+            content_type = "binary/octet-stream"
+
+        # Upload the file with the specified ContentType
+        aws_response = s3_client.put_object(
+            Body=file,
+            Bucket=bucket_name,
+            Key=key_name,
+            ContentType=content_type,  # Set the detected or fallback content type
+        )
 
         # Try to get the CID from the response headers
         cid = aws_response["ResponseMetadata"]["HTTPHeaders"].get("x-amz-meta-cid")
