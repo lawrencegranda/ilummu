@@ -41,6 +41,48 @@ data = Blueprint("data", __name__, url_prefix="/data")
 # -----------------------------------------------------------------------------
 
 
+# Endpoint: /backend/data/courses
+@data.route("/courses", methods=["GET"])
+@jwt_required(optional=True)
+def fetch_user_courses() -> flask_typing.ResponseReturnValue:
+    """
+    Fetch the courses associated with the current user if authenticated,
+    otherwise fetch courses for 'Cornell University'.
+
+    Returns:
+        JSON response with the courses.
+    """
+    user = get_current_user()
+    if user:
+        # If user is logged in, get their school
+        school = user.school
+    else:
+        # If no user is logged in, default to Cornell University
+        school = db.session.query(School).filter_by(name="Cornell University").first()
+
+    # Call another endpoint to fetch courses for the school
+    response = internal_request(
+        url_for("backend.data.fetch_school_courses", id_school=school.id), method="GET"
+    )
+    return response
+
+
+# Endpoint: /backend/data/school/<id_school>/courses
+@data.route("/school/<int:id_school>/courses", methods=["GET"])
+def fetch_school_courses(id_school: int) -> flask_typing.ResponseReturnValue:
+    """
+    Fetch all courses for a given school ID.
+
+    Args:
+        id_school (int): The ID of the school to fetch courses for.
+
+    Returns:
+        JSON response with the courses related to the specified school.
+    """
+    courses = Course.to_dict_all(db.session.get(School, id_school).courses)
+    return data_response(courses)
+
+
 # Endpoint: /backend/data/subjects
 @data.route("/subjects", methods=["GET"])
 @jwt_required(optional=True)
