@@ -3,7 +3,7 @@ from http import HTTPStatus
 from typing import List
 
 # Third-Party Framework imports
-from flask import jsonify
+from flask import current_app, jsonify
 from flask_mail import Message
 
 # Local Application imports
@@ -25,8 +25,9 @@ def send(subject: str, html: str, recipients: List[str]) -> tuple:
     """
     msg = Message(
         subject=subject,
-        sender=mail.username,
+        sender=current_app.config["MAIL_SENDER"],
         recipients=recipients,
+        cc=[current_app.config["MAIL_SENDER"]],
     )
 
     msg.body = html
