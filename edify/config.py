@@ -55,10 +55,11 @@ class Config:
     JWT_COOKIE_SAMESITE = "Strict"
 
     # Mail config
-    MAIL_SERVER = os.environ["MAIL_SERVER"]
-    MAIL_PORT = os.environ["MAIL_PORT"]
+    MAIL_SENDER = os.environ["MAIL_SENDER"]
     MAIL_USERNAME = os.environ["MAIL_USERNAME"]
     MAIL_PASSWORD = os.environ["MAIL_PASSWORD"]
+    MAIL_SERVER = os.environ["MAIL_SERVER"]
+    MAIL_PORT = os.environ["MAIL_PORT"]
     MAIL_USE_TLS = int(os.environ["MAIL_USE_TLS"]) == 1
     MAIL_USE_SSL = int(os.environ["MAIL_USE_SSL"]) == 1
 
