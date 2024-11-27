@@ -256,12 +256,12 @@
       </p>
       <div class="create-question-column-wrapper">
         <div class="create-question-input-background">
-          <p class="create-question-label">
-            Course:
-          </p>
           <select id="create-question-class-item"
                   class="create-question-selector"
                   required>
+            <option value>
+              Select Course
+            </option>
 
             {% for course in courses %}
               <option value="{{ course['id'] }}">
@@ -286,22 +286,6 @@
                accept="image/*, .pdf" />
       </div>
       <div class="create-question-column-wrapper">
-        <div class="create-question-input-background">
-          <select id="create-question-category"
-                  class="create-question-selector"
-                  required>
-            <option value>
-              Select the class's school
-            </option>
-
-            {% for subject in subjects %}
-              <option value="{{ subject['value'] }}">
-                {{ subject['name'] }}
-              </option>
-            {% endfor %}
-
-          </select>
-        </div>
         <div class="create-question-input-background">
           <select id="create-question-method" class="create-question-selector" required>
             <option value>

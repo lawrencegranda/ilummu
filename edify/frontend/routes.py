@@ -171,6 +171,9 @@ def home() -> flask_typing.ResponseReturnValue:
     # Fetch the logged user if any, else None
     user = get_user()
 
+    courses = fetch_data(url_for("backend.data.fetch_user_courses"), "GET")
+    courses.sort(key=lambda d: d["code"])
+
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
     subjects.sort(key=lambda d: d["name"])
 
@@ -181,6 +184,7 @@ def home() -> flask_typing.ResponseReturnValue:
 
     return render_template(
         "/home.jinja",
+        courses=courses,
         subjects=subjects,
         methods=methods,
         time_intervals=time_intervals,
@@ -203,6 +207,9 @@ def dashboard() -> flask_typing.ResponseReturnValue:
     if user and not is_verified():
         return email_verification()
 
+    courses = fetch_data(url_for("backend.data.fetch_user_courses"), "GET")
+    courses.sort(key=lambda d: d["code"])
+
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
     subjects.sort(key=lambda d: d["name"])
 
@@ -213,6 +220,7 @@ def dashboard() -> flask_typing.ResponseReturnValue:
 
     return render_template(
         "dashboard.jinja",
+        courses=courses,
         subjects=subjects,
         methods=methods,
         time_intervals=time_intervals,
@@ -618,6 +626,9 @@ def fetch_question(id_question: int) -> flask_typing.ResponseReturnValue:
     """
     user = get_user()
 
+    courses = fetch_data(url_for("backend.data.fetch_user_courses"), "GET")
+    courses.sort(key=lambda d: d["code"])
+
     subjects = fetch_data(url_for("backend.data.fetch_user_subjects"), "GET")
     subjects.sort(key=lambda d: d["name"])
 
@@ -653,6 +664,7 @@ def fetch_question(id_question: int) -> flask_typing.ResponseReturnValue:
 
     return render_template(
         "question.jinja",
+        courses=courses,
         subjects=subjects,
         methods=methods,
         time_intervals=time_intervals,
