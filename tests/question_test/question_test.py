@@ -39,7 +39,7 @@ class TestCreateQuestion:
 
         response = client_with_data.post(
             url_for("backend.question.create_question"),
-            json={
+            data={
                 "class_code": course_code,
                 "class_name": course_name,
                 "academic_field": academic_field.value,
@@ -126,7 +126,7 @@ class TestCreateQuestion:
 
         response = client_with_data.post(
             url_for("backend.question.create_question"),
-            json={
+            data={
                 "class_code": course_code,
                 "class_name": course_name,
                 "academic_field": academic_field.value,
@@ -200,7 +200,7 @@ class TestCreateQuestion:
 
         response = client_with_data.post(
             url_for("backend.question.create_question"),
-            json={
+            data={
                 "class_code": course.code,
                 "class_name": course.name,
                 "academic_field": academic_field.value,
@@ -226,7 +226,7 @@ class TestCreateQuestion:
 
         response = client_with_data.post(
             url_for("backend.question.create_question"),
-            json={
+            data={
                 "class_code": course.code,
                 "class_name": course.name,
                 "academic_field": academic_field.value,
@@ -253,7 +253,7 @@ class TestCreateQuestion:
 
         response = client_with_data.post(
             url_for("backend.question.create_question"),
-            json={
+            data={
                 "class_code": course.code,
                 "class_name": course.name,
                 "academic_field": invalid_academic_field,
