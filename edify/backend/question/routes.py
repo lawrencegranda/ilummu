@@ -2,17 +2,23 @@
 from http import HTTPStatus
 from typing import Optional, Any, Tuple
 from datetime import datetime, timedelta
+import os
 
 # Third-Party Framework imports
-from flask import Blueprint, Flask, jsonify
+import boto3
+from flask import Blueprint, Flask, current_app, jsonify, request
 from flask import typing as flask_typing
 from flask_jwt_extended import jwt_required
+import mimetypes
+from io import BytesIO
+from PIL import Image
 from sqlalchemy.exc import IntegrityError
+import uuid
 from webargs import fields, validate
 from webargs.flaskparser import use_args
 
 # Local Application imports
-from edify import db
+from edify import db, s3_client
 from edify.backend.question.utils import question_dictionary
 from edify.backend.user.utils import get_current_user, check_author
 from edify.models import (
@@ -40,10 +46,74 @@ question = Blueprint("question", __name__, url_prefix="/question")
 # -----------------------------------------------------------------------------
 
 
+def upload_question(file) -> Optional[str]:
+    global s3_client
+    bucket_name = current_app.config["FILEBASE_BUCKET"]
+
+    # Generate a unique key by combining a UUID, timestamp, and original filename
+    timestamp = datetime.utcnow()
+    key_name = f"images/{uuid.uuid4().hex}_{timestamp}_{file.filename}"
+
+    # Upload image to Filebase
+    try:
+
+        # If it is an image, resize
+        try:
+            # Create a copy of the original file in memory
+            file_copy = BytesIO(file.read())
+            file_copy.seek(0)
+            file.seek(0)
+
+            # Open and process the image
+            image = Image.open(file_copy)
+
+            # Resize image (e.g., to 1024x1024 while keeping the aspect ratio)
+            max_size = (1024, 1024)
+            image.thumbnail(max_size)  # This keeps the aspect ratio
+
+            # Save the resized image to a BytesIO object
+            image_bytes = BytesIO()
+            image.save(image_bytes, format=image.format)
+            image_bytes.seek(0)
+
+            file = image_bytes
+        except Exception as e:
+            print(e)
+            pass
+
+        # Determine the MIME type of the file
+        content_type, _ = mimetypes.guess_type(key_name)
+        print(content_type)
+        if not content_type:
+            # Fallback if MIME type can't be determined
+            content_type = "binary/octet-stream"
+
+        # Upload the file with the specified ContentType
+        aws_response = s3_client.put_object(
+            Body=file,
+            Bucket=bucket_name,
+            Key=key_name,
+            ContentType=content_type,  # Set the detected or fallback content type
+        )
+
+        # Try to get the CID from the response headers
+        cid = aws_response["ResponseMetadata"]["HTTPHeaders"].get("x-amz-meta-cid")
+
+        if cid:
+            # Construct the IPFS Gateway URL using the CID
+            image_url = f"{current_app.config['FILEBASE_URL']}{cid}"
+            return image_url
+    except Exception as e:
+        print(e)
+        pass
+
+    return None
+
+
 # Endpoint: /backend/question/new
 @question.route("/new", methods=["POST"])
 @jwt_required()
-@use_args(QuestionSchema)
+@use_args(QuestionSchema, location="form")
 def create_question(args):
     """
     Create a new question and post it in the database.
@@ -60,6 +130,17 @@ def create_question(args):
     Returns:
         dict: A JSON response containing a success message or an error message.
     """
+
+    # Default to no url
+    image_url = None
+
+    # Retrive the file
+    image_file = request.files.get("image", default=None)
+    if image_file:
+        image_url = upload_question(image_file)
+        if not image_url:
+            return error_response("Failed to upload image.", ErrorType.SERVER_ERROR)
+
     # Retrieve the current user. Return an error if no user is found
     user = get_current_user()
     if user is None:
@@ -136,6 +217,7 @@ def create_question(args):
         price=args["price"],
         method_id=method.id,
         solved=False,  # Question is initially unsolved
+        image_url=image_url,
     )
 
     db.session.add(question)

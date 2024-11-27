@@ -1,4 +1,6 @@
 # Standard Library imports
+import io
+import os
 import re
 import time
 from http import HTTPStatus
@@ -23,9 +25,12 @@ from flask_jwt_extended import (
     jwt_required,
     unset_jwt_cookies,
 )
+from tempfile import mkdtemp
+import urllib.request
 from urllib.parse import quote
 from webargs import fields, validate
 from webargs.flaskparser import use_args
+from werkzeug.utils import secure_filename
 
 # Local Application imports
 from edify import bcrypt, db
@@ -287,11 +292,28 @@ def signup() -> flask_typing.ResponseReturnValue:
 
 # Endpoint: /store_question
 @frontend.route("/store_question", methods=["POST"])
-@use_args(QuestionSchema)
+@use_args(QuestionSchema, location="form")
 @jwt_required(optional=True)
 def store_question(args) -> flask_typing.ResponseReturnValue:
     # Temporarily store the question data in the session
     session["temp_question"] = args
+
+    # Retrive the file if any
+    image_file = request.files.get("image", default=None)
+
+    if image_file:
+        if "temp_dir" not in session:
+            # Create a temporary directory
+            temp_dir = mkdtemp()
+            session["temp_dir"] = temp_dir
+
+        # Secure the filename and save to the temp directory
+        filename = secure_filename(image_file.filename)
+        filepath = os.path.join(session["temp_dir"], filename)
+        image_file.save(filepath)
+
+        # Store the file path in the session
+        session["temp_file"] = filepath
 
     # If the user is authenticated, create the question inmidiately.
     if get_user():
@@ -319,18 +341,36 @@ def store_question(args) -> flask_typing.ResponseReturnValue:
 @frontend.route("/submit_question_after_login", methods=["POST"])
 @jwt_required()
 def submit_question_after_login() -> flask_typing.ResponseReturnValue:
-    # Retrieve the question data from the session
-    question_data = session.pop("temp_question", None)
+    # Retrieve the question data and file from the session
+    data = session.pop("temp_question", None)
+    file_path = session.pop("temp_file", None)
 
-    if not question_data:
+    if not data:
         return error_response(
             "No question data found in session.", ErrorType.BAD_REQUEST
         )
 
+    # Prepare the form data
+    question_data = data.copy()
+    file = None
+
+    # Attach the file if it exists
+    if file_path:
+        try:
+            # Flask test client format
+            with open(file_path, "rb") as f:
+                file = (io.BytesIO(f.read()), os.path.basename(file_path))
+        except Exception as e:
+            print(f"Failed to retrieve file from path: {e}")
+
     # Submit the question using the existing endpoint
     # Create a request to submit the question to /backend/question/new
     response = internal_request(
-        url_for("backend.question.create_question"), method="POST", data=question_data
+        url_for("backend.question.create_question"),
+        method="POST",
+        data=question_data,
+        is_form=True,
+        file=file,
     )
 
     return response
@@ -598,6 +638,18 @@ def fetch_question(id_question: int) -> flask_typing.ResponseReturnValue:
     question["user"]["username"] = (
         "You" if question["is_author"] else question["user"]["username"]
     )
+
+    question["is_image"] = False
+    if question["image_url"]:
+        # Fetch the MIME type of question
+        try:
+            req = urllib.request.Request(question["image_url"], method="HEAD")
+            with urllib.request.urlopen(req) as response:
+                question["is_image"] = response.headers.get(
+                    "Content-Type", ""
+                ).startswith("image")
+        except Exception as e:
+            print(f"Error fetching MIME type: {e}")
 
     return render_template(
         "question.jinja",
