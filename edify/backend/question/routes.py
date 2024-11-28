@@ -47,6 +47,18 @@ question = Blueprint("question", __name__, url_prefix="/question")
 
 
 def upload_image(file) -> Optional[str]:
+    """
+    Uploads a file to Filebase, resizing it if necessary, and returns its IPFS Gateway URL.
+
+    Args:
+        file: A file to be uploaded.
+
+    Returns:
+        Optional[str]: The URL of the uploaded image via the IPFS Gateway, or None if the upload fails.
+
+    Raises:
+        Exception: Any exception encountered during image processing or upload is caught and logged.
+    """
     global s3_client
     bucket_name = current_app.config["FILEBASE_BUCKET"]
 
@@ -119,10 +131,8 @@ def create_question(args):
     Create a new question and post it in the database.
 
     Args:
-        class_code (str): The class code for the question.
-        class_name (str): The name of the class.
-        academic_field_id (int): The ID associated with the academic field.
-        method_id (int): The communication method ID.
+        course_id (int): The course id for the question.
+        method (int): The communication method ID.
         solve_time (int): The required time to solve the question.
         price (float): The offered price for solving the question.
         request_message (str): The question/request message.
@@ -152,7 +162,7 @@ def create_question(args):
         )
 
     # Fetch the method. Return error if invalid
-    method = db.session.query(Method).filter_by(value=args.get("method")).one_or_none()
+    method = db.session.query(Method).filter_by(value=args["method"]).one_or_none()
     if method is None:
         return error_response("Invalid method", ErrorType.BAD_REQUEST)
 
