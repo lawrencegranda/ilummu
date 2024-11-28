@@ -79,26 +79,10 @@
             else 
                 return false;
 
-            // Validate class code
-            var class_code = $("#create-question-class-code").val().replace(' ', '').trim();
-            if (!class_code) {
-                showError("Class code is required.");
-                return;
-            } else if (class_code.length > 10) {
-                showError("Class code is too long.");
-                return;
-            } else if (class_code.length < 6) {
-                showError("Class code is too short.");
-                return;
-            }
-
-            // Validate class name
-            var class_name = $("#create-question-class-name").val().replace(/\s+/g, ' ').trim();
-            if (!class_name) {
-                showError("Class name is required.");
-                return;
-            } else if (class_name.length < 3) {
-                showError("Class name is too short.");
+            // Validate course
+            var course_id = $("#create-question-course-item").val().trim()
+            if (!course_id) {
+                showError("Select a course from the options.");
                 return;
             }
 
@@ -112,13 +96,6 @@
                 return;
             } else if (request_message.length > 5000) {
                 showError("Request is too long (maximum of 5000 characters).");
-                return;
-            }
-
-            // Validate academic field selection
-            var academic_field = $("#create-question-category").val().trim()
-            if (!academic_field) {
-                showError("Select a school from the options.");
                 return;
             }
 
@@ -152,25 +129,28 @@
                 return;
             }
 
+            var imageFile = null;
+            try {
+                imageFile = $("#create-question-file")[0].files[0];
+            } catch (error) {
+                console.error("An error occurred while appending the image file:", error);
+            }
+
             // If validation passes, format the data
-            var data = {
-                class_code: class_code,
-                class_name: class_name,
+            const data= {
+                course_id: course_id,
                 request_message: request_message,
-                academic_field: academic_field,
                 method: method,
                 solve_time: time,
                 price: price, 
+                image: imageFile,
             };
-
+            
+            // Use a FormData Object
             const formData = new FormData();
-            formData.append("class_code", class_code);
-            formData.append("class_name", class_name);
-            formData.append("request_message", request_message);
-            formData.append("academic_field", academic_field);
-            formData.append("method", method);
-            formData.append("solve_time", time);
-            formData.append("price", price);
+            Object.entries(data).forEach(([key, value]) => {
+                formData.append(key, value);
+            });
 
             {% if user is none %}
             let question_url = "{{url_for('frontend.store_question')}}"
@@ -178,18 +158,12 @@
             let question_url = "{{url_for('backend.question.create_question')}}"
             {% endif %}
 
-            const imageFile = $("#create-question-file")[0].files[0];
-            if (imageFile) {
-                formData.append("image", imageFile);
-            }
-
             // Send the data via AJAX POST request
             $.ajax({
                 url: question_url,
                 type: 'POST', // HTTP method
                 processData: false,
                 contentType: false, // Request content type
-                //data: JSON.stringify(data),
                 data: formData, // Data to be sent
                 success: function (response) {
                     // Handle success
@@ -256,7 +230,7 @@
       </p>
       <div class="create-question-column-wrapper">
         <div class="create-question-input-background">
-          <select id="create-question-class-item"
+          <select id="create-question-course-item"
                   class="create-question-selector"
                   required>
             <option value>
