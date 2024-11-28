@@ -209,19 +209,9 @@ def populate_courses():
     """Populate the database with predefined courses."""
     courses_data = [
         {
-            "code": "ENG101",
-            "name": "Introduction to Engineering",
-            "academic_field": "engineering",  # Engineering academic_field
-        },
-        {
-            "code": "ART203",
-            "name": "Modern Art History",
+            "code": "ECON1110",
+            "name": "Introductory Microeconomics",
             "academic_field": "as",  # Arts and Sciences academic_field
-        },
-        {
-            "code": "AGRI202",
-            "name": "Agricultural Economics",
-            "academic_field": "cals",  # Agriculture and Life Sciences academic_field
         },
     ]
 
