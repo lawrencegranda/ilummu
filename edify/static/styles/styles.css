@@ -3172,3 +3172,17 @@ p.made-students {
     row-gap: 20px;
   }
 }
+
+
+button#home-start-now.btn.btn-primary {
+  background-color: var(--yellow--base) !important; 
+  border: 2px solid var(--yellow--base) !important;
+}
+
+button#home-start-now.btn.btn-primary:hover,
+button#home-start-now.btn.btn-primary:active,
+button#home-start-now.btn.btn-primary:focus {
+  background-color: white !important; 
+  color: var(--yellow--base) !important; 
+  border: 2px solid var(--yellow--base) !important; 
+}
