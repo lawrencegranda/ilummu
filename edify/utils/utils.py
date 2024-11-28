@@ -473,5 +473,5 @@ def validate_auth_data(input_data: dict) -> bool:
         result = schema.load(input_data)  # Validate the input data
         return True
     except Exception as e:
-        print(e)
+        print("ERROR: Encountered an error validating the Auth schema", e)
         return False
