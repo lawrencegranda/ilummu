@@ -310,7 +310,7 @@ def store_question(args) -> flask_typing.ResponseReturnValue:
     image_file = request.files.get("image", default=None)
 
     if image_file:
-        if "temp_dir" not in session:
+        if "temp_dir" not in session or not os.path.isdir(session["temp_dir"]):
             # Create a temporary directory
             temp_dir = mkdtemp()
             session["temp_dir"] = temp_dir
