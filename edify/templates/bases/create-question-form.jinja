@@ -137,13 +137,12 @@
             }
 
             // If validation passes, format the data
-            const data= {
+            const data = {
                 course_id: course_id,
                 request_message: request_message,
                 method: method,
                 solve_time: time,
                 price: price, 
-                image: imageFile,
             };
             
             // Use a FormData Object
@@ -151,6 +150,11 @@
             Object.entries(data).forEach(([key, value]) => {
                 formData.append(key, value);
             });
+
+            // Append image if it exists
+            if (imageFile) {
+              formData.append("image", imageFile);
+            }
 
             {% if user is none %}
             let question_url = "{{url_for('frontend.store_question')}}"
