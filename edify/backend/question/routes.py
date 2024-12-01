@@ -2,17 +2,23 @@
 from http import HTTPStatus
 from typing import Optional, Any, Tuple
 from datetime import datetime, timedelta
+import os
 
 # Third-Party Framework imports
-from flask import Blueprint, Flask, jsonify
+import boto3
+from flask import Blueprint, Flask, current_app, jsonify, request
 from flask import typing as flask_typing
 from flask_jwt_extended import jwt_required
+import mimetypes
+from io import BytesIO
+from PIL import Image
 from sqlalchemy.exc import IntegrityError
+import uuid
 from webargs import fields, validate
 from webargs.flaskparser import use_args
 
 # Local Application imports
-from edify import db
+from edify import db, s3_client
 from edify.backend.question.utils import question_dictionary
 from edify.backend.user.utils import get_current_user, check_author
 from edify.models import (
@@ -40,19 +46,93 @@ question = Blueprint("question", __name__, url_prefix="/question")
 # -----------------------------------------------------------------------------
 
 
+def upload_image(file) -> Optional[str]:
+    """
+    Uploads a file to Filebase, resizing it if necessary, and returns its IPFS Gateway URL.
+
+    Args:
+        file: A file to be uploaded.
+
+    Returns:
+        Optional[str]: The URL of the uploaded image via the IPFS Gateway, or None if the upload fails.
+
+    Raises:
+        Exception: Any exception encountered during image processing or upload is caught and logged.
+    """
+    global s3_client
+    bucket_name = current_app.config["FILEBASE_BUCKET"]
+
+    # Generate a unique key by combining a UUID, timestamp, and original filename
+    timestamp = datetime.utcnow()
+    key_name = f"images/{uuid.uuid4().hex}_{timestamp}_{file.filename}"
+
+    # Upload image to Filebase
+    try:
+
+        # If it is an image, resize
+        try:
+            # Create a copy of the original file in memory
+            file_copy = BytesIO(file.read())
+            file_copy.seek(0)
+            file.seek(0)
+
+            # Open and process the image
+            image = Image.open(file_copy)
+
+            # Resize image (e.g., to 1024x1024 while keeping the aspect ratio)
+            max_size = (1024, 1024)
+            image.thumbnail(max_size)  # This keeps the aspect ratio
+
+            # Save the resized image to a BytesIO object
+            image_bytes = BytesIO()
+            image.save(image_bytes, format=image.format)
+            image_bytes.seek(0)
+
+            file = image_bytes
+        except Exception as e:
+            print("ERROR: ncountered an error resizing the image:", e)
+            pass
+
+        # Determine the MIME type of the file
+        content_type, _ = mimetypes.guess_type(key_name)
+        print(content_type)
+        if not content_type:
+            # Fallback if MIME type can't be determined
+            content_type = "binary/octet-stream"
+
+        # Upload the file with the specified ContentType
+        aws_response = s3_client.put_object(
+            Body=file,
+            Bucket=bucket_name,
+            Key=key_name,
+            ContentType=content_type,  # Set the detected or fallback content type
+        )
+
+        # Try to get the CID from the response headers
+        cid = aws_response["ResponseMetadata"]["HTTPHeaders"].get("x-amz-meta-cid")
+
+        if cid:
+            # Construct the IPFS Gateway URL using the CID
+            image_url = f"{current_app.config['FILEBASE_URL']}{cid}"
+            return image_url
+    except Exception as e:
+        print("ERROR: Encountered an error uploading the image:", e)
+        pass
+
+    return None
+
+
 # Endpoint: /backend/question/new
 @question.route("/new", methods=["POST"])
 @jwt_required()
-@use_args(QuestionSchema)
+@use_args(QuestionSchema, location="form")
 def create_question(args):
     """
     Create a new question and post it in the database.
 
     Args:
-        class_code (str): The class code for the question.
-        class_name (str): The name of the class.
-        academic_field_id (int): The ID associated with the academic field.
-        method_id (int): The communication method ID.
+        course_id (int): The course id for the question.
+        method (int): The communication method ID.
         solve_time (int): The required time to solve the question.
         price (float): The offered price for solving the question.
         request_message (str): The question/request message.
@@ -60,25 +140,11 @@ def create_question(args):
     Returns:
         dict: A JSON response containing a success message or an error message.
     """
+
     # Retrieve the current user. Return an error if no user is found
     user = get_current_user()
     if user is None:
         return error_response("User not found", ErrorType.USER_NOT_FOUND)
-
-    # Fetch the method. Return error if invalid
-    method = db.session.query(Method).filter_by(value=args.get("method")).one_or_none()
-    if method is None:
-        return error_response("Invalid method", ErrorType.BAD_REQUEST)
-
-    # Fetch the academic field. Return error if invalid
-    academic_field = AcademicField.query.filter_by(
-        value=args.get("academic_field"), school_id=user.school_id
-    ).one_or_none()
-    if academic_field is None:
-        return error_response(
-            f"Invalid academic field or not in {user.school.name}",
-            ErrorType.BAD_REQUEST,
-        )
 
     # No double requests
     recent_question = (
@@ -88,44 +154,40 @@ def create_question(args):
         .first()
     )
     if recent_question and datetime.utcnow() - recent_question.created_at < timedelta(
-        seconds=1
+        seconds=10
     ):
         return error_response(
             f"Too many requests, wait",
             ErrorType.BAD_REQUEST,
         )
 
-    # Format code to uppercase
-    args["class_code"] = args["class_code"].upper()
+    # Fetch the method. Return error if invalid
+    method = db.session.query(Method).filter_by(value=args["method"]).one_or_none()
+    if method is None:
+        return error_response("Invalid method", ErrorType.BAD_REQUEST)
 
-    # Format name to titlecase
-    args["class_name"] = args["class_name"].title()
-
-    # Attempt to find the course matching the provided class code and academic field
-    course = Course.query.filter_by(
-        code=args["class_code"],
-        academic_field_id=academic_field.id,
-        school_id=user.school_id,
-    ).first()
-
-    # If course does not exist, create a new course
-    if not course:
-        course = Course(
-            code=args["class_code"],
-            name=args["class_name"],
-            academic_field_id=academic_field.id,
-            school_id=user.school_id,
+    # Attempt to find the course by ID. Return error if invalid
+    course = db.session.get(Course, args["course_id"])
+    if course is None:
+        return error_response(
+            f"Invalid course",
+            ErrorType.BAD_REQUEST,
+        )
+    if course.school_id != user.school_id:
+        return error_response(
+            f"Course not in the user's school: {user.school.name}",
+            ErrorType.BAD_REQUEST,
         )
 
-        db.session.add(course)
+    # Default to no image url
+    image_url = None
 
-        # Commit and roll back if there's a database error
-        try:
-            db.session.commit()
-        except IntegrityError as e:
-            db.session.rollback()
-            print(f"IntegrityError: {e}")
-            return error_response("Failed to create course.", ErrorType.BAD_REQUEST)
+    # Retrive the file
+    image_file = request.files.get("image", default=None)
+    if image_file:
+        image_url = upload_image(image_file)
+        if not image_url:
+            return error_response("Failed to upload image.", ErrorType.SERVER_ERROR)
 
     # Create a new question associated with the user and course
     question = Question(
@@ -136,6 +198,7 @@ def create_question(args):
         price=args["price"],
         method_id=method.id,
         solved=False,  # Question is initially unsolved
+        image_url=image_url,
     )
 
     db.session.add(question)

@@ -163,18 +163,34 @@
                 price: price, 
             };
 
+            const formData = new FormData();
+            formData.append("class_code", class_code);
+            formData.append("class_name", class_name);
+            formData.append("request_message", request_message);
+            formData.append("academic_field", academic_field);
+            formData.append("method", method);
+            formData.append("solve_time", time);
+            formData.append("price", price);
+
             {% if user is none %}
             let question_url = "{{url_for('frontend.store_question')}}"
             {% else %}
             let question_url = "{{url_for('backend.question.create_question')}}"
             {% endif %}
 
+            const imageFile = $("#create-question-file")[0].files[0];
+            if (imageFile) {
+                formData.append("image", imageFile);
+            }
+
             // Send the data via AJAX POST request
             $.ajax({
                 url: question_url,
                 type: 'POST', // HTTP method
-                contentType: 'application/json', // Request content type
-                data: JSON.stringify(data), // Data to be sent
+                processData: false,
+                contentType: false, // Request content type
+                //data: JSON.stringify(data),
+                data: formData, // Data to be sent
                 success: function (response) {
                     // Handle success
                     {% if user is none %}
@@ -271,7 +287,7 @@
         <input id="create-question-file"
                type="file"
                style="display: none"
-               accept="image/*, .pdf, .docx, .doc" />
+               accept="image/*, .pdf" />
       </div>
       <div class="create-question-column-wrapper">
         <div class="create-question-input-background">

@@ -477,13 +477,18 @@ strong:hover {
 
 #button-nav-question {
   font-weight: 500;
-  /* color: var(--blue--base) !important; */
-  /* color: var(--yellow--base) !important; */
   color: black;
   background-color: var(--neutral--300) !important;
   height: 37px;
   padding-left: 10px;
   padding-right: 10px;
+}
+
+@media only screen and (max-width: 420px) {
+  #button-nav-question {
+    display: none;
+    visibility: hidden;
+  }
 }
 
 #button-nav-question:hover {
@@ -1411,6 +1416,31 @@ p.question-text {
   margin: 0;
   margin-top: 15px;
   word-break: break-all;
+}
+
+.question-image {
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden auto;
+  margin-top: 30px;
+  resize: vertical;
+  min-height: 300px;
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 25px;
+}
+
+.question-img {
+  width: 100%;
+  height: auto;
+  border: none;
+}
+
+.question-file {
+  width: 100%;
+  height: 100%;
+  border: none;
 }
 
 .question-comments {
@@ -3141,4 +3171,18 @@ p.made-students {
     flex-direction: column;
     row-gap: 20px;
   }
+}
+
+
+button#home-start-now.btn.btn-primary {
+  background-color: var(--yellow--base) !important; 
+  border: 2px solid var(--yellow--base) !important;
+}
+
+button#home-start-now.btn.btn-primary:hover,
+button#home-start-now.btn.btn-primary:active,
+button#home-start-now.btn.btn-primary:focus {
+  background-color: white !important; 
+  color: var(--yellow--base) !important; 
+  border: 2px solid var(--yellow--base) !important; 
 }

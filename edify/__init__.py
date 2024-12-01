@@ -3,27 +3,34 @@ from http import HTTPStatus
 import traceback
 
 # Third-Party Framework imports
+import boto3
 from flask import Flask, request, jsonify, session, url_for, redirect, current_app
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import (
     JWTManager,
-    unset_jwt_cookies,
-    unset_access_cookies,
     jwt_required,
     get_jwt_identity,
     verify_jwt_in_request,
     set_access_cookies,
 )
-from flask_jwt_extended.exceptions import UserLookupError, NoAuthorizationError
+from flask_jwt_extended.exceptions import (
+    UserLookupError,
+    NoAuthorizationError,
+    JWTExtendedException,
+)
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
 from werkzeug.exceptions import HTTPException
-from jwt.exceptions import ExpiredSignatureError
+from jwt.exceptions import ExpiredSignatureError, PyJWTError
 
 # Local Application imports
-from edify.utils.utils import internal_request, get_request_cookie, get_access_header
-
+from edify.utils.utils import (
+    internal_request,
+    get_request_cookie,
+    get_access_header,
+    handle_invalid_token,
+)
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -31,17 +38,24 @@ bcrypt = Bcrypt()
 jwt = JWTManager()
 migrate = Migrate()
 mail = Mail()
+s3_client = None
 
 
 def create_app(config_class):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
+    # Initialize S3 client only if not in testing mode
+    if not config_class.TESTING:
+        global s3_client
+        s3_client = boto3.client(
+            "s3",
+            endpoint_url=app.config["FILEBASE_ENDPOINT"],
+            aws_access_key_id=app.config["FILEBASE_ACCESS_KEY"],
+            aws_secret_access_key=app.config["FILEBASE_SECRET_KEY"],
+        )
+
     # Passing app as a parameter here instead of on initialization
-    # (FlaskDoc)
-    # This is so that the extension object does not initially get bound to the application.
-    # Using this design pattern, no application specific state is stored on the extension
-    # object so one extension object can be used for multiple apps.
     db.init_app(app)
     bcrypt.init_app(app)
     jwt.init_app(app)
@@ -90,24 +104,23 @@ def create_app(config_class):
     # -----------------------------------------------------------------------------
     @frontend.errorhandler(UserLookupError)
     def invalid_user(e):
-        # Possible fix: logout to unset cookies
-        print(f"User not found: {e}")
-        response = redirect(url_for("frontend.logout"))
-        unset_jwt_cookies(response)
-
-        return response
+        print(f"ERROR: User not found: {e}")
+        return handle_invalid_token()
 
     @frontend.errorhandler(ExpiredSignatureError)
     @frontend.errorhandler(NoAuthorizationError)
     def expired_jwt(e):
-        response = redirect(url_for("frontend.logout"))
-        unset_jwt_cookies(response)
+        return handle_invalid_token()
 
-        return response
+    @frontend.errorhandler(JWTExtendedException)
+    @frontend.errorhandler(PyJWTError)
+    def general_jwt(e):
+        print(f"ERROR: General JWT exception: {e}")
+        return handle_invalid_token()
 
     @frontend.errorhandler(Exception)
     def handle_error(e):
-        print(f"{type(e)}: {e}")
+        print(f"ERROR: Uncaught error ({type(e)}): {e}")
         print(traceback.format_exc())
 
         return (

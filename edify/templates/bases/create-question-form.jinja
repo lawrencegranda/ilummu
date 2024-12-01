@@ -1,0 +1,323 @@
+<style>
+    #error-msg {
+        margin-bottom: 10px;
+        font-size: 16px;
+    }
+</style>
+<script>
+  $(document).ready(function () {
+    $("#create-question-price").on("change", function () {
+      let value = parseFloat($(this).val()).toFixed(2);
+      if (isNaN(value)) {
+        value = "";
+        $(this).attr("placeholder", "Invalid. Try again.");
+      }
+      $(this).val(value);
+    });
+    
+    $("#create-question-file").on("change", function () {
+      let file = $(this).prop("files")[0]["name"];
+
+      if (file.length > 33) {
+        file =
+          file.substring(0, 15) +
+          "..." +
+          file.substring(file.length - 15, file.length);
+      }
+
+      $("#file-selected").text(file);
+    });
+
+  });
+  
+</script>
+<script>
+  var errorMsg
+
+  // Function to reset error messages
+  const reset = () => {
+      errorMsg.text("");
+      errorMsg.hide();
+  };
+
+  // Function to display error messages
+  const showError = (msg) => {
+      console.log(msg);
+      errorMsg.text(msg);
+      errorMsg.show();
+  };
+
+  // Ensure the document is ready before executing the script
+  $(document).ready(() => {
+      errorMsg = $("#error-msg");
+      reset();
+  });
+
+  // Form submission event handler for question form
+  $(document).ready(() => {
+      var allowSubmit = true;
+
+      const disableSubmit = () => {
+          allowSubmit = false;
+          $("#create-question-button").prop("disabled", true);
+          return;
+      }
+      
+      const enableSubmit = () => {
+          allowSubmit = true;
+          $("#create-question-button").prop("disabled", false);
+          return;
+      }
+
+      $("#create-question-form").on("submit", function (event) {
+          const action = () => {
+            event.preventDefault(); // Prevent default form submission
+            reset(); // Clear previous error messages
+
+            if (allowSubmit)
+                disableSubmit();
+            else 
+                return false;
+
+            // Validate course
+            var course_id = $("#create-question-course-item").val().trim()
+            if (!course_id) {
+                showError("Select a course from the options.");
+                return;
+            }
+
+            // Validate request message
+            var request_message = $("#create-question-textbox").val().replace(/[ \t]+/g, ' ').trim();
+            if (!request_message) {
+                showError("Fill out the textarea.");
+                return;
+            } else if (request_message.length < 20) {
+                showError("Request is too short (minimum of 20 characters).");
+                return;
+            } else if (request_message.length > 5000) {
+                showError("Request is too long (maximum of 5000 characters).");
+                return;
+            }
+
+            // Validate method selection
+            var method = $("#create-question-method").val().trim()
+            if (!method) {
+                showError("Select a method from the options.");
+                return;
+            }
+
+            // Validate time interval selection
+            var time = $("#create-question-solve-time").val().trim()
+            if (!time) {
+                showError("Select a time interval from the options.");
+                return;
+            }
+
+            // Validate price input
+            var price = parseFloat($("#create-question-price").val().trim());
+            if (!price) {
+                showError("A question price is required.");
+                return;
+            } else if (isNaN(price)) {
+                showError("Please enter a valid price.");
+                return;
+            } else if (price < 2) {
+                showError("$2.00 is the minimum price.");
+                return;
+            } else if (price > 100) {
+                showError("$100.00 is the maximum price.");
+                return;
+            }
+
+            var imageFile = null;
+            try {
+                imageFile = $("#create-question-file")[0].files[0];
+            } catch (error) {
+                console.error("An error occurred while appending the image file:", error);
+            }
+
+            // If validation passes, format the data
+            const data = {
+                course_id: course_id,
+                request_message: request_message,
+                method: method,
+                solve_time: time,
+                price: price, 
+            };
+            
+            // Use a FormData Object
+            const formData = new FormData();
+            Object.entries(data).forEach(([key, value]) => {
+                formData.append(key, value);
+            });
+
+            // Append image if it exists
+            if (imageFile) {
+              formData.append("image", imageFile);
+            }
+
+            {% if user is none %}
+            let question_url = "{{url_for('frontend.store_question')}}"
+            {% else %}
+            let question_url = "{{url_for('backend.question.create_question')}}"
+            {% endif %}
+
+            // Send the data via AJAX POST request
+            $.ajax({
+                url: question_url,
+                type: 'POST', // HTTP method
+                processData: false,
+                contentType: false, // Request content type
+                data: formData, // Data to be sent
+                success: function (response) {
+                    // Handle success
+                    {% if user is none %}
+                        let login = "{{ url_for('frontend.signup') }}"
+
+                        if ('next_url' in response && 'http_method' in response ) {
+                            let next = response["next_url"]
+                            let http_method = response["http_method"]
+
+                            login = login + "?next_url=" + next + "&http_method=" + http_method
+                        }
+
+                        window.location.href = login
+                        return;
+                    {% else %}
+                        let element = $(".create-question-wrapper-dimensions");
+                        if (element.is(":visible")) {
+                            // Hide the element after a delay
+                            setTimeout(function () {
+                                element.hide();
+                            }, 300);
+                        }
+
+                        console.log(response)
+
+                        try {
+                          if ("id" in response) {
+                            let id = response["id"];
+                            location.href = "/question/"+id;
+                            return;
+                          } 
+                        }
+                        catch(err) {}
+
+                        // Refresh the page
+                        location.href = '{{url_for("frontend.dashboard")}}';
+
+                        return;
+                    {% endif %}
+                },
+                error: function (error) {
+                  let error_msg = getErrorResponse(error);
+
+                  if (!error_msg) {
+                    error_msg = "An error occurred during creation. Please try again.";
+                  }
+
+                  showError(error_msg);
+                }
+            });
+          }
+
+          action();
+          setTimeout(enableSubmit, 500);
+      });
+  });
+</script>
+<div class="create-question-container">
+  <form id="create-question-form" method="post" enctype="multipart/form-data">
+    <div class="create-question-body">
+      <p class="create-question-title">
+        Ask a question
+      </p>
+      <div class="create-question-column-wrapper">
+        <div class="create-question-input-background">
+          <select id="create-question-course-item"
+                  class="create-question-selector"
+                  required>
+            <option value>
+              Select Course
+            </option>
+
+            {% for course in courses %}
+              <option value="{{ course['id'] }}">
+                {{ course['code'] }}: {{ course['name'] }}
+              </option>
+            {% endfor %}
+
+          </select>
+        </div>
+      </div>
+      <div class="create-question-textbox-wrapper">
+        <textarea id="create-question-textbox"
+                  rows="4"
+                  placeholder="Write your question here. Keep it simple and clear to get the best answer (remember that you can always give more details once you find a tutor)."></textarea>
+        <label for="create-question-file" class="create-question-file-label">
+          <span class="glyphicon glyphicon-paperclip"></span> -
+          <span id="file-selected">No file selected</span>
+        </label>
+        <input id="create-question-file"
+               type="file"
+               style="display: none"
+               accept="image/*, .pdf" />
+      </div>
+      <div class="create-question-column-wrapper">
+        <div class="create-question-input-background">
+          <select id="create-question-method" class="create-question-selector" required>
+            <option value>
+              Select a help method
+            </option>
+
+            {% for method in methods %}
+              <option value="{{ method['value'] }}">
+                {{ method['name'] }}
+              </option>
+            {% endfor %}
+
+          </select>
+        </div>
+      </div>
+      <div class="create-question-column-wrapper">
+        <div class="create-question-input-background">
+          <p class="create-question-label">
+            Solve time:
+          </p>
+          <select id="create-question-solve-time"
+                  class="create-question-selector"
+                  required>
+
+            {% for interval in time_intervals %}
+              <option value="{{ interval['value'] }}">
+                {{ interval['name'] }}
+              </option>
+            {% endfor %}
+
+          </select>
+        </div>
+        <div class="create-question-input-background">
+          <p class="create-question-label create-question-price-label">
+            Price ($):
+          </p>
+          <input id="create-question-price"
+                 type="number"
+                 placeholder="How much will you pay?"
+                 min="2"
+                 step="0.5"
+                 autocomplete="off"
+                 required />
+        </div>
+      </div>
+      <p id="error-msg">
+      </p>
+      <button id="create-question-button"
+              form="create-question-form"
+              type="submit"
+              class="btn btn-primary"
+              type="button">
+        Create
+      </button>
+    </div>
+  </form>
+</div>

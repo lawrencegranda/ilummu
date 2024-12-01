@@ -16,6 +16,7 @@ class Config:
         raise Exception(f"Invalid Environment {os.environ['ENV']}")
 
     ENV = os.environ["ENV"]
+    TESTING = False
 
     if ENV == EdifyEnvironments.PRODUCTION.value:
         SQLALCHEMY_DATABASE_URI = os.environ["DB_URL"]
@@ -55,10 +56,11 @@ class Config:
     JWT_COOKIE_SAMESITE = "Strict"
 
     # Mail config
-    MAIL_SERVER = os.environ["MAIL_SERVER"]
-    MAIL_PORT = os.environ["MAIL_PORT"]
+    MAIL_SENDER = os.environ["MAIL_SENDER"]
     MAIL_USERNAME = os.environ["MAIL_USERNAME"]
     MAIL_PASSWORD = os.environ["MAIL_PASSWORD"]
+    MAIL_SERVER = os.environ["MAIL_SERVER"]
+    MAIL_PORT = os.environ["MAIL_PORT"]
     MAIL_USE_TLS = int(os.environ["MAIL_USE_TLS"]) == 1
     MAIL_USE_SSL = int(os.environ["MAIL_USE_SSL"]) == 1
 
@@ -67,3 +69,10 @@ class Config:
 
     # Auth token time
     AUTH_TOKEN_MAX_AGE: int = int(timedelta(minutes=30).total_seconds())
+
+    # Filebase credentials
+    FILEBASE_ACCESS_KEY: str = os.environ["FILEBASE_ACCESS_KEY"]
+    FILEBASE_SECRET_KEY: str = os.environ["FILEBASE_SECRET_KEY"]
+    FILEBASE_BUCKET: str = os.environ["FILEBASE_BUCKET"]
+    FILEBASE_ENDPOINT: str = os.environ["FILEBASE_ENDPOINT"]
+    FILEBASE_URL: str = os.environ["FILEBASE_URL"]
