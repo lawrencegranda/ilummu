@@ -9,9 +9,10 @@ from typing import Any, Optional, Tuple
 
 # Third-Party Framework Imports
 import flask
-import phonenumbers
-from flask import current_app, jsonify, request, url_for
+from flask import current_app, jsonify, request, url_for, redirect
 from flask import typing as flask_typing
+from flask_jwt_extended import unset_jwt_cookies
+import phonenumbers
 from marshmallow import Schema
 from werkzeug.test import EnvironBuilder
 
@@ -473,5 +474,18 @@ def validate_auth_data(input_data: dict) -> bool:
         result = schema.load(input_data)  # Validate the input data
         return True
     except Exception as e:
-        print(e)
+        print("ERROR: Encountered an error validating the Auth schema", e)
         return False
+
+
+def handle_invalid_token() -> flask_typing.ResponseReturnValue:
+    """
+    Handle invalid or missing JWT tokens by unsetting cookies and redirecting to the logout page.
+
+    Returns:
+        Response: A Flask response object that redirects to the logout page
+        with JWT cookies cleared.
+    """
+    response = redirect(url_for("frontend.logout"))
+    unset_jwt_cookies(response)
+    return response

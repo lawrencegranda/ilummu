@@ -12,7 +12,7 @@ from flask_login import UserMixin
 from edify import jwt, db
 from edify.models import User, Question
 from edify.utils.constants import AuthLevelEnum, ErrorType
-from edify.utils.utils import error_response
+from edify.utils.utils import error_response, handle_invalid_token
 
 
 @jwt.user_lookup_loader
@@ -101,21 +101,24 @@ def no_token_allowed(f):
     @wraps(f)
     def decorator(*args, **kwargs):
         # Verify the JWT in the request but do not require it
-        verify_jwt_in_request(optional=True)
+        try:
+            has_token = verify_jwt_in_request(optional=True) is not None
+        except:
+            return handle_invalid_token()
+
+        # If not logged, continue
+        if not has_token:
+            return f(*args, **kwargs)
 
         # Get the user ID from the JWT identity
         user_id = get_jwt_identity()
 
-        # If user_id is None (no JWT), call the original function
-        if not user_id:
-            return f(*args, **kwargs)
-
         # If user is authenticated, redirect to the dashboard
-        if db.session.get(User, user_id):
+        if user_id and db.session.get(User, user_id):
             return redirect(url_for("frontend.dashboard"))
 
-        # Otherwise, call the original function
-        return f(*args, **kwargs)
+        # The token is valid but the user_id is missing or invalid.
+        return handle_invalid_token()
 
     return decorator
 
