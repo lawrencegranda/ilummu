@@ -164,9 +164,7 @@ class NotificationTypeEnum(EnumBase):
 
 # Question stored as dict.
 QuestionSchema = {
-    "class_code": fields.Str(required=True, validate=validate.Length(min=4)),
-    "class_name": fields.Str(required=True, validate=validate.Length(min=1)),
-    "academic_field": fields.Str(required=True, validate=validate.Length(min=1)),
+    "course_id": fields.Int(required=True, validate=validate.Range(min=1)),
     "method": fields.Str(required=True),
     "solve_time": fields.Int(required=True, validate=validate.Range(min=1)),
     "price": fields.Float(required=True, validate=validate.Range(min=0)),
