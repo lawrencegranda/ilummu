@@ -556,15 +556,16 @@ strong:hover {
   display: block;
   position: relative;
   width: 100%;
-  min-height: 380px;
-  margin-top: 50px;
+  min-height: 200px;
+  margin-top: 20px;
 }
 
 .column {
   height: 100%;
-  min-height: 380px;
-  padding: min(18px, 2vw);
+  min-height: 200px;
+  padding: min(30px, 3vw);
 }
+
 
 .third {
   width: 33.33%;
@@ -730,7 +731,7 @@ strong:hover {
 }
 
 @media only screen and (min-width: 0px) and (max-width: 900px) {
-  #instructions {
+  #features-three-boxes {
     margin-top: 40px;
     align-self: auto;
     position: relative;
@@ -738,20 +739,21 @@ strong:hover {
     flex-direction: column;
     width: 100%;
     min-height: 0;
+    background-color: #F3F9FF;
   }
 
-  #instructions > .third.column {
+  #features-three-boxes > .third.column {
     width: 100%;
-    min-height: 200px;
+    /* min-height: 200px; */
     border: none;
   }
 
-  #instructions > .third.column.center-column {
+  #features-three-boxes > .third.column.center-column {
     border-bottom: 1px solid var(--neutral--200);
     border-top: 1px solid var(--neutral--200);
   }
 
-  .instructions-text {
+  .features-text {
     min-height: 50px !important;
   }
 }
@@ -2979,27 +2981,28 @@ p.made-students {
   max-width: 500px;
 }
 
-.instructions-image {
+.features-image {
   width: 100%;
-  height: max-content;
-  min-height: 250px;
+  /* height: max-content; */
+  min-height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
   max-width: 400px;
   margin-left: auto;
   margin-right: auto;
-  margin-bottom: 20px;
+  /* margin-bottom: 20px; */
   border-color: white;
+  background-color: #F3F9FF;
 }
 
-.instructions-image > img {
+.features-image > img {
   transition: 150ms;
   border-color: white;
 }
 
 @media only screen and (min-width: 570px) {
-  .instructions-image > img:hover {
+  .features-image > img:hover {
     scale: 1.25;
     background-color: white;
     border: 1px solid var(--neutral--300);
@@ -3008,7 +3011,7 @@ p.made-students {
   }
 }
 
-.instructions-text {
+.features-text {
   margin-top: 10px;
   min-height: 73px;
   color: black;
@@ -3185,4 +3188,27 @@ button#home-start-now.btn.btn-primary:focus {
   background-color: white !important; 
   color: var(--yellow--base) !important; 
   border: 2px solid var(--yellow--base) !important; 
+}
+
+
+
+#instructions .heading-text {
+  text-align: center;
+  margin: 60px; 
+}
+
+#instructions .heading-text h1 {
+  font-size: 36px; /* Large font size for the main heading */
+  color: #000000; /* Example blue color; adjust as needed */
+  font-weight: bold;
+}
+
+#instructions .heading-text h1 span {
+  color: #3eacf3; /* Example red color for 'EARN'; adjust as needed */
+}
+
+#instructions .heading-text p {
+  font-size: 24px; /* Smaller font size for the subheading */
+  color: #333333; /* Dark gray color for the subheading; adjust as needed */
+  margin-top: 10px; /* Space between main heading and subheading */
 }

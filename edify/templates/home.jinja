@@ -67,41 +67,44 @@
                      alt="" />
             </div>
         </div>
-        <div id="instructions" class="three-columns-container row-flex">
+
+        <div id="features-three-boxes" class="three-columns-container row-flex">
             <div class="column third">
-                <h5 class="center instructions-text">
-                    Post Questions and Help Peers
-                </h5>
-                <div class="instructions-image">
-                    <img src="{{ url_for('static', filename='dashboard-image.png') }}"
+                <div class="features-image">
+                    <img src="{{ url_for('static', filename='box1.svg') }}"
                          width="auto"
                          height="auto"
                          alt="" />
                 </div>
             </div>
             <div class="column third center-column">
-                <h5 class="center instructions-text">
-                    Choose Offers to Save Money
-                </h5>
-                <div class="instructions-image">
-                    <img src="{{ url_for('static', filename='offers-image.png') }}"
+                
+                <div class="features-image">
+                    <img src="{{ url_for('static', filename='box2.svg') }}"
                          width="auto"
                          height="auto"
                          alt="" />
                 </div>
             </div>
             <div class="column third">
-                <h5 class="center instructions-text">
-                    Answer and Earn Money
-                </h5>
-                <div class="instructions-image">
-                    <img src="{{ url_for('static', filename='bid-image.png') }}"
+                
+                <div class="features-image">
+                    <img src="{{ url_for('static', filename='box3.svg') }}"
                          width="auto"
                          height="auto"
                          alt="" />
                 </div>
             </div>
         </div>
+
+        <div id="instructions" class="image-container">
+            <div class="heading-text">
+                <h1><span>LEARN</span> Smarter. <span>EARN</span> Faster</h1>
+                <p>Here's How it Works!</p>
+            </div>
+            <img id="instructions-svg" src="{{ url_for('static', filename='instructions.svg') }}" alt="Instructions" style="width: 100%; height: auto;">
+        </div>
+
         <div id="home-create-wrapper">
             <div class="home-background home-background2">
                 <svg viewBox="0 0 1440 320" class="home-svg" preserveAspectRatio="none">
