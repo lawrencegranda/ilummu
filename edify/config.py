@@ -105,6 +105,8 @@ class Config:
             "'self'",
             "data:",
             "https://cdnjs.cloudflare.com",  # Allow images from cdnjs.cloudflare.com
+            "https://robohash.org",  # For the pictures
+            FILEBASE_URL,  # Files
         ],
     }
 
