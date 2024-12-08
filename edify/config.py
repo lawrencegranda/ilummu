@@ -85,6 +85,7 @@ class Config:
             "https://ajax.googleapis.com",
             "https://cdn.jsdelivr.net",
             "https://cdnjs.cloudflare.com",
+            "https://code.jquery.com",  # Add this to allow jQuery CDN
             "'unsafe-inline'",  # Use hashes or nonces in production
         ],
         "style-src": [
