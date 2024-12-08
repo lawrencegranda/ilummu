@@ -60,12 +60,33 @@ def create_app(config_class):
     bcrypt.init_app(app)
     jwt.init_app(app)
     migrate.init_app(app, db)
-    mail.state = mail.init_app(
-        app
-    )  # Had to do this because there is an error in source code.
+
+    # Had to do this because there is an error in source code.
+    mail.state = mail.init_app(app)
 
     from edify.frontend.routes import frontend
     from edify.backend.routes import backend
+
+    @frontend.before_request
+    def enforce_https():
+        """
+        Refirect to HTTPS
+        """
+        if (
+            not request.is_secure
+            and request.headers.get("X-Forwarded-Proto", "http") != "https"
+        ):
+            url = request.url.replace("http://", "https://", 1)
+            return redirect(url, code=301)
+
+    @frontend.after_request
+    def add_csp_header(response):
+        """
+        Add CSP Headers
+        """
+        response.headers["Content-Security-Policy"] = config_class.CSP_HEADER
+
+        return response
 
     @frontend.before_request
     @jwt_required(optional=True, refresh=True)

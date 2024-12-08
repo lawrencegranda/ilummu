@@ -76,3 +76,42 @@ class Config:
     FILEBASE_BUCKET: str = os.environ["FILEBASE_BUCKET"]
     FILEBASE_ENDPOINT: str = os.environ["FILEBASE_ENDPOINT"]
     FILEBASE_URL: str = os.environ["FILEBASE_URL"]
+
+    # CSP Policy
+    CSP_POLICY = {
+        "default-src": "'self'",
+        "script-src": [
+            "'self'",
+            "https://ajax.googleapis.com",
+            "https://cdn.jsdelivr.net",
+            "https://cdnjs.cloudflare.com",
+            "https://code.jquery.com",  # Add this to allow jQuery CDN
+            "'unsafe-inline'",  # Use hashes or nonces in production
+        ],
+        "style-src": [
+            "'self'",
+            "https://maxcdn.bootstrapcdn.com",
+            "https://fonts.googleapis.com",
+            "https://cdn.jsdelivr.net",
+            "https://cdnjs.cloudflare.com",
+            "'unsafe-inline'",  # Use hashes in production
+        ],
+        "font-src": [
+            "'self'",
+            "https://fonts.gstatic.com",
+            "https://maxcdn.bootstrapcdn.com",
+        ],
+        "img-src": [
+            "'self'",
+            "data:",
+            "https://cdnjs.cloudflare.com",  # Allow images from cdnjs.cloudflare.com
+            "https://robohash.org",  # For the pictures
+            FILEBASE_URL,  # Files
+        ],
+    }
+
+    # Convert the CSP_POLICY dictionary to a string for the header
+    CSP_HEADER = "; ".join(
+        f"{key} {' '.join(value) if isinstance(value, list) else value}"
+        for key, value in CSP_POLICY.items()
+    )
