@@ -21,6 +21,7 @@ from flask_jwt_extended.exceptions import (
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
+from flask_talisman import Talisman
 from werkzeug.exceptions import HTTPException
 from jwt.exceptions import ExpiredSignatureError, PyJWTError
 
@@ -54,6 +55,10 @@ def create_app(config_class):
             aws_access_key_id=app.config["FILEBASE_ACCESS_KEY"],
             aws_secret_access_key=app.config["FILEBASE_SECRET_KEY"],
         )
+
+    if config_class.PRODUCTION:
+        # Add Talisman to enforce HTTPS
+        Talisman(app)
 
     # Passing app as a parameter here instead of on initialization
     db.init_app(app)

@@ -17,9 +17,12 @@ class Config:
 
     ENV = os.environ["ENV"]
     TESTING = False
+    PRODUCTION = False
 
     if ENV == EdifyEnvironments.PRODUCTION.value:
+        PRODUCTION = True
         SQLALCHEMY_DATABASE_URI = os.environ["DB_URL"]
+        SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
         # Web settings
         HOST = os.environ["HOST"]
