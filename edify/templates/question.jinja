@@ -38,7 +38,6 @@
                   console.error('Error: ', error);
               }
           });
-      }
 
        $(document).ready(function () {
           $("#button-agree-offer").on("click", function () {
@@ -212,6 +211,43 @@
     </script>
   {% endif %}
 
+  
+  <script>
+    function openModal(fileUrl, isImage) {
+      // Determine the type based on the provided `isImage` flag
+      const modal = document.getElementById(isImage ? "imageModal" : "pdfModal");
+      const modalContent = isImage
+          ? document.getElementById("modalImage")
+          : document.getElementById("modalPdf");
+  
+      if (modal && modalContent) {
+          console.log("Modal found:", modal);
+  
+          // Set the source of the modal content
+          modalContent.src = fileUrl;
+
+          // Show the modal
+          modal.classList.add("show");
+      } else {
+          console.error("Modal not found for:", fileUrl);
+      }
+  }
+  
+  function closeModal() {
+      document.querySelectorAll(".image-modal").forEach((modal) => {
+          modal.classList.remove("show");
+      });
+  
+      // Clear the source to stop loading content
+      const modalImage = document.getElementById("modalImage");
+      const modalPdf = document.getElementById("modalPdf");
+      if (modalImage) modalImage.src = "";
+      if (modalPdf) modalPdf.src = "";
+  }
+  </script>
+
+
+
 {% endblock javascript %}
 
 {% block content %}
@@ -269,24 +305,56 @@
             {{ question.request }}
           </p>
 
+
           {% if question.image_url %}
-            <div class="question-image">
+              <div class="question-wrapper-main">
+                  {% if question.is_image %}
+                      <!-- Mini preview for images -->
+                      <div class="question-img-preview-container">
+                          <div class="question-img-preview" >
+                              <img class="question-img" src="{{ question.image_url }}" alt="Question Image" />
+                              <p class="overlay-text" onclick="openModal('{{ question.image_url }}', true)">Click to see full image</p>
 
-              {% if question.is_image %}
-                <img src="{{ question.image_url }}"
-                     alt="Question Image"
-                     class="question-img"
-                     width="100%"
-                     height="auto" />
-              {% else %}
-                <iframe src="{{ question.image_url }}"
-                        alt="Question Image"
-                        class="question-file">
-                </iframe>
-              {% endif %}
+                          </div>
+                      </div>
 
-            </div>
+                      <!--<p class="preview-text">Click to see full image</p>  -->
+
+
+                      <!-- Full-view modal -->
+                      <div id="imageModal" class="image-modal" onclick="closeModal()">
+                        <span class="modal-close" onclick="closeModal()">&times;</span>
+                        <img id="modalImage" class="modal-content" alt="Full View Image" />
+                      </div>
+                  {% else %}
+                      <!-- Iframe for non-image file -->
+                      <!-- <iframe src="{{ question.image_url }}" title="Question File" class="question-file"></iframe> -->
+                      <!-- Mini preview for PDF -->
+                      <div class="question-img-preview-container">
+                          <div class="question-img-preview">
+                              <img class="question-img" src="{{ question.image_url }}" alt="Question Image" />
+                              <p class="overlay-text" onclick="openModal('{{ question.image_url }}', false)">Click to see full PDF file</p>
+                          </div>
+                      </div>
+
+                      <!-- Full-view modal for PDF -->
+                      <div id="pdfModal" class="image-modal" onclick="closeModal()">
+                          <span class="modal-close">&times;</span>
+                          <iframe id="modalPdf" class="modal-content pdf-modal-content" frameborder="0"></iframe>
+                      </div>
+                  {% endif %}
+              </div>
           {% endif %}
+
+
+
+
+
+
+
+
+
+
 
         </div>
       </div>
