@@ -1439,6 +1439,8 @@ p.question-text {
   border: none;
 }
 
+
+
 .question-file {
   width: 100%;
   height: 100%;
@@ -3211,4 +3213,221 @@ button#home-start-now.btn.btn-primary:focus {
   font-size: 24px; /* Smaller font size for the subheading */
   color: #333333; /* Dark gray color for the subheading; adjust as needed */
   margin-top: 10px; /* Space between main heading and subheading */
+}
+
+/* Question Wrapper Styling */
+.question-wrapper-main {
+  border: none;
+  position: relative;
+  background-color: white;
+  border-radius: 25px;
+  padding: 40px;
+}
+
+/* Image Preview Styling */
+.question-img-preview-container {
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  border: none;
+}
+
+.question-img-preview {
+  width: 100%; 
+  height: 40vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden; 
+  background: #000; 
+  position: relative;
+  border-radius: 8px;
+}
+
+.question-img-preview img {
+  width: 100%; 
+  height: auto; 
+  object-fit: cover; 
+  opacity: 0.3;
+}
+
+.question-img-preview:hover img {
+  opacity: 0.5; /* Hover effect */
+  transition: opacity 0.3s ease;
+}
+
+/* Overlay Text Styling */
+.overlay-text {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 1); 
+  color: black;
+  font-size: 18px;
+  width: 75%;
+  height: 15%;
+  left: 50%;
+  font-weight: 450;
+  transform: translate(-50%, 0);
+  text-align: center;
+  border-radius: 8px;
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  cursor: pointer;
+}
+
+.overlay-text:hover {
+  transform: translate(-50%, 0) scale(1.15); 
+}
+
+.question-img {
+  transition: filter 0.3s ease; 
+}
+
+/* Image Modal Styling */
+.image-modal {
+  display: none; 
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.8); 
+  justify-content: center;
+  align-items: flex-start; 
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out; 
+  padding-top: calc(25vh);
+  
+
+}
+
+.image-modal.show {
+  display: flex; 
+  /* animation: fadeIn 0.2s ease; */
+  opacity: 1;
+}
+
+.modal-content {
+  height: 50vh;
+  width: auto; 
+  max-width: 80vw;
+  margin: auto;
+  border-radius: 8px;
+  object-fit: contain;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add a subtle shadow */
+
+}
+
+#imageModal.modal-content {
+  margin: auto;
+  display: block;
+  height: 60vh;
+  width: auto; 
+  max-width: 80vw;
+  /* max-height: 80vh; */
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-size: 28px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+.modal-close:hover {
+  color: #ccc;
+}
+
+/* PDF Preview Container Styling */
+.pdf-preview {
+  background-color: rgba(0, 0, 0, 0.8); 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  height: 40vh; /* Same as image preview height */
+}
+
+.pdf-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  object-fit: cover;
+  opacity: 0.3; /* Match image opacity */
+  transition: opacity 0.3s ease;
+}
+
+.pdf-preview:hover .pdf-iframe {
+  opacity: 0.5; /* Hover effect */
+}
+
+/* PDF Modal Styling */
+.pdf-modal {
+  display: none; /* Hidden by default */
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  justify-content: center;
+  align-items: center;
+  padding: 0;
+  overflow: auto;
+}
+
+#pdfModal.image-modal {
+  padding-top: calc(10vh);
+}
+
+
+.pdf-modal-content {
+  width: 80vw;
+  height: 80vh;
+  /* max-width: 80vw;
+  max-height: 80vh; */
+  object-fit: contain;
+}
+
+.pdf-container {
+  width: 80vw;
+  height: 80vh;
+  overflow: auto; /* Enable scrolling */
+  background-color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.pdf-page {
+  margin: 10px 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.image-modal.show, .pdf-modal.show {
+  display: flex; /* Show modal */
+  opacity: 1;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+  max-width: 80vw;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 8px;
+  background: white;
+}
+
+/* Fade-in Animation */
+@keyframes fadeIn {
+  from {
+      opacity: 0;
+  }
+  to {
+      opacity: 1;
+  }
 }
