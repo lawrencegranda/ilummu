@@ -73,7 +73,8 @@ def create_app(config_class):
         Refirect to HTTPS
         """
         if (
-            not request.is_secure
+            config_class.PROD
+            and not request.is_secure
             and request.headers.get("X-Forwarded-Proto", "http") != "https"
         ):
             url = request.url.replace("http://", "https://", 1)
@@ -84,7 +85,8 @@ def create_app(config_class):
         """
         Add CSP Headers
         """
-        response.headers["Content-Security-Policy"] = config_class.CSP_HEADER
+        if config_class.PROD:
+            response.headers["Content-Security-Policy"] = config_class.CSP_HEADER
 
         return response
 
