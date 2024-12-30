@@ -38,6 +38,7 @@
                   console.error('Error: ', error);
               }
           });
+      }
 
        $(document).ready(function () {
           $("#button-agree-offer").on("click", function () {
@@ -211,7 +212,6 @@
     </script>
   {% endif %}
 
-  
   <script>
     function openModal(fileUrl, isImage) {
       // Determine the type based on the provided `isImage` flag
@@ -245,9 +245,6 @@
       if (modalPdf) modalPdf.src = "";
   }
   </script>
-
-
-
 {% endblock javascript %}
 
 {% block content %}
@@ -305,56 +302,49 @@
             {{ question.request }}
           </p>
 
-
           {% if question.image_url %}
-              <div class="question-wrapper-main">
-                  {% if question.is_image %}
-                      <!-- Mini preview for images -->
-                      <div class="question-img-preview-container">
-                          <div class="question-img-preview" >
-                              <img class="question-img" src="{{ question.image_url }}" alt="Question Image" />
-                              <p class="overlay-text" onclick="openModal('{{ question.image_url }}', true)">Click to see full image</p>
+            <div class="question-wrapper-main">
 
-                          </div>
-                      </div>
+              {% if question.is_image %}
+                <!-- Mini preview for images -->
+                <div class="question-img-preview-container">
+                  <div class="question-img-preview">
+                    <img class="question-img"
+                         src="{{ question.image_url }}"
+                         alt="Question Image" />
+                    <p class="overlay-text"
+                       onclick="openModal('{{ question.image_url }}', true)">
+                      Click to see full image
+                    </p>
+                  </div>
+                </div>
+                <!-- Full-view modal -->
+                <div id="imageModal" class="image-modal" onclick="closeModal()">
+                  <span class="modal-close" onclick="closeModal()">&times;</span>
+                  <img id="modalImage" class="modal-content" alt="Full View Image" />
+                </div>
+              {% else %}
+                <!-- Mini preview for PDF -->
+                <div class="question-img-preview-container">
+                  <div class="question-img-preview">
+                    <img class="question-img"
+                         src="{{ question.image_url }}"
+                         alt="Question Image" />
+                    <p class="overlay-text"
+                       onclick="openModal('{{ question.image_url }}', false)">
+                      Click to see full PDF file
+                    </p>
+                  </div>
+                </div>
+                <!-- Full-view modal for PDF -->
+                <div id="pdfModal" class="image-modal" onclick="closeModal()">
+                  <span class="modal-close">&times;</span>
+                  <iframe id="modalPdf" class="modal-content pdf-modal-content" frameborder="0"></iframe>
+                </div>
+              {% endif %}
 
-                      <!--<p class="preview-text">Click to see full image</p>  -->
-
-
-                      <!-- Full-view modal -->
-                      <div id="imageModal" class="image-modal" onclick="closeModal()">
-                        <span class="modal-close" onclick="closeModal()">&times;</span>
-                        <img id="modalImage" class="modal-content" alt="Full View Image" />
-                      </div>
-                  {% else %}
-                      <!-- Iframe for non-image file -->
-                      <!-- <iframe src="{{ question.image_url }}" title="Question File" class="question-file"></iframe> -->
-                      <!-- Mini preview for PDF -->
-                      <div class="question-img-preview-container">
-                          <div class="question-img-preview">
-                              <img class="question-img" src="{{ question.image_url }}" alt="Question Image" />
-                              <p class="overlay-text" onclick="openModal('{{ question.image_url }}', false)">Click to see full PDF file</p>
-                          </div>
-                      </div>
-
-                      <!-- Full-view modal for PDF -->
-                      <div id="pdfModal" class="image-modal" onclick="closeModal()">
-                          <span class="modal-close">&times;</span>
-                          <iframe id="modalPdf" class="modal-content pdf-modal-content" frameborder="0"></iframe>
-                      </div>
-                  {% endif %}
-              </div>
+            </div>
           {% endif %}
-
-
-
-
-
-
-
-
-
-
 
         </div>
       </div>
