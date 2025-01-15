@@ -12,6 +12,7 @@ from webargs import fields, validate
 from webargs.flaskparser import use_args
 from sqlalchemy.exc import IntegrityError
 
+
 # Local Application imports
 from edify import db
 from edify.models import User, Question, Offer, OfferStatus, Notification
@@ -19,6 +20,7 @@ from edify.utils.constants import ErrorType, OfferStatusEnum
 from edify.backend.user.utils import get_current_user
 from edify.utils.utils import error_response
 from edify.utils.constants import ErrorType, NotificationTypeEnum, OfferStatusEnum
+from socketio_ext import socketio
 
 # -----------------------------------------------------------------------------
 # Route Blueprint
@@ -121,6 +123,22 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
     )
     db.session.add(notification_author)
     db.session.commit()
+
+    # after committing offer, we want to push to the question author’s room:
+    question_author_id = question.user_id
+    room_name = f"user_{question_author_id}"
+
+    # socketio emission! this sends a real time notification to the author
+    socketio.emit(
+        "new_offer",
+        {
+            "question_id": question.id,
+            "offer_id": offer.id,
+            "offer_amount": offer.amount,
+            "message": f"You have a new offer from {user.username} for ${price:.2f}!",
+        },
+        room=room_name,
+    )
 
     response = jsonify(offer.to_dict(simplified=True))
 
