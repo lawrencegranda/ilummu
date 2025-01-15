@@ -65,6 +65,47 @@ def generate_fake_users(num_users):
     return
 
 
+# TODO: For testing socket!
+
+
+def create_test_user(email="testuser1@cornell.edu", password="Password1!"):
+    """Create a test user with a plain-text password for debugging."""
+    # Get a random school and major
+    school = db.session.query(School).filter_by(name="Cornell University").first()
+    majors = db.session.query(Major).all()
+
+    phone = f"+1 {''.join(choices(string.digits, k=10))}"
+    while (
+        not validate_phone(phone)
+        or db.session.query(User).filter_by(phone=phone).first()
+    ):
+        phone = f"+1 {''.join(choices(string.digits, k=10))}"
+
+    # Create the user
+    hashed_pw = User.hash_password(password)
+    random_suffix = str(randint(1000, 9999))
+    unique_username = f"testuser_{random_suffix}"
+    unique_email = f"du{random_suffix}@cornell.edu"
+    user = User(
+        username=unique_username,
+        firstname=fake.first_name(),
+        lastname=fake.last_name(),
+        school_id=school.id,
+        major_id=choice(majors).id,
+        graduation=fake.future_date(end_date="+4y"),
+        email=unique_email,
+        phone=phone,
+        password=hashed_pw,
+        mail_is_verified=fake.boolean(),
+        phone_is_verified=fake.boolean(),
+        is_mock=False,
+    )
+
+    # Add the user to the database
+    db.session.add(user)
+    print(f"Test user created: {email}")
+
+
 def generate_fake_questions(num_questions):
     """Generate fake questions associated with users, courses, and methods."""
     intervals = db.session.query(TimeInterval).all()
@@ -167,6 +208,7 @@ def populate_fake():
     # Use a database session to bulk add mock data
     with db.session.begin():
         generate_fake_users(num_users)
+        create_test_user()
 
         questions = generate_fake_questions(num_questions)
         db.session.add_all(questions)

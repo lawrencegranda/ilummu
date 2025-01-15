@@ -1,52 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta name="description"
-              content="ilummu - Get help and help others wiith their homework.">
-        <meta name="keywords"
-              content="ilummu, homework, cornell, university, chegg, quizlet, brainly">
 
-        {% block head %}
-            <meta charset="utf-8" />
-            <title>ilummu:
+<head>
+    <meta name="description" content="ilummu - Get help and help others wiith their homework.">
+    <meta name="keywords" content="ilummu, homework, cornell, university, chegg, quizlet, brainly">
 
-                {% block title %}
-                {% endblock title %}
+    {% block head %}
+    <meta charset="utf-8" />
+    <title>ilummu:
 
-            </title>
-        {% endblock head %}
+        {% block title %}
+        {% endblock title %}
 
-        <!-- Styles -->
-        {% include "bases/headers.jinja" %}
+    </title>
+    {% endblock head %}
 
-        {% block headers %}
-        {% endblock headers %}
+    <!-- Styles -->
+    {% include "bases/headers.jinja" %}
 
-        {% block javascript %}
-        {% endblock javascript %}
+    {% block headers %}
+    {% endblock headers %}
 
-    </head>
-    <body>
-        <!-- Navbar -->
+    {% block javascript %}
+    {% endblock javascript %}
 
-        {% block navbar %}
-        {% endblock navbar %}
+</head>
 
-        <!-- Top Elements -->
+<body>
+    <!-- Navbar -->
 
-        {% block top %}
-        {% endblock top %}
+    {% block navbar %}
+    {% endblock navbar %}
 
-        <!-- Content -->
+    <!-- Top Elements -->
 
-        {% block content %}
-        {% endblock content %}
+    {% block top %}
+    {% endblock top %}
 
-        <!-- Footer -->
+    <!-- Content -->
 
-        {% block footer %}
-            {% include "bases/footer.jinja" %}
-        {% endblock footer %}
+    {% block content %}
+    {% endblock content %}
 
-    </body>
+    <!-- Footer -->
+
+    {% block footer %}
+    {% include "bases/footer.jinja" %}
+    {% endblock footer %}
+
+
+    <!-- Socket.IO client script -->
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+
+    <script>
+        // Connect to the Flask-SocketIO server
+        const socket = io();  // automatically connects to the same host and port
+
+        // If you pass a `user` object to the template, let's join their room:
+        {% if user %}
+        socket.emit("join", { user_id: {{ user["id"] }} });
+        {% endif %}
+
+        // Listen for the "new_offer" event from the server
+        socket.on("new_offer", function (data) {
+            console.log("Received new_offer event:", data);
+
+            // If this page’s URL contains /question/<id>,
+            // and it matches the question_id from the event, reload
+            if (window.location.href.includes(`/question/${data.question_id}`)) {
+                location.reload(); // Force a page refresh
+            } else {
+                // Otherwise, show a quick popup or custom notification
+                alert(data.message);
+            }
+        });
+    </script>
+
+</body>
+
 </html>
