@@ -17,7 +17,7 @@ class DatabaseSetup(ABC):
         """Run the database setup process."""
         with self.app.app_context():
             # pylint: disable=import-outside-toplevel
-            from edify import db
+            from edify.core import db
             from edify.database.populate import populate_constants
 
             # Create tables

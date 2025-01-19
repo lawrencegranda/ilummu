@@ -4,7 +4,7 @@
 import json
 
 # Local Application imports
-from edify import db
+from edify.core import db
 from edify.models import (
     School,
     AcademicField,

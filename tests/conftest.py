@@ -12,7 +12,7 @@ import pytest
 # Local Application imports
 from edify.database.populate import populate_constants
 from edify.models import User, School, Major, Question, Method, Course, Offer
-from edify import db
+from edify.core import db
 from edify.utils.utils import validate_phone
 from tests.test_app import create_test_app
 from tests.utils import get_jwt_header

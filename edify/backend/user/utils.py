@@ -10,7 +10,7 @@ from flask_jwt_extended import current_user, set_access_cookies, set_refresh_coo
 from flask_login import UserMixin
 
 # Local Application imports
-from edify import db
+from edify.core import db
 from edify.models import User, Question, School, Major
 from edify.utils.constants import SupportedLanguagesEnum, ErrorType
 from edify.utils.utils import (

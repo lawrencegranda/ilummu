@@ -8,7 +8,7 @@ from faker import Faker
 from flask import url_for
 
 # Local Application imports
-from edify import db
+from edify.core import db
 from edify.models import Offer, Question, Notification
 from edify.utils.constants import OfferStatusEnum
 from tests.utils import get_jwt_header, compare_dicts

@@ -9,7 +9,7 @@ from sqlalchemy import Index, event
 from sqlalchemy.orm import Session
 
 # Local Application imports
-from edify import db
+from edify.core import db
 from edify.models.base import BaseModel
 from edify.utils.constants import OfferStatusEnum
 from edify.utils.utils import date_to_int

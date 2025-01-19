@@ -7,7 +7,7 @@ from random import choice, randint
 from faker import Faker
 
 # Local Application imports
-from edify import db
+from edify.core import db
 from edify.models import (
     Course,
     Major,

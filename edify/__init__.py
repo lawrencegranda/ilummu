@@ -5,11 +5,8 @@ from http import HTTPStatus
 import traceback
 
 # Third-Party Framework imports
-import boto3
 from flask import Flask, request, jsonify, url_for, redirect
-from flask_bcrypt import Bcrypt
 from flask_jwt_extended import (
-    JWTManager,
     jwt_required,
     get_jwt_identity,
     verify_jwt_in_request,
@@ -20,58 +17,25 @@ from flask_jwt_extended.exceptions import (
     NoAuthorizationError,
     JWTExtendedException,
 )
-from flask_migrate import Migrate
-from flask_sqlalchemy import SQLAlchemy
-from flask_mail import Mail
 from jwt.exceptions import ExpiredSignatureError, PyJWTError
 
 # Local Application imports
+from edify.core import init_db, init_extensions
 from edify.utils.utils import (
     internal_request,
     get_access_header,
     handle_invalid_token,
 )
 
-# Initialize extensions
-db = SQLAlchemy()
-bcrypt = Bcrypt()
-jwt = JWTManager()
-migrate = Migrate()
-mail = Mail()
-
 
 def create_app(config_class):
-    """
-    Flask application factory function.
-
-    Args:
-        config_class: Configuration class for the application.
-
-    Returns:
-        Flask: Configured Flask application instance.
-    """
+    """Flask application factory function."""
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    # Initialize S3 client for file storage
-    if config_class.TESTING:
-        app.config["S3_CLIENT"] = None
-    else:
-        app.config["S3_CLIENT"] = boto3.client(
-            "s3",
-            endpoint_url=app.config["FILEBASE_ENDPOINT"],
-            aws_access_key_id=app.config["FILEBASE_ACCESS_KEY"],
-            aws_secret_access_key=app.config["FILEBASE_SECRET_KEY"],
-        )
-
-    # Passing app as a parameter here instead of on initialization
-    db.init_app(app)
-    bcrypt.init_app(app)
-    jwt.init_app(app)
-    migrate.init_app(app, db)
-
-    # Had to do this because there is an error in source code.
-    mail.state = mail.init_app(app)
+    # Initialize core components
+    init_db(app)
+    init_extensions(app)
 
     # pylint: disable=import-outside-toplevel
     from edify.frontend.routes import frontend
@@ -79,12 +43,7 @@ def create_app(config_class):
 
     @frontend.before_request
     def enforce_https():
-        """
-        Redirect to HTTPS if not already using it.
-
-        Returns:
-            Optional[Response]: Redirect response if HTTP, None otherwise.
-        """
+        """Redirect to HTTPS if not already using it."""
         if (
             config_class.PROD
             and not request.is_secure
