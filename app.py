@@ -20,7 +20,7 @@ def on_join(data):
     """
     user_id = data.get("user_id")
     if user_id:
-        room_name = f"user_{user_id}"  # Create a unique room for the user
+        room_name = f"user_{user_id}"  # unique user id
         join_room(room_name)
         print(f"User {user_id} joined room: {room_name}")
     else:

@@ -130,14 +130,13 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
 
     # socketio emission! this sends a real time notification to the author
     socketio.emit(
-        "new_offer",
+        "offer_notification",
         {
-            "question_id": question.id,
-            "offer_id": offer.id,
-            "offer_amount": offer.amount,
+            "type": "info",
             "message": f"You have a new offer from {user.username} for ${price:.2f}!",
+            "reload_url": f"/question/{question.id}",
         },
-        room=room_name,
+        room=room_name,  # question author
     )
 
     response = jsonify(offer.to_dict(simplified=True))
@@ -248,6 +247,16 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
         question_id=offer.question.id,
     )
     db.session.add(notification_author)
+
+    socketio.emit(
+        "offer_notification",
+        {
+            "type": "info",
+            "message": f"{user.username} updated their offer to ${offer.amount:.2f}",
+            "reload_url": f"/question/{offer.question.id}",
+        },
+        room=f"user_{offer.question.user_id}",
+    )
     db.session.commit()
 
     return jsonify(offer.to_dict()), HTTPStatus.OK
@@ -313,6 +322,16 @@ def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
     )
     db.session.add(notification_author)
     db.session.commit()
+
+    socketio.emit(
+        "offer_notification",
+        {
+            "type": "warning",
+            "message": f"{offer.user.username} revoked their offer on question {offer.question.id}.",
+            "reload_url": f"/question/{offer.question.id}",
+        },
+        room=f"user_{offer.question.user_id}",
+    )
 
     return jsonify({"msg": "Offer deleted"}), HTTPStatus.NO_CONTENT
 
@@ -458,6 +477,16 @@ def accept_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
         db.session.add(notification_declined)
         db.session.commit()
 
+    socketio.emit(
+        "offer_notification",
+        {
+            "type": "success",
+            "message": f"Your offer for question {offer.question.id} was accepted!",
+            "reload_url": f"/question/{offer.question.id}",
+        },
+        room=f"user_{offer.user_id}",
+    )
+
     return jsonify(offer.to_dict()), HTTPStatus.OK
 
 
@@ -546,6 +575,16 @@ def decline_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
         question_id=offer.question.id,
     )
     db.session.add(notification_author)
+
+    socketio.emit(
+        "offer_notification",
+        {
+            "type": "info",
+            "message": f"Your offer for question {offer.question.id} was declined!",
+            "reload_url": f"/question/{offer.question.id}",
+        },
+        room=f"user_{offer.user_id}",
+    )
     db.session.commit()
 
     return jsonify(offer.to_dict()), HTTPStatus.OK
