@@ -17,7 +17,7 @@ from webargs import fields, validate
 from webargs.flaskparser import use_args
 
 # Local Application imports
-from edify import db
+from edify.core import db
 from edify.models import User
 from edify.utils.constants import (
     ErrorType,

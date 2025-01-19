@@ -14,7 +14,7 @@ from itsdangerous.exc import BadSignature, SignatureExpired
 from sqlalchemy import Index, event
 
 # Local Application imports
-from edify import db, bcrypt
+from edify.core import db, bcrypt
 from edify.models.base import BaseModel
 from edify.models.notification import Notification
 from edify.utils.constants import (

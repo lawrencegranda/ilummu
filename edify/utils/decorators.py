@@ -12,7 +12,7 @@ from flask_jwt_extended.exceptions import JWTExtendedException
 from flask_login import UserMixin
 
 # Local Application Imports
-from edify import jwt, db
+from edify.core import db, jwt
 from edify.models import User, Question
 from edify.utils.constants import AuthLevelEnum, ErrorType
 from edify.utils.utils import error_response, handle_invalid_token

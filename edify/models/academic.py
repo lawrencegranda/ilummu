@@ -7,7 +7,7 @@ from typing import Dict, Any
 from sqlalchemy import Index, UniqueConstraint, event
 
 # Local Application imports
-from edify import db
+from edify.core import db
 from edify.models.base import BaseModel
 from edify.utils.utils import (
     format_lower_case,

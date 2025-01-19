@@ -9,7 +9,7 @@ from typing import Optional, Tuple
 from faker import Faker
 
 # Local Application imports
-from edify import db
+from edify.core import db
 from edify.models import User, School, Major
 from edify.utils.utils import validate_phone
 

@@ -14,7 +14,7 @@ from webargs import fields
 from webargs.flaskparser import use_args
 
 # Local Application imports
-from edify import db
+from edify.core import db
 from edify.models import Question, Offer
 from edify.utils.utils import error_response
 from edify.utils.constants import ErrorType, NotificationTypeEnum, OfferStatusEnum

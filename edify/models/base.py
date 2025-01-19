@@ -8,7 +8,7 @@ from typing import Dict, Any, List
 from flask_login import UserMixin
 
 # Local Application imports
-from edify import db
+from edify.core import db
 
 
 class ModelABCMeta(type(db.Model), ABCMeta):

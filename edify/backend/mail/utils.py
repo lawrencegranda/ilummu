@@ -11,7 +11,7 @@ from flask import current_app, jsonify
 from flask_mail import Message
 
 # Local Application imports
-from edify import mail
+from edify.core import mail
 from edify.utils.constants import ErrorType
 from edify.utils.utils import error_response
 

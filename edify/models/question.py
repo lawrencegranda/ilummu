@@ -8,7 +8,7 @@ from typing import Dict, Any
 from sqlalchemy import Index, event
 
 # Local Application imports
-from edify import db
+from edify.core import db
 from edify.models.base import BaseModel
 from edify.utils.constants import PREVIEW_LENGTH
 from edify.utils.utils import date_to_int, get_time_ago, get_seconds_ago, trim_text

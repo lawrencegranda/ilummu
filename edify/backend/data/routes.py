@@ -8,7 +8,7 @@ from flask.typing import ResponseReturnValue
 from flask_jwt_extended import jwt_required
 
 # Local Application imports
-from edify import db
+from edify.core import db
 from edify.backend.user.utils import get_current_user
 from edify.models import (
     AcademicField,

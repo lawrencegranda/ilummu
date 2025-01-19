@@ -9,7 +9,7 @@ from flask import url_for
 from sqlalchemy import Index, event
 
 # Local Application imports
-from edify import db
+from edify.core import db
 from edify.models.base import BaseModel
 from edify.utils.constants import NotificationTypeEnum
 

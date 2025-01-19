@@ -10,7 +10,7 @@ from flask.typing import ResponseReturnValue
 from sqlalchemy.exc import IntegrityError
 
 # Local Application imports
-from edify import db
+from edify.core import db
 from edify.models import Notification
 from edify.utils.constants import ErrorType
 from edify.utils.utils import error_response
