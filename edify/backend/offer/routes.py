@@ -8,18 +8,18 @@ from typing import Optional
 
 # Third-Party Framework imports
 from flask import Blueprint, jsonify
-from flask import typing as flask_typing
+from flask.typing import ResponseReturnValue
 from flask_jwt_extended import jwt_required
-from sqlalchemy.exc import IntegrityError
 from webargs import fields
 from webargs.flaskparser import use_args
 
 # Local Application imports
 from edify import db
 from edify.models import Question, Offer, Notification
+from edify.utils.utils import error_response
 from edify.utils.constants import ErrorType, NotificationTypeEnum, OfferStatusEnum
 from edify.backend.user.utils import get_current_user
-from edify.utils.utils import error_response
+from edify.backend.utils import commit_changes, create_notification
 
 # -----------------------------------------------------------------------------
 # Route Blueprint
@@ -31,38 +31,6 @@ offer = Blueprint("offer", __name__, url_prefix="/offer")
 # -----------------------------------------------------------------------------
 # Blueprint Endpoints (offer)
 # -----------------------------------------------------------------------------
-
-
-def commit_offer_changes(error_msg: str) -> Optional[flask_typing.ResponseReturnValue]:
-    """Commit changes and handle potential errors.
-
-    Args:
-        error_msg: Error message if commit fails
-
-    Returns:
-        Error response if commit fails, None if successful
-    """
-    try:
-        db.session.commit()
-    except IntegrityError as e:
-        db.session.rollback()
-        print(f"IntegrityError: {e}")
-        return error_response(error_msg, ErrorType.BAD_REQUEST)
-    return None
-
-
-def create_offer_notification(
-    notification_type: str, message: str, user_id: int, question_id: int
-) -> None:
-    """Create and commit a notification for an offer."""
-    notification = Notification(
-        type=notification_type,
-        message=message,
-        user_id=user_id,
-        question_id=question_id,
-    )
-    db.session.add(notification)
-    db.session.commit()
 
 
 def validate_offer_request(
@@ -114,7 +82,7 @@ def validate_offer_request(
 
 def validate_price(
     price: float, question_price: float
-) -> Optional[flask_typing.ResponseReturnValue]:
+) -> Optional[ResponseReturnValue]:
     """Validate offer price is within acceptable range.
 
     Args:
@@ -140,7 +108,7 @@ def validate_price(
         "price": fields.Float(required=True),
     }
 )
-def create_offer(args) -> flask_typing.ResponseReturnValue:
+def create_offer(args) -> ResponseReturnValue:
     """Create an offer for a question."""
     user = get_current_user()
     if not user:
@@ -180,7 +148,7 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
     )
     db.session.add(offer_obj)
 
-    commit_error = commit_offer_changes("Failed to create offer.")
+    commit_error = commit_changes("Failed to create offer")
     if commit_error:
         return commit_error
 
@@ -199,7 +167,7 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
     ]
 
     for n_type, msg, u_id in notifications:
-        create_offer_notification(n_type, msg, u_id, question.id)
+        create_notification(n_type, msg, u_id, question.id)
 
     return jsonify(offer_obj.to_dict(simplified=True)), HTTPStatus.CREATED
 
@@ -207,7 +175,7 @@ def create_offer(args) -> flask_typing.ResponseReturnValue:
 # Endpoint: /backend/offer/<int:id_offer>
 @offer.route("/<int:id_offer>", methods=["GET"])
 @jwt_required()
-def get_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
+def get_offer(id_offer: int) -> ResponseReturnValue:
     """
     Retrieve an offer by its ID.
 
@@ -215,7 +183,7 @@ def get_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
         id_offer (int): The ID of the offer to retrieve.
 
     Returns:
-        flask_typing.ResponseReturnValue: The response containing the offer data.
+        ResponseReturnValue: The response containing the offer data.
     """
 
     offer_obj = db.session.query(Offer).filter_by(id=id_offer).first()
@@ -231,7 +199,7 @@ def get_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
 @offer.route("/<int:id_offer>", methods=["PUT"])
 @jwt_required()
 @use_args({"amount": fields.Float(required=True)})
-def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
+def update_offer(args, id_offer: int) -> ResponseReturnValue:
     """Update an offer price."""
     # Validate offer request
     checks = validate_offer_request(id_offer, require_owner=True)
@@ -248,19 +216,19 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
 
     offer_obj.amount = new_amount
 
-    error = commit_offer_changes("Couldn't update offer")
+    error = commit_changes("Failed to update offer")
     if error:
         return error
 
     # Send notifications
-    create_offer_notification(
+    create_notification(
         NotificationTypeEnum.UPDATED_OFFER,
         f"You changed the offer amount to ${new_amount:.2f}!",
         offer_obj.user_id,
         question.id,
     )
 
-    create_offer_notification(
+    create_notification(
         NotificationTypeEnum.UPDATED_OFFER,
         f"{offer_obj.user.username} changed their offer to ${new_amount:.2f}!",
         question.user_id,
@@ -273,7 +241,7 @@ def update_offer(args, id_offer: int) -> flask_typing.ResponseReturnValue:
 # Endpoint: /backend/offer/<int:id_offer>
 @offer.route("/<int:id_offer>", methods=["DELETE"])
 @jwt_required()
-def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
+def delete_offer(id_offer: int) -> ResponseReturnValue:
     """Delete an offer from the database."""
     # Validate offer request
     checks = validate_offer_request(id_offer, require_owner=True)
@@ -286,19 +254,19 @@ def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
     offer_obj.status = OfferStatusEnum.REMOVED
     offer_obj.active = False
 
-    error = commit_offer_changes("Couldn't delete offer")
+    error = commit_changes("Failed to delete offer")
     if error:
         return error
 
     # Send notifications
-    create_offer_notification(
+    create_notification(
         NotificationTypeEnum.OFFER_REVOKED,
         f"You revoked an offer to {question.user.username}!",
         offer_obj.user_id,
         question.id,
     )
 
-    create_offer_notification(
+    create_notification(
         NotificationTypeEnum.OFFER_REVOKED,
         f"{offer_obj.user.username} revoked their offer!",
         question.user_id,
@@ -311,7 +279,7 @@ def delete_offer(id_offer: int) -> flask_typing.ResponseReturnValue:
 # Endpoint: /backend/offer/user/<int:user_id>
 @offer.route("/user/<int:user_id>", methods=["GET"])
 @jwt_required()
-def get_offers_by_user(user_id: int) -> flask_typing.ResponseReturnValue:
+def get_offers_by_user(user_id: int) -> ResponseReturnValue:
     """
     Retrieves offers associated with a specific user.
 
@@ -319,7 +287,7 @@ def get_offers_by_user(user_id: int) -> flask_typing.ResponseReturnValue:
         user_id (int): The ID of the user.
 
     Returns:
-        flask_typing.ResponseReturnValue: Response containing the offers associated with the user.
+        ResponseReturnValue: Response containing the offers associated with the user.
     """
     user = get_current_user()
 
@@ -333,7 +301,7 @@ def get_offers_by_user(user_id: int) -> flask_typing.ResponseReturnValue:
 
 @offer.route("/accept/<int:offer_id>", methods=["POST"])
 @jwt_required()
-def accept_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
+def accept_offer(offer_id: int) -> ResponseReturnValue:
     """Accept an offer for a question."""
     # Validate offer request
     checks = validate_offer_request(offer_id, require_author=True)
@@ -362,12 +330,12 @@ def accept_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
         other_offer.status = OfferStatusEnum.DECLINED
         other_offer.active = False
 
-    error = commit_offer_changes("Couldn't accept offer")
+    error = commit_changes("Failed to accept offer")
     if error:
         return error
 
     # Send notifications
-    create_offer_notification(
+    create_notification(
         NotificationTypeEnum.OFFER_ACCEPTED,
         (
             f"Your offer to {question.user.username} was accepted! Check the "
@@ -377,7 +345,7 @@ def accept_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
         question.id,
     )
 
-    create_offer_notification(
+    create_notification(
         NotificationTypeEnum.OFFER_ACCEPTED,
         (
             f"You accepted {offer_obj.user.username}'s offer! Check the question "
@@ -388,7 +356,7 @@ def accept_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     )
 
     for other_offer in other_offers:
-        create_offer_notification(
+        create_notification(
             NotificationTypeEnum.OFFER_DECLINED,
             f"Your offer to {question.user.username} was declined!",
             other_offer.user_id,
@@ -401,7 +369,7 @@ def accept_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
 # Endpoint: /backend/offer/decline/<int:offer_id>
 @offer.route("/decline/<int:offer_id>", methods=["POST"])
 @jwt_required()
-def decline_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
+def decline_offer(offer_id: int) -> ResponseReturnValue:
     """Decline an offer for a question."""
     # Validate offer request
     checks = validate_offer_request(offer_id, require_author=True)
@@ -415,19 +383,19 @@ def decline_offer(offer_id: int) -> flask_typing.ResponseReturnValue:
     offer_obj.status = OfferStatusEnum.DECLINED
     offer_obj.active = False
 
-    error = commit_offer_changes("Couldn't decline offer")
+    error = commit_changes("Failed to decline offer")
     if error:
         return error
 
     # Send notifications
-    create_offer_notification(
+    create_notification(
         NotificationTypeEnum.OFFER_DECLINED,
         f"Your offer to {question.user.username} was declined!",
         offer_obj.user_id,
         question.id,
     )
 
-    create_offer_notification(
+    create_notification(
         NotificationTypeEnum.OFFER_DECLINED,
         f"You declined {offer_obj.user.username}'s offer!",
         question.user_id,
