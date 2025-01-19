@@ -21,6 +21,8 @@ from edify.utils.utils import (
     generate_funny_username,
 )
 
+from edify.backend.utils import commit_changes
+
 
 def get_current_user() -> Optional[User]:
     """
@@ -161,7 +163,7 @@ def make_login_response(user: User, remember: bool) -> ResponseReturnValue:
     """Make a login response for the user."""
     # Generate and commit the access token for the user
     access_token = user.get_access_token()
-    db.session.commit()
+    commit_changes("Failed to generate access token")
 
     # Make the response and set the access token
     response = jsonify(

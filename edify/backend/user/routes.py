@@ -18,7 +18,7 @@ from webargs.flaskparser import use_args
 
 # Local Application imports
 from edify import db
-from edify.models import Notification, User
+from edify.models import User
 from edify.utils.constants import (
     ErrorType,
     AuthLevelEnum,
@@ -39,6 +39,7 @@ from edify.backend.user.utils import (
     make_login_response,
 )
 from edify.backend.mail.utils import send
+from edify.backend.utils import commit_changes, create_notification
 
 # -----------------------------------------------------------------------------
 # Route Blueprint
@@ -121,11 +122,7 @@ def refresh() -> ResponseReturnValue:
     """
     curr_user = get_current_user()
     print(f"Refreshing token... User {curr_user.id}")
-    token = curr_user.get_access_token()
-    db.session.commit()
-    response = jsonify({"access_token": token})
-    set_access_cookies(response, token)
-    return (response, HTTPStatus.OK)
+    return make_login_response(curr_user, False), HTTPStatus.OK
 
 
 # Endpoint: /backend/user/login
@@ -239,13 +236,14 @@ def signup(args: dict) -> ResponseReturnValue:
 
     # Save user
     db.session.add(curr_user)
-    db.session.commit()
+    commit_changes("Failed to create user")
 
     # Create welcome notification
     create_notification(
         NotificationTypeEnum.ACCOUNT_CREATED,
         f"Welcome {username}!",
         curr_user.id,
+        None,
     )
 
     return (
@@ -311,6 +309,7 @@ def reset_email(args: dict) -> ResponseReturnValue:
             f'{datetime.now().strftime("%m/%d/%Y %H:%M")}.'
         ),
         user_id=curr_user.id,
+        question_id=None,
     )
 
     return jsonify({}), HTTPStatus.OK
@@ -390,13 +389,14 @@ def reset_password(args: dict) -> ResponseReturnValue:
     # Hash password before storing it in the db for privacy purposes
     curr_user.password = User.hash_password(password)
     curr_user.password_last_reset = datetime.utcnow()
-    db.session.commit()
+    commit_changes("Failed to reset password")
 
     # Create a notification for the password reset
     create_notification(
         NotificationTypeEnum.PASSWORD_RESET,
         f'Your password was reset on {datetime.now().strftime("%m/%d/%Y %H:%M")}.',
-        curr_user.id,
+        user_id=curr_user.id,
+        question_id=None,
     )
 
     # Generate the access token for the user
@@ -463,7 +463,8 @@ def verify_email() -> ResponseReturnValue:
     create_notification(
         NotificationTypeEnum.PASSWORD_RESET,
         "A verification code was sent to your email!",
-        curr_user.id,
+        user_id=curr_user.id,
+        question_id=None,
     )
 
     return jsonify({}), HTTPStatus.OK
@@ -500,13 +501,14 @@ def check_auth_code(args: dict) -> ResponseReturnValue:
 
     # Set verified status
     curr_user.mail_is_verified = True
-    db.session.commit()
+    commit_changes("Failed to verify email")
 
     # Create a notification for account verification
     create_notification(
         NotificationTypeEnum.ACCOUNT_VERIFIED,
         "Your email was verified successfully!",
-        curr_user.id,
+        user_id=curr_user.id,
+        question_id=None,
     )
 
     return jsonify({}), HTTPStatus.OK
