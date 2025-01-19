@@ -28,12 +28,13 @@ To run the API, run the following steps:
 
 1. Install the correct python version:
    - Run `pyenv install 3.10.7`
+
 2. Set python version to be the default for the project:
    - Go to `~/path/to/edify/`
      - Run `cd ~/path/to/edify/`
    - Run `pyenv install 3.10.7`
-3. Install Dependencies from Poetry:
 
+3. Install Dependencies from Poetry:
    - Go to `~/path/to/edify/`
      - Run `cd ~/path/to/edify/`
    - Create a virtual environment
@@ -43,12 +44,17 @@ To run the API, run the following steps:
 
 4. Activate virtual environment:
    - Run `poetry shell`
+
 5. Add environment variables
    - Run `source env.sh` (or whatever the environment filed is named)
-6. Set up the local database (OPTIONAL):
+
+6. Set up the local database:
+   - Make sure you have an `edify_local` database created and empty.
    - Run `flask db upgrade` to get the latest models.
    - Run `python setup.py` to populate constants.
-7. Run web:
+   - Optional: Run `python setup_fake.py` to populate the databse with fake data.
+
+8. Run web:
    - Run `python app.py`
 
 Steps 1-2-3-6 only need to be done the first time.
@@ -59,11 +65,10 @@ Steps 4-5-7 must be run every time.
 
 ## CICD - Github Branches
 
-There is 1 main branch in the continuous development and integration pipeline:
+There are 2 main branches in the continuous development and integration pipeline:
 
 - `main` : Main branch in the repository. Once a feature developed on a separate branch is ready, it can be merged to `main`
-
-Certainly! Here’s a basic `README.md` file you can create to instruct how to perform migrations using Flask-Migrate without Flask-Script:
+- `PROD` : Production branch in the repository. Once code is tested, functional, and working in `main`, it can be merged to `PROD`. Any changes are automatically deployed to the working web.
 
 ---
 
@@ -131,8 +136,6 @@ This command applies the migration script to the database, making the necessary 
 - Use caution with `flask db downgrade` as it can lead to data loss if not used carefully.
 
 #### Example Workflow
-
-Here’s an example workflow to illustrate how to use Flask-Migrate:
 
 1. Modify your SQLAlchemy models in `models.py`.
 2. Run `flask db migrate -m "Added User table"`.
