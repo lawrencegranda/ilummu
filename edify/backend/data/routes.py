@@ -1,31 +1,25 @@
+"""Data-related endpoints for fetching courses, subjects, and other reference data."""
+
 # Standard Library imports
-from http import HTTPStatus
-from typing import Any, Dict, List, Optional
 
 # Third-Party Framework imports
-from flask import Blueprint, current_app, jsonify, redirect, url_for
+from flask import Blueprint, url_for
 from flask import typing as flask_typing
-from flask_jwt_extended import jwt_required, current_user
+from flask_jwt_extended import jwt_required
 
 # Local Application imports
 from edify import db
-from edify.backend.user.utils import get_current_user, check_author
-from edify.backend.question.utils import question_dictionary
+from edify.backend.user.utils import get_current_user
 from edify.models import (
     AcademicField,
     Course,
     Major,
     Method,
     Notification,
-    NotificationType,
-    Offer,
-    Question,
     School,
     TimeInterval,
-    User,
 )
 from edify.utils.constants import ErrorType
-from edify.utils.decorators import author_required
 from edify.utils.utils import error_response, internal_request, data_response
 
 

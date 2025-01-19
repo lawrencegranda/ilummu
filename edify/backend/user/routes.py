@@ -1,37 +1,24 @@
+"""User-related routes and authentication endpoints for the Edify backend."""
+
 # Standard Library imports
-from datetime import datetime, timedelta
+from datetime import datetime
 from http import HTTPStatus
-from typing import Optional, Any, Tuple
 
 # Third-Party Framework imports
-from flask import Blueprint, url_for, jsonify, current_app, request, render_template
+from flask import Blueprint, url_for, jsonify, current_app, render_template
 from flask import typing as flask_typing
 from flask_jwt_extended import (
     jwt_required,
-    current_user,
     set_access_cookies,
     set_refresh_cookies,
     unset_jwt_cookies,
 )
-from flask_login import UserMixin
 from webargs import fields, validate
 from webargs.flaskparser import use_args
 
 # Local Application imports
 from edify import db
-from edify.models import (
-    Notification,
-    AcademicField,
-    Method,
-    TimeInterval,
-    Course,
-    School,
-    Major,
-    User,
-    Question,
-    Offer,
-    NotificationType,
-)
+from edify.models import Notification, School, Major, User
 from edify.utils.constants import (
     ErrorType,
     AuthLevelEnum,
@@ -40,7 +27,6 @@ from edify.utils.constants import (
 )
 from edify.utils.utils import (
     error_response,
-    validate_date,
     validate_email,
     validate_phone,
     generate_funny_username,
@@ -73,11 +59,14 @@ def get_user() -> flask_typing.ResponseReturnValue:
         Response: JSON response with the user's information or None if not found.
     """
     try:
-        user = get_current_user()
-        if user:
-            return jsonify({"user": user.to_dict(simplified=False)}), HTTPStatus.OK
-    except:
-        pass
+        curr_user = get_current_user()
+        if curr_user:
+            return (
+                jsonify({"user": curr_user.to_dict(simplified=False)}),
+                HTTPStatus.OK,
+            )
+    except (ValueError, KeyError, RuntimeError) as e:
+        print(f"Error getting current user: {e}")
 
     return jsonify(None), HTTPStatus.NOT_FOUND
 
@@ -92,8 +81,8 @@ def is_verified() -> flask_typing.ResponseReturnValue:
     Returns:
         Response: true or false.
     """
-    user = get_current_user()
-    if user and (user.mail_is_verified or user.phone_is_verified):
+    curr_user = get_current_user()
+    if curr_user and (curr_user.mail_is_verified or curr_user.phone_is_verified):
         return jsonify(True), HTTPStatus.OK
 
     return jsonify(False), HTTPStatus.OK
@@ -106,7 +95,7 @@ def is_verified() -> flask_typing.ResponseReturnValue:
 @user.route("/logout", methods=["POST"])
 def logout() -> flask_typing.ResponseReturnValue:
     """
-    Endpoint to log out a user.
+    Endpoint to log out a curr_user.
 
     Returns:
         Response: JSON response indicating successful logout.
@@ -126,9 +115,9 @@ def refresh() -> flask_typing.ResponseReturnValue:
     Returns:
         Response: JSON response with the new access token.
     """
-    user = get_current_user()
-    print(f"Refreshing token... User {user.id}")
-    token = user.get_access_token()
+    curr_user = get_current_user()
+    print(f"Refreshing token... User {curr_user.id}")
+    token = curr_user.get_access_token()
     db.session.commit()
     response = jsonify({"access_token": token})
     set_access_cookies(response, token)
@@ -146,7 +135,7 @@ def refresh() -> flask_typing.ResponseReturnValue:
 )
 def login(args) -> flask_typing.ResponseReturnValue:
     """
-    Endpoint to log in a user.
+    Endpoint to log in a curr_user.
 
     Args:
         args (dict): The login arguments containing email, password, and remember flag.
@@ -155,37 +144,39 @@ def login(args) -> flask_typing.ResponseReturnValue:
         Response: JSON response with the access token and user information.
     """
     # Get the user corresponding to the email that is logging in
-    user = db.session.query(User).filter_by(email=args["email"], is_mock=False).first()
+    curr_user = (
+        db.session.query(User).filter_by(email=args["email"], is_mock=False).first()
+    )
 
     # Check if user exists and if the given password is correct
-    if not user or not user.check_password(args["password"]):
+    if not curr_user or not curr_user.check_password(args["password"]):
         return error_response(
             "Incorrect email or password", ErrorType.INCORRECT_CREDENTIALS
         )
 
     # # Uncomment these lines to enable email and phone verification checks
-    # if user.mail_is_verified is False:
+    # if curr_user.mail_is_verified is False:
     #     return error_response("Email not verified", ErrorType.USER_NOT_VERIFIED)
-    # if user.phone_is_verified is False:
+    # if curr_user.phone_is_verified is False:
     #     return error_response("Phone not verified", ErrorType.USER_NOT_VERIFIED)
 
     # Generate and commit the access token for the user
-    access_token = user.get_access_token()
+    access_token = curr_user.get_access_token()
     db.session.commit()
 
-    if user.auth_level in [AuthLevelEnum.SCHOOL_ADMIN, AuthLevelEnum.SUPER_ADMIN]:
+    if curr_user.auth_level in [AuthLevelEnum.SCHOOL_ADMIN, AuthLevelEnum.SUPER_ADMIN]:
         # Additional logic for admin users (if needed)
         pass
 
     response = jsonify(
-        {"access_token": access_token, "user": user.to_dict(simplified=True)}
+        {"access_token": access_token, "user": curr_user.to_dict(simplified=True)}
     )
     set_access_cookies(response, access_token)
 
     if "remember" in args and args["remember"]:
         set_refresh_cookies(
             response,
-            generate_refresh_token(user),
+            generate_refresh_token(curr_user),
             max_age=current_app.config["JWT_REFRESH_TOKEN_EXPIRES"],
         )
 
@@ -212,7 +203,7 @@ def login(args) -> flask_typing.ResponseReturnValue:
 )
 def signup(args) -> flask_typing.ResponseReturnValue:
     """
-    Endpoint to create a new user.
+    Endpoint to create a new curr_user.
 
     Args:
         args (dict): The user creation arguments.
@@ -235,13 +226,13 @@ def signup(args) -> flask_typing.ResponseReturnValue:
         return error_response("Invalid email format.", ErrorType.BAD_REQUEST)
 
     # Check if email is already taken
-    user = db.session.query(User).filter_by(email=args["email"]).first()
-    if user:
+    curr_user = db.session.query(User).filter_by(email=args["email"]).first()
+    if curr_user:
         return error_response("Email is already taken", ErrorType.BAD_REQUEST)
 
     # Check if phone is already taken
-    user = db.session.query(User).filter_by(phone=args["phone"]).first()
-    if user:
+    curr_user = db.session.query(User).filter_by(phone=args["phone"]).first()
+    if curr_user:
         return error_response("Phone is already taken", ErrorType.BAD_REQUEST)
 
     # Determine the user's language preference
@@ -301,7 +292,7 @@ def signup(args) -> flask_typing.ResponseReturnValue:
         args["lastname"] = username
 
     # Create new user in the User table
-    user = User(
+    curr_user = User(
         username=username,
         firstname=args["firstname"],
         lastname=args["lastname"],
@@ -315,30 +306,30 @@ def signup(args) -> flask_typing.ResponseReturnValue:
     )
 
     # Add new user to the database
-    db.session.add(user)
+    db.session.add(curr_user)
     db.session.commit()
 
     # Generate the access token for the user
-    access_token = user.get_access_token()
+    access_token = curr_user.get_access_token()
 
     # Create a notification for the new user
     notif = Notification(
         type=NotificationTypeEnum.ACCOUNT_CREATED,
         message=f"Welcome {username}!",
-        user_id=user.id,
+        user_id=curr_user.id,
     )
     db.session.add(notif)
     db.session.commit()
 
     response = jsonify(
-        {"access_token": access_token, "user": user.to_dict(simplified=True)}
+        {"access_token": access_token, "user": curr_user.to_dict(simplified=True)}
     )
     set_access_cookies(response, access_token)
 
     if "remember" in args and args["remember"]:
         set_refresh_cookies(
             response,
-            generate_refresh_token(user),
+            generate_refresh_token(curr_user),
             max_age=current_app.config["JWT_REFRESH_TOKEN_EXPIRES"],
         )
 
@@ -366,33 +357,42 @@ def reset_email(args) -> flask_typing.ResponseReturnValue:
         Response: Send email.
     """
     # Get the user corresponding to the email that is logging in
-    user = (
+    curr_user = (
         db.session.query(User)
         .filter_by(email=args["email"].lower(), is_mock=False)
         .first()
     )
 
     # If user not found, do not send email.
-    if not user:
+    if not curr_user:
         return jsonify({}), HTTPStatus.OK
 
     # Generate token.
-    token = user.generate_reset_token()
+    token = curr_user.generate_reset_token()
 
     # Format url with token
     url = url_for("frontend.reset_password", token=token, _external=True)
 
     # Render html
-    html = render_template("/reset_email.jinja", name=user.username, action_url=url)
+    html = render_template(
+        "/reset_email.jinja", name=curr_user.username, action_url=url
+    )
 
     # Send email
-    send(subject="ilummu: Password reset request", html=html, recipients=[user.email])
+    send(
+        subject="ilummu: Password reset request",
+        html=html,
+        recipients=[curr_user.email],
+    )
 
     # Create a notification for the forgot password
     notif = Notification(
         type=NotificationTypeEnum.PASSWORD_RESET,
-        message=f'You initated the password reset process on {datetime.now().strftime("%m/%d/%Y %H:%M")}.',
-        user_id=user.id,
+        message=(
+            f"You initated the password reset process on "
+            f'{datetime.now().strftime("%m/%d/%Y %H:%M")}.'
+        ),
+        user_id=curr_user.id,
     )
     db.session.add(notif)
     db.session.commit()
@@ -419,10 +419,10 @@ def check_token(args) -> flask_typing.ResponseReturnValue:
         Response: Tuple. Success or failure.
     """
     token = args["token"]
-    user = User.validate_reset_token(token)
+    curr_user = User.validate_reset_token(token)
 
     # Check if user exists
-    if not user:
+    if not curr_user:
         return error_response(
             "Invalid or expired reset link. Please try again.", ErrorType.BAD_REQUEST
         )
@@ -449,10 +449,10 @@ def reset_password(args) -> flask_typing.ResponseReturnValue:
         Response: Tuple. Access token and user, and code.
     """
     token = args["token"]
-    user = User.validate_reset_token(token)
+    curr_user = User.validate_reset_token(token)
 
     # Check if user exists
-    if not user:
+    if not curr_user:
         return error_response(
             "Invalid or expired reset link. Please try again.", ErrorType.BAD_REQUEST
         )
@@ -460,7 +460,7 @@ def reset_password(args) -> flask_typing.ResponseReturnValue:
     password = args["password"]
 
     # Make sure it is a new password
-    if user.check_password(password):
+    if curr_user.check_password(password):
         return error_response(
             "Password must be different from your last password.", ErrorType.BAD_REQUEST
         )
@@ -472,32 +472,32 @@ def reset_password(args) -> flask_typing.ResponseReturnValue:
         return error_response(msg, ErrorType.BAD_REQUEST)
 
     # Hash password before storing it in the db for privacy purposes
-    user.password = User.hash_password(password)
-    user.password_last_reset = datetime.utcnow()
+    curr_user.password = User.hash_password(password)
+    curr_user.password_last_reset = datetime.utcnow()
     db.session.commit()
 
     # Create a notification for the password reset
     notif = Notification(
         type=NotificationTypeEnum.PASSWORD_RESET,
         message=f'Your password was reset on {datetime.now().strftime("%m/%d/%Y %H:%M")}.',
-        user_id=user.id,
+        user_id=curr_user.id,
     )
     db.session.add(notif)
     db.session.commit()
 
     # Generate the access token for the user
-    access_token = user.get_access_token()
+    access_token = curr_user.get_access_token()
 
     # Return access token and user
     response = jsonify(
-        {"access_token": access_token, "user": user.to_dict(simplified=True)}
+        {"access_token": access_token, "user": curr_user.to_dict(simplified=True)}
     )
 
     # Set up cookies
     set_access_cookies(response, access_token)
     set_refresh_cookies(
         response,
-        generate_refresh_token(user),
+        generate_refresh_token(curr_user),
         max_age=current_app.config["JWT_REFRESH_TOKEN_EXPIRES"],
     )
 
@@ -520,33 +520,36 @@ def verify_email() -> flask_typing.ResponseReturnValue:
     Returns:
         Response: Send email.
     """
-    user = get_current_user()
+    curr_user = get_current_user()
 
     # If user not found, error
-    if not user:
+    if not curr_user:
         return error_response("User not found", ErrorType.USER_NOT_FOUND)
 
     # If there is a valid code, sent recently, do not send
-    if user.has_valid_session_auth_code() and user.sec_since_issued_auth_code() < 50:
+    if (
+        curr_user.has_valid_session_auth_code()
+        and curr_user.sec_since_issued_auth_code() < 50
+    ):
         return (
             jsonify({"msg": "Email was already sent before and is still valid."}),
             HTTPStatus.OK,
         )
 
     # Generate code
-    code = user.generate_session_auth_code()
+    code = curr_user.generate_session_auth_code()
 
     # Render html
-    html = render_template("/verify_email.jinja", name=user.username, code=code)
+    html = render_template("/verify_email.jinja", name=curr_user.username, code=code)
 
     # Send email
-    send(subject="ilummu: Verify your email", html=html, recipients=[user.email])
+    send(subject="ilummu: Verify your email", html=html, recipients=[curr_user.email])
 
     # Create a notification for the email sent
     notification = Notification(
         type=NotificationTypeEnum.PASSWORD_RESET,
-        message=f"A verification code was sent to your email!",
-        user_id=user.id,
+        message="A verification code was sent to your email!",
+        user_id=curr_user.id,
     )
     db.session.add(notification)
     db.session.commit()
@@ -574,24 +577,24 @@ def check_auth_code(args) -> flask_typing.ResponseReturnValue:
         Response: Tuple. Success or failure.
     """
     code = args["code"]
-    user = get_current_user()
+    curr_user = get_current_user()
 
     # If user not found, error.
-    if not user:
+    if not curr_user:
         return error_response("User not found", ErrorType.USER_NOT_FOUND)
 
-    if not user.validate_session_auth_code(code):
+    if not curr_user.validate_session_auth_code(code):
         return error_response("Invalid or expired code", ErrorType.BAD_REQUEST)
 
     # Set verified status
-    user.mail_is_verified = True
+    curr_user.mail_is_verified = True
     db.session.commit()
 
     # Create a notification for account verification
     notification = Notification(
         type=NotificationTypeEnum.ACCOUNT_VERIFIED,
-        message=f"Your email was verified successfully!",
-        user_id=user.id,
+        message="Your email was verified successfully!",
+        user_id=curr_user.id,
     )
     db.session.add(notification)
     db.session.commit()

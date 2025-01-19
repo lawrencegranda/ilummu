@@ -1,6 +1,7 @@
+"""User-related utility functions for authentication and user management."""
+
 # Standard Library imports
 from typing import Optional
-from datetime import datetime
 
 # Third-Party Framework imports
 from flask_jwt_extended import current_user

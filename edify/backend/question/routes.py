@@ -1,32 +1,30 @@
+"""Question management endpoints for the Edify backend."""
+
 # Standard Library imports
-from http import HTTPStatus
-from typing import Optional, Any, Tuple
 from datetime import datetime, timedelta
-import os
+from http import HTTPStatus
+from io import BytesIO
+import mimetypes
+from typing import Optional
+import uuid
 
 # Third-Party Framework imports
-import boto3
-from flask import Blueprint, Flask, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 from flask import typing as flask_typing
 from flask_jwt_extended import jwt_required
-import mimetypes
-from io import BytesIO
 from PIL import Image
 from sqlalchemy.exc import IntegrityError
-import uuid
-from webargs import fields, validate
+from webargs import fields
 from webargs.flaskparser import use_args
 
 # Local Application imports
-from edify import db, s3_client
+from edify import db
 from edify.backend.question.utils import question_dictionary
 from edify.backend.user.utils import get_current_user, check_author
 from edify.models import (
-    AcademicField,
     Course,
     Method,
     Question,
-    User,
     Notification,
     Offer,
 )
@@ -54,12 +52,11 @@ def upload_image(file) -> Optional[str]:
         file: A file to be uploaded.
 
     Returns:
-        Optional[str]: The URL of the uploaded image via the IPFS Gateway, or None if the upload fails.
+        Optional[str]: URL of uploaded image via the IPFS Gateway, or None if the upload fails.
 
     Raises:
         Exception: Any exception encountered during image processing or upload is caught and logged.
     """
-    global s3_client
     bucket_name = current_app.config["FILEBASE_BUCKET"]
 
     # Generate a unique key by combining a UUID, timestamp, and original filename
@@ -81,7 +78,7 @@ def upload_image(file) -> Optional[str]:
 
             # Resize image (e.g., to 1024x1024 while keeping the aspect ratio)
             max_size = (1024, 1024)
-            image.thumbnail(max_size)  # This keeps the aspect ratio
+            image.thumbnail(max_size)
 
             # Save the resized image to a BytesIO object
             image_bytes = BytesIO()
@@ -89,9 +86,8 @@ def upload_image(file) -> Optional[str]:
             image_bytes.seek(0)
 
             file = image_bytes
-        except Exception as e:
-            print("ERROR: ncountered an error resizing the image:", e)
-            pass
+        except (IOError, OSError) as e:
+            print("ERROR: Encountered an error resizing the image:", e)
 
         # Determine the MIME type of the file
         content_type, _ = mimetypes.guess_type(key_name)
@@ -101,11 +97,11 @@ def upload_image(file) -> Optional[str]:
             content_type = "binary/octet-stream"
 
         # Upload the file with the specified ContentType
-        aws_response = s3_client.put_object(
+        aws_response = current_app.config["S3_CLIENT"].put_object(
             Body=file,
             Bucket=bucket_name,
             Key=key_name,
-            ContentType=content_type,  # Set the detected or fallback content type
+            ContentType=content_type,
         )
 
         # Try to get the CID from the response headers
@@ -115,9 +111,11 @@ def upload_image(file) -> Optional[str]:
             # Construct the IPFS Gateway URL using the CID
             image_url = f"{current_app.config['FILEBASE_URL']}{cid}"
             return image_url
-    except Exception as e:
+    except (
+        current_app.config["S3_CLIENT"].exceptions.ClientError,
+        current_app.config["S3_CLIENT"].exceptions.BotoCoreError,
+    ) as e:
         print("ERROR: Encountered an error uploading the image:", e)
-        pass
 
     return None
 
@@ -157,7 +155,7 @@ def create_question(args):
         seconds=10
     ):
         return error_response(
-            f"Too many requests, wait",
+            "Too many requests, wait",
             ErrorType.BAD_REQUEST,
         )
 
@@ -170,7 +168,7 @@ def create_question(args):
     course = db.session.get(Course, args["course_id"])
     if course is None:
         return error_response(
-            f"Invalid course",
+            "Invalid course",
             ErrorType.BAD_REQUEST,
         )
     if course.school_id != user.school_id:
@@ -187,10 +185,10 @@ def create_question(args):
     if image_file:
         image_url = upload_image(image_file)
         if not image_url:
-            return error_response("Failed to upload image.", ErrorType.SERVER_ERROR)
+            return error_response("Failed to upload image.", ErrorType.INTERNAL_ERROR)
 
     # Create a new question associated with the user and course
-    question = Question(
+    question_obj = Question(
         user_id=user.id,
         course_id=course.id,
         request=args["request_message"],
@@ -201,7 +199,7 @@ def create_question(args):
         image_url=image_url,
     )
 
-    db.session.add(question)
+    db.session.add(question_obj)
 
     # Commit and roll back if there's a database error
     try:
@@ -214,15 +212,15 @@ def create_question(args):
     # Create a notification for the new question
     notification = Notification(
         type=NotificationTypeEnum.QUESTION_CREATED,
-        message=f"Question created successfully.",
-        user_id=question.user.id,
-        question_id=question.id,
+        message="Question created successfully.",
+        user_id=question_obj.user.id,
+        question_id=question_obj.id,
     )
     db.session.add(notification)
     db.session.commit()
 
     # Return the created question as a JSON response with status 201 (Created)
-    return jsonify(question.to_dict(simplified=True)), HTTPStatus.CREATED
+    return jsonify(question_obj.to_dict(simplified=True)), HTTPStatus.CREATED
 
 
 # Endpoint: /backend/question/<int:id_question>/delete
@@ -245,38 +243,38 @@ def delete_question(id_question: int):
         return error_response("User not found", ErrorType.USER_NOT_FOUND)
 
     # Query the Question model to find the question by its ID
-    question = db.session.query(Question).filter_by(id=id_question).first()
+    question_obj = db.session.query(Question).filter_by(id=id_question).first()
 
     # Return an error response if the question does not exist
-    if not question:
+    if not question_obj:
         return error_response("Question not found", ErrorType.NOT_FOUND)
 
     # If question is not visible, return an error response
-    if not question.visible:
+    if not question_obj.visible:
         return error_response("Question is hidden", ErrorType.UNAUTHORIZED)
 
     # Set to not visible as deleted
-    question.visible = False
+    question_obj.visible = False
     db.session.commit()
 
     # Create a notification for the updated question
     notification = Notification(
         type=NotificationTypeEnum.QUESTION_DELETED,
-        message=f"Question deleted successfully.",
-        user_id=question.user.id,
-        question_id=question.id,
+        message="Question deleted successfully.",
+        user_id=question_obj.user.id,
+        question_id=question_obj.id,
     )
     db.session.add(notification)
     db.session.commit()
 
     # Return the updated question as a JSON response with status 200 (OK)
-    return jsonify(question.to_dict(simplified=True)), HTTPStatus.OK
+    return jsonify(question_obj.to_dict(simplified=True)), HTTPStatus.OK
 
 
 # Endpoint: /backend/question/all
 @question.route("/all", methods=["GET"])
 @jwt_required(optional=True)
-def all() -> flask_typing.ResponseReturnValue:
+def get_all() -> flask_typing.ResponseReturnValue:
     """
     Fetch all questions available in the system.
 
@@ -310,14 +308,14 @@ def get(id_question: int) -> flask_typing.ResponseReturnValue:
         JSON response with the specified question or an error if not found.
     """
     # Query the Question model to find the question by its ID
-    question = db.session.query(Question).filter_by(id=id_question).first()
+    question_obj = db.session.query(Question).filter_by(id=id_question).first()
 
     # If no question is found, return an error response
-    if not question:
+    if not question_obj:
         return error_response("Question not found", ErrorType.NOT_FOUND)
 
     # If question is not visible, return an error response
-    if not question.visible:
+    if not question_obj.visible:
         return error_response("Question is hidden", ErrorType.UNAUTHORIZED)
 
     # Get the current user from the JWT
@@ -325,7 +323,7 @@ def get(id_question: int) -> flask_typing.ResponseReturnValue:
     user_id = user.id if user else None
 
     # Convert the question object to a dictionary format suitable for JSON response
-    qstn_dict = question_dictionary(user_id, question.to_dict(simplified=False))
+    qstn_dict = question_dictionary(user_id, question_obj.to_dict(simplified=False))
 
     # Return the question data in JSON format with HTTP 200 OK status
     return data_response(qstn_dict)
@@ -345,14 +343,14 @@ def is_author(id_question: int) -> flask_typing.ResponseReturnValue:
         JSON response with a boolean indicating if the user is the author or an error if not found.
     """
     # Query the Question model to find the question by its ID
-    question = db.session.query(Question).filter_by(id=id_question).first()
+    question_obj = db.session.query(Question).filter_by(id=id_question).first()
 
     # Return an error response if the question does not exist
-    if not question:
+    if not question_obj:
         return error_response("Question not found", ErrorType.NOT_FOUND)
 
     # If question is not visible, return an error response
-    if not question.visible:
+    if not question_obj.visible:
         return error_response("Question is hidden", ErrorType.UNAUTHORIZED)
 
     # Get the current user from the JWT
@@ -363,10 +361,10 @@ def is_author(id_question: int) -> flask_typing.ResponseReturnValue:
         return error_response("User not found", ErrorType.USER_NOT_FOUND)
 
     # Check if the current user is the author of the question
-    is_author = check_author(user.id, question.id)
+    user_is_author = check_author(user.id, question_obj.id)
 
     # Return the result as a JSON response
-    return data_response(is_author)
+    return data_response(user_is_author)
 
 
 # Endpoint: /backend/question/<id_question>/offer
@@ -383,14 +381,14 @@ def offer(id_question: int) -> flask_typing.ResponseReturnValue:
         JSON response with offer details if found or an empty list if not.
     """
     # Query the Question model to find the question by its ID
-    question = db.session.query(Question).filter_by(id=id_question).first()
+    question_obj = db.session.query(Question).filter_by(id=id_question).first()
 
     # Return an error response if the question does not exist
-    if not question:
+    if not question_obj:
         return error_response("Question not found", ErrorType.NOT_FOUND)
 
     # If question is not visible, return an error response
-    if not question.visible:
+    if not question_obj.visible:
         return error_response("Question is hidden", ErrorType.UNAUTHORIZED)
 
     # Get the current user from the JWT
@@ -403,7 +401,7 @@ def offer(id_question: int) -> flask_typing.ResponseReturnValue:
     # Query the Offer model to check if the user has made an active offer for the question
     offer_made = (
         db.session.query(Offer)
-        .filter_by(question_id=question.id, user_id=user.id, active=True)
+        .filter_by(question_id=question_obj.id, user_id=user.id, active=True)
         .first()
     )
 
@@ -430,26 +428,28 @@ def offers(id_question: int) -> flask_typing.ResponseReturnValue:
         JSON response with a list of offers or an error if the user is not the author.
     """
     # Query the Question model to find the question by its ID
-    question = db.session.query(Question).filter_by(id=id_question).first()
+    question_obj = db.session.query(Question).filter_by(id=id_question).first()
 
     # Return an error response if the question does not exist
-    if not question:
+    if not question_obj:
         return error_response("Question not found", ErrorType.NOT_FOUND)
 
     # If question is not visible, return an error response
-    if not question.visible:
+    if not question_obj.visible:
         return error_response("Question is hidden", ErrorType.UNAUTHORIZED)
 
     # Query the Offer model for all active offers received for the specified question
-    offers = (
-        db.session.query(Offer).filter_by(question_id=question.id, active=True).all()
+    offer_list = (
+        db.session.query(Offer)
+        .filter_by(question_id=question_obj.id, active=True)
+        .all()
     )
 
     # Convert the list of offers to a dictionary format suitable for JSON response
-    offers = Offer.to_dict_all(offers)
+    offer_list = Offer.to_dict_all(offer_list)
 
     # Return the list of offers in JSON format with HTTP 200 OK status
-    return data_response(offers)
+    return data_response(offer_list)
 
 
 # Endpoint: /backend/question/<id_question>
@@ -481,51 +481,56 @@ def change_price(args, id_question: int) -> flask_typing.ResponseReturnValue:
     price = args["price"]
 
     # Query the Question model to find the question by its ID
-    question = db.session.query(Question).filter_by(id=id_question).first()
+    question_obj = db.session.query(Question).filter_by(id=id_question).first()
 
     # Return an error response if the question does not exist
-    if not question:
+    if not question_obj:
         return error_response("Question not found", ErrorType.NOT_FOUND)
 
     # If question is not visible, return an error response
-    if not question.visible:
+    if not question_obj.visible:
         return error_response("Question is hidden", ErrorType.UNAUTHORIZED)
 
     # If new price is too low, error
-    if price < question.original_price:
+    if price < question_obj.original_price:
         return error_response("New price is too low", ErrorType.BAD_REQUEST)
 
     # If new price is too high, error
-    if price > 3 * question.original_price:
+    if price > 3 * question_obj.original_price:
         return error_response("New price is too high", ErrorType.BAD_REQUEST)
 
-    question.price = price
+    question_obj.price = price
     db.session.commit()
 
     # Create a notification for the updated question
     notification = Notification(
         type=NotificationTypeEnum.QUESTION_UPDATED,
         message=f"Question price updated to ${price:.2f}!",
-        user_id=question.user.id,
-        question_id=question.id,
+        user_id=question_obj.user.id,
+        question_id=question_obj.id,
     )
     db.session.add(notification)
     db.session.commit()
 
     # Send notifications to those who made an offer.
-    offers = (
-        db.session.query(Offer).filter_by(question_id=question.id, active=True).all()
+    offer_list = (
+        db.session.query(Offer)
+        .filter_by(question_id=question_obj.id, active=True)
+        .all()
     )
 
-    for offer in offers:
+    for offer_obj in offer_list:
         notification = Notification(
             type=NotificationTypeEnum.PRICE_CHANGE,
-            message=f"{question.user.username} updated the question price to ${price:.2f}! Check your offer.",
-            user_id=offer.user.id,
-            question_id=question.id,
+            message=(
+                f"{question_obj.user.username} updated the question price to ${price:.2f}! "
+                "Check your offer."
+            ),
+            user_id=offer_obj.user.id,
+            question_id=question_obj.id,
         )
         db.session.add(notification)
         db.session.commit()
 
     # Return the updated question as a JSON response with status 200 (OK)
-    return jsonify(question.to_dict(simplified=True)), HTTPStatus.OK
+    return jsonify(question_obj.to_dict(simplified=True)), HTTPStatus.OK
