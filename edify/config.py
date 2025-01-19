@@ -37,7 +37,7 @@ class Config:
         SQLALCHEMY_DATABASE_URI = os.environ["DB_URL"]
 
     elif TESTING:
-        SQLALCHEMY_DATABASE_URI = "sqlite:///site.db"
+        SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
 
     # Configure all the ways you want to allow JWTs to be sent.
     JWT_TOKEN_LOCATION = ["headers", "cookies"]

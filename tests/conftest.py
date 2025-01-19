@@ -8,6 +8,8 @@ import string
 # Third-Party Framework imports
 from faker import Faker
 import pytest
+from flask import Flask
+from flask.ctx import RequestContext
 
 # Local Application imports
 from edify.database.populate import populate_constants
@@ -26,21 +28,23 @@ def app():
     """Create test Flask application."""
     flask_app = create_test_app()
     yield flask_app
-    os.remove("instance/site.db")
+
+    if os.path.exists("instance/site.db"):
+        os.remove("instance/site.db")
 
 
 @pytest.fixture
-def client(app):
+def client(app: Flask):
     """Create test client with application context."""
     test_client = app.test_client()
-    ctx = app.test_request_context()
+    ctx: RequestContext = app.test_request_context()
     ctx.push()
     yield test_client
     ctx.pop()
 
 
 @pytest.fixture
-def client_with_db(client):
+def client_with_db(client: Flask):
     """Create test client with empty database."""
     db.create_all()
     yield client
@@ -48,7 +52,7 @@ def client_with_db(client):
 
 
 @pytest.fixture
-def client_with_data(client_with_db):
+def client_with_data(client_with_db: Flask):
     """Create test client with populated database constants."""
     populate_constants()
     return client_with_db
@@ -92,7 +96,7 @@ def create_user() -> User:
 
 
 @pytest.fixture
-def user_jwt(client_with_data):
+def user_jwt(client_with_data: Flask):
     """Create test user and return with JWT token."""
     user = create_user()
     jwt_header = get_jwt_header(user)
@@ -100,7 +104,7 @@ def user_jwt(client_with_data):
 
 
 @pytest.fixture
-def client_with_question(client_with_data):
+def client_with_question(client_with_data: Flask):
     """Create test client with a sample question."""
     user = create_user()
 
@@ -125,7 +129,7 @@ def client_with_question(client_with_data):
 
 
 @pytest.fixture
-def client_with_offer(client_with_question):
+def client_with_offer(client_with_question: Flask):
     """Create test client with a sample offer."""
     user = create_user()
 
