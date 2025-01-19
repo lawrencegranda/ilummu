@@ -33,7 +33,11 @@ def commit_changes(error_msg: str) -> Optional[ResponseReturnValue]:
 
 
 def create_notification(
-    notification_type: str, message: str, user_id: int, question_id: int
+    notification_type: str,
+    message: str,
+    user_id: int,
+    question_id: Optional[int] = None,
+    link: Optional[str] = None,
 ) -> Optional[ResponseReturnValue]:
     """Create and commit a notification"""
     notification = Notification(
@@ -41,6 +45,7 @@ def create_notification(
         message=message,
         user_id=user_id,
         question_id=question_id,
+        link=link,
     )
     db.session.add(notification)
 
