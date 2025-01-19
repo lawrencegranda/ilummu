@@ -1,7 +1,7 @@
 """Question management endpoints for the Edify backend."""
 
 # Standard Library imports
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 from io import BytesIO
 import mimetypes
@@ -60,7 +60,7 @@ def upload_image(file) -> Optional[str]:
     bucket_name = current_app.config["FILEBASE_BUCKET"]
 
     # Generate a unique key by combining a UUID, timestamp, and original filename
-    timestamp = datetime.utcnow()
+    timestamp = datetime.now(timezone.utc)
     key_name = f"images/{uuid.uuid4().hex}_{timestamp}_{file.filename}"
 
     # Upload image to Filebase
@@ -120,6 +120,33 @@ def upload_image(file) -> Optional[str]:
     return None
 
 
+def validate_question_creation(
+    school_id: int, course_id: int, method: int
+) -> Optional[tuple]:
+    """
+    Validate a question request.
+    """
+    # Fetch the method. Return error if invalid
+    method = db.session.query(Method).filter_by(value=method).one_or_none()
+    if method is None:
+        return error_response("Invalid method", ErrorType.BAD_REQUEST)
+
+    # Attempt to find the course by ID. Return error if invalid
+    course = db.session.get(Course, course_id)
+    if course is None:
+        return error_response(
+            "Invalid course",
+            ErrorType.BAD_REQUEST,
+        )
+    if course.school_id != school_id:
+        return error_response(
+            "Course not in the user's school",
+            ErrorType.BAD_REQUEST,
+        )
+
+    return None
+
+
 # Endpoint: /backend/question/new
 @question.route("/new", methods=["POST"])
 @jwt_required()
@@ -151,31 +178,23 @@ def create_question(args):
         .order_by(Question.created_at.desc())
         .first()
     )
-    if recent_question and datetime.utcnow() - recent_question.created_at < timedelta(
-        seconds=10
-    ):
+    if recent_question and datetime.now(
+        timezone.utc
+    ) - recent_question.created_at < timedelta(seconds=10):
         return error_response(
             "Too many requests, wait",
             ErrorType.BAD_REQUEST,
         )
 
-    # Fetch the method. Return error if invalid
-    method = db.session.query(Method).filter_by(value=args["method"]).one_or_none()
-    if method is None:
-        return error_response("Invalid method", ErrorType.BAD_REQUEST)
+    # Validate the question request
+    checks = validate_question_creation(
+        user.school_id, args["course_id"], args["method"]
+    )
+    if checks:
+        return checks
 
-    # Attempt to find the course by ID. Return error if invalid
+    method = db.session.query(Method).filter_by(value=args["method"]).one_or_none()
     course = db.session.get(Course, args["course_id"])
-    if course is None:
-        return error_response(
-            "Invalid course",
-            ErrorType.BAD_REQUEST,
-        )
-    if course.school_id != user.school_id:
-        return error_response(
-            f"Course not in the user's school: {user.school.name}",
-            ErrorType.BAD_REQUEST,
-        )
 
     # Default to no image url
     image_url = None
