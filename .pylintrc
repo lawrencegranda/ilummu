@@ -1,3 +1,4 @@
 [MASTER]
 # Ignore specific files or directories
-ignore = migrations, conftest.py
+ignore-paths=^migrations/.*$,
+             ^.*/conftest.py$
