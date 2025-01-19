@@ -12,7 +12,7 @@ from typing import Any, Optional, Tuple
 # Third-Party Framework Imports
 import flask
 from flask import current_app, jsonify, request, url_for, redirect
-from flask import typing as flask_typing
+from flask.typing import ResponseReturnValue
 from flask_jwt_extended import unset_jwt_cookies
 from marshmallow import Schema, ValidationError
 import phonenumbers
@@ -73,7 +73,7 @@ def internal_request(
     data: Any = None,
     is_form: bool = False,
     file: Optional[Tuple[io.BytesIO, str]] = None,
-) -> flask_typing.ResponseReturnValue:
+) -> ResponseReturnValue:
     """
     Creates an internal request within the Flask application using test request context.
 
@@ -209,7 +209,7 @@ def validate_phone(phone: str) -> bool:
 
 
 # Formats a phone number to international format if it is valid
-def format_phone(phone: str) -> str:
+def format_phone(phone: str) -> Optional[str]:
     """
     Formats a phone number to international format if it is valid.
 
@@ -217,10 +217,10 @@ def format_phone(phone: str) -> str:
         phone (str): The phone number to format.
 
     Returns:
-        str: The formatted phone number, or the original phone number if invalid.
+        Optional[str]: The formatted phone number, or None if invalid.
     """
     if not validate_phone(phone):
-        return phone
+        return None
 
     parsed_number = phonenumbers.parse(phone, None)
     phone = phonenumbers.format_number(
@@ -490,7 +490,7 @@ def validate_auth_data(input_data: dict) -> bool:
         return False
 
 
-def handle_invalid_token() -> flask_typing.ResponseReturnValue:
+def handle_invalid_token() -> ResponseReturnValue:
     """
     Handle invalid or missing JWT tokens by unsetting cookies and redirecting to the logout page.
 

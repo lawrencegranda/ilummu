@@ -20,7 +20,7 @@ from flask import (
     session,
     url_for,
 )
-from flask import typing as flask_typing
+from flask.typing import ResponseReturnValue
 from flask_jwt_extended import jwt_required, unset_jwt_cookies
 from webargs import fields
 from webargs.flaskparser import use_args
@@ -129,7 +129,7 @@ question = Blueprint("question", __name__, url_prefix="/question")
 # Endpoint: /
 @frontend.route("/")
 @jwt_required(optional=True)
-def index() -> flask_typing.ResponseReturnValue:
+def index() -> ResponseReturnValue:
     """
     Homepage route. Redirects users based on their authentication status.
 
@@ -147,7 +147,7 @@ def index() -> flask_typing.ResponseReturnValue:
 # Endpoint: /home
 @frontend.route("/home")
 @jwt_required(optional=True)
-def home() -> flask_typing.ResponseReturnValue:
+def home() -> ResponseReturnValue:
     """
     Home route displaying user-related data.
 
@@ -181,7 +181,7 @@ def home() -> flask_typing.ResponseReturnValue:
 # Endpoint: /dashboard
 @frontend.route("/dashboard")
 @jwt_required(optional=True)
-def dashboard() -> flask_typing.ResponseReturnValue:
+def dashboard() -> ResponseReturnValue:
     """
     Dashboard route displaying user data and related questions.
 
@@ -220,7 +220,7 @@ def dashboard() -> flask_typing.ResponseReturnValue:
 
 # Endpoint: /logout
 @frontend.route("/logout")
-def logout() -> flask_typing.ResponseReturnValue:
+def logout() -> ResponseReturnValue:
     """
     Logout route that invalidates the user's session.
 
@@ -241,7 +241,7 @@ def logout() -> flask_typing.ResponseReturnValue:
 # Endpoint: /login
 @frontend.route("/login")
 @no_token_allowed
-def login() -> flask_typing.ResponseReturnValue:
+def login() -> ResponseReturnValue:
     """
     Login route for rendering the login form.
 
@@ -259,7 +259,7 @@ def login() -> flask_typing.ResponseReturnValue:
 # Endpoint: /signup
 @frontend.route("/signup")
 @no_token_allowed
-def signup() -> flask_typing.ResponseReturnValue:
+def signup() -> ResponseReturnValue:
     """
     Signup route that fetches majors and renders the signup form.
 
@@ -288,7 +288,7 @@ def signup() -> flask_typing.ResponseReturnValue:
 @frontend.route("/store_question", methods=["POST"])
 @use_args(QuestionSchema, location="form")
 @jwt_required(optional=True)
-def store_question(args) -> flask_typing.ResponseReturnValue:
+def store_question(args) -> ResponseReturnValue:
     """
     Store question data in session and handle file uploads.
 
@@ -340,7 +340,7 @@ def store_question(args) -> flask_typing.ResponseReturnValue:
 # Endpoint: /submit_question_after_login
 @frontend.route("/submit_question_after_login", methods=["POST"])
 @jwt_required()
-def submit_question_after_login() -> flask_typing.ResponseReturnValue:
+def submit_question_after_login() -> ResponseReturnValue:
     """
     Submit stored question data after user authentication.
 
@@ -409,7 +409,7 @@ def redirect_handler():
 
 # Endpoint: /forgot-password
 @frontend.route("/forgot-password")
-def forgot_password() -> flask_typing.ResponseReturnValue:
+def forgot_password() -> ResponseReturnValue:
     """
     Forgot password route.
 
@@ -426,7 +426,7 @@ def forgot_password() -> flask_typing.ResponseReturnValue:
 
 # Endpoint: /reset-password
 @frontend.route("/reset-password")
-def reset_password() -> flask_typing.ResponseReturnValue:
+def reset_password() -> ResponseReturnValue:
     """
     Reset password route.
 
@@ -457,7 +457,7 @@ def reset_password() -> flask_typing.ResponseReturnValue:
 @jwt_required()
 def email_verification(
     next_url: str = None, http_method: str = None
-) -> flask_typing.ResponseReturnValue:
+) -> ResponseReturnValue:
     """
     Route to verify email.
 
@@ -488,7 +488,7 @@ def email_verification(
 
 # Endpoint: /verify-email
 @frontend.route("/verify-email")
-def verify_email() -> flask_typing.ResponseReturnValue:
+def verify_email() -> ResponseReturnValue:
     """
     Email verification.
 
@@ -526,7 +526,7 @@ def verify_email() -> flask_typing.ResponseReturnValue:
     },
     location="query",
 )
-def question_list(args) -> flask_typing.ResponseReturnValue:
+def question_list(args) -> ResponseReturnValue:
     """
     List questions based on filter criteria. Route endpoint.
 
@@ -618,7 +618,7 @@ def list_questions(field_lst: List[str], search: str) -> str:
 # Endpoint: /question/<id_question>
 @question.route("/<int:id_question>")
 @jwt_required(optional=True)
-def fetch_question(id_question: int) -> flask_typing.ResponseReturnValue:
+def fetch_question(id_question: int) -> ResponseReturnValue:
     """
     Retrieve a specific question by ID and related data.
 
