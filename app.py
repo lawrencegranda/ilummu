@@ -1,6 +1,13 @@
+"""
+This script is used to run the Flask app.
+"""
+
 # Local Application imports
 from edify import create_app
 from edify.config import Config
+
+# pylint: disable=wildcard-import
+# pylint: disable=unused-wildcard-import
 from edify.models import *
 from edify.utils.constants import EdifyEnvironments
 

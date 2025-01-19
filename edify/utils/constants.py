@@ -1,3 +1,5 @@
+"""Constants and enums used throughout the Edify application."""
+
 # Standard Library imports
 from enum import Enum
 from http import HTTPStatus
@@ -42,6 +44,8 @@ class EdifyEnvironments(Enum):
 
 
 class EnumBase:
+    """Base class providing reflection methods for enum-like classes."""
+
     @classmethod
     def keys(cls) -> List[str]:
         """Returns a list of all the keys in the Enum class."""
@@ -156,7 +160,7 @@ class NotificationTypeEnum(EnumBase):
 
         if (
             notification_type in cls.keys()
-            and notification_type in cls.question_required.keys()
+            and notification_type in cls.question_required
         ):
             return cls.question_required[notification_type]
         raise ValueError(f"{notification_type} is not a valid notification type.")

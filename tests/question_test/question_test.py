@@ -1,28 +1,26 @@
+"""Test suite for the Question model and related routes."""
+
 # Standard Library imports
 from http import HTTPStatus
-import datetime
 
 # Third-Party Framework imports
 from faker import Faker
-from flask import Flask, url_for
-import pytest
+from flask import url_for
 
 # Local Application imports
-from edify import db
-from edify.models import User, AcademicField, Course, Method, Question
-from tests.utils import get_jwt_header
-from edify.utils.constants import primitives
+from edify.core import db
+from edify.models import User, Course, Method, Question
+from tests.utils import get_jwt_header, compare_dicts
 
 # Initialize Faker for generating fake data
 fake = Faker()
 
 
 class TestCreateQuestion:
+    """Test suite for the Question model and related routes."""
 
     def test_create_question_success(self, client_with_data, user_jwt):
-        """
-        Test creating a question successfully.
-        """
+        """Test creating a question successfully."""
         user, jwt = user_jwt
 
         method = db.session.query(Method).first()
@@ -54,7 +52,7 @@ class TestCreateQuestion:
         # Find the question in the database
         question = db.session.get(Question, question["id"])
         assert question, "Question not in database"
-        assert question.visible == True, "Question is not visible"
+        assert question.visible, "Question is not visible"
 
         # Convert to dict
         question = question.to_dict(simplified=False)
@@ -79,7 +77,7 @@ class TestCreateQuestion:
         ), f"Methods do not match {question['method']}"
 
         assert (
-            question["solved"] == False
+            question["solved"] is False
         ), f"Question should be unsolved {question['solved']}"
 
         assert (
@@ -99,10 +97,8 @@ class TestCreateQuestion:
         ), f"Academic field does not match {question['academic_field']}"
 
     def test_create_question_user_not_found(self, client_with_data, user_jwt):
-        """
-        Test creating a question without a user (Unauthorized).
-        """
-        user, jwt = user_jwt
+        """Test creating a question without a user (Unauthorized)."""
+        user, _ = user_jwt
 
         method = db.session.query(Method).first()
 
@@ -122,9 +118,7 @@ class TestCreateQuestion:
         assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json
 
     def test_create_question_invalid_method(self, client_with_data, user_jwt):
-        """
-        Test creating a question with an invalid method ID.
-        """
+        """Test creating a question with an invalid method ID."""
         user, jwt = user_jwt
 
         invalid_method = "none"  # Assuming this method does not exist
@@ -147,12 +141,11 @@ class TestCreateQuestion:
 
 
 class TestDeleteQuestion:
+    """Test suite for deleting a question."""
 
     def test_delete_question_success(self, client_with_question):
-        """
-        Test deleting a question successfully.
-        """
-        question = db.session.query(Question).filter(Question.visible == True).first()
+        """Test deleting a question successfully."""
+        question = db.session.query(Question).filter(Question.visible.is_(True)).first()
 
         # Get the user and it's jwt
         user = db.session.get(User, question.user_id)
@@ -176,18 +169,93 @@ class TestDeleteQuestion:
         # Find the question in the database
         question = db.session.get(Question, question["id"])
         assert question, "Question not in database"
-        assert question.visible == False, "Question is visible and was not removed"
+        assert question.visible is False, "Question is visible and was not removed"
 
         # Convert to dict
         question_dict = question.to_dict(simplified=False)
 
         # Assert all attributes are equal except for visibility
-        for (k, v1), (k2, v2) in zip(
-            original_question_dict.items(), question_dict.items()
-        ):
-            assert k == k2, f"Keys are not equal ({k} != {k2})"
+        compare_dicts(original_question_dict, question_dict, keys_to_skip=["visible"])
 
-            if k == "visible" or not isinstance(v1, primitives):
-                continue
+    def test_delete_question_unauthorized_user(self, client_with_question, user_jwt):
+        """Test deleting a question by a user who is not the owner of the question."""
+        user, jwt = user_jwt
 
-            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
+        # Query for a question not owned by the user
+        question = (
+            db.session.query(Question).filter(Question.user_id != user.id).first()
+        )
+
+        # Assert that such a question exists in the database
+        assert question, "User does not have any question in Database"
+
+        # Retrieve the original question as a dictionary
+        original_question_dict = question.to_dict(simplified=False)
+
+        # Send request to delete the question with an unauthorized user
+        response = client_with_question.delete(
+            url_for("backend.question.delete_question", id_question=question.id),
+            headers=jwt,
+        )
+
+        # Assert that the response status code is 401 (Unauthorized)
+        assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json
+
+        # Assert that the correct error message is returned
+        assert (
+            response.get_json()["msg"] == "User is not the author of the question"
+        ), response.json
+
+        # Retrieve the current question as a dictionary
+        question_dict = db.session.get(Question, question.id).to_dict(simplified=False)
+
+        # Assert all attributes are equal (no changes should have been made)
+        compare_dicts(original_question_dict, question_dict)
+
+    def test_delete_question_not_visible(self, client_with_question):
+        """Test deleting a question that is not visible."""
+        question = db.session.query(Question).first()
+
+        # Assert that such a question exists in the database
+        assert question, "No questions in Database"
+
+        # Get the user and it's jwt
+        user = db.session.get(User, question.user_id)
+        jwt = get_jwt_header(user)
+
+        question.visible = False
+        db.session.commit()
+
+        # Retrieve the original question as a dictionary
+        original_question_dict = question.to_dict(simplified=False)
+
+        # Send request to delete the question with an unauthorized user
+        response = client_with_question.delete(
+            url_for("backend.question.delete_question", id_question=question.id),
+            headers=jwt,
+        )
+
+        # Assert that the response status code is 401 (Unauthorized)
+        assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json
+
+        # Assert that the correct error message is returned
+        assert response.get_json()["msg"] == "Question is hidden", response.json
+
+        # Retrieve the current question as a dictionary
+        question_dict = db.session.get(Question, question.id).to_dict(simplified=False)
+
+        # Assert all attributes are equal (no changes should have been made)
+        compare_dicts(original_question_dict, question_dict)
+
+    def test_delete_question_not_found(self, client_with_question, user_jwt):
+        """Test deleting a question that does not exist."""
+        _, jwt = user_jwt
+
+        # Send request to delete the question with a random id
+        response = client_with_question.delete(
+            url_for("backend.question.delete_question", id_question=999),
+            headers=jwt,
+        )
+
+        assert response.status_code == HTTPStatus.NOT_FOUND, response.json
+        assert response.get_json()["msg"] == "Question not found", response.json
