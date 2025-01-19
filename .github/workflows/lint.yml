@@ -15,8 +15,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Pull prebuilt Docker image
-        run: docker pull lawrencegranda/pythonpoetry:3.10.7-1.7.1
+      - name: Enable QEMU
+        run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+
+      - name: Pull Docker image with arm64 emulation
+        run: docker pull --platform linux/arm64 lawrencegranda/pythonpoetry:3.10.7-1.7.1
 
       - name: Install dependencies
         run: |
