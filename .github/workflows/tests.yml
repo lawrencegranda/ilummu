@@ -9,30 +9,23 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Enable QEMU
-        run: docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10.7"
 
-      - name: Pull Docker image with arm64 emulation
-        run: docker pull --platform linux/arm64 lawrencegranda/pythonpoetry:3.10.7-1.7.1
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2.1.0
+        with:
+          poetry-version: "1.7.1"
 
       - name: Install dependencies
-        run: |
-          echo -e "\033[1;34mInstalling dependencies...\033[0m"
-          docker run -it --rm \
-          -v ${{ github.workspace }}:/app \
-          -w /app \
-          lawrencegranda/pythonpoetry:3.10.7-1.7.1 \
-          poetry install --no-interaction --no-root
+        run: poetry install
 
       - name: Run tests
-        run: |
-          echo -e "\033[1;34mRunning tests...\033[0m"
-          docker run -it --rm \
-          -v ${{ github.workspace }}:/app \
-          -w /app \
-          lawrencegranda/pythonpoetry:3.10.7-1.7.1 \
-          poetry run pytest || exit 1
+        run: poetry run pytest
