@@ -1,3 +1,5 @@
+"""Configuration for the Edify application."""
+
 # Standard Library imports
 from datetime import timedelta
 import os
@@ -6,14 +8,17 @@ import os
 from edify.utils.constants import EdifyEnvironments
 
 
+# pylint: disable=too-few-public-methods
 class Config:
+    """Configuration for the Edify application."""
+
     MAINTENANCE_MODE = int(os.environ["MAINTENANCE_MODE"]) == 1
 
     SECRET_KEY = os.environ["SECRET_KEY"]
     JWT_SECRET_KEY = SECRET_KEY
 
     if not any(member.name == os.environ["ENV"] for member in EdifyEnvironments):
-        raise Exception(f"Invalid Environment {os.environ['ENV']}")
+        raise EnvironmentError(f"Invalid Environment {os.environ['ENV']}")
 
     ENV = os.environ["ENV"]
 
