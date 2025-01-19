@@ -15,25 +15,32 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10.7"
-
-      - name: Install Poetry
-        uses: abatilo/actions-poetry@v2.1.0
-        with:
-          poetry-version: "1.7.1"
+      - name: Pull prebuilt Docker image
+        run: docker pull lawrencegranda/pythonpoetry:3.10.7-1.7.1
 
       - name: Install dependencies
-        run: poetry install
+        run: |
+          echo -e "\033[1;34mInstalling dependencies...\033[0m"
+          docker run -it --rm \
+          -v ${{ github.workspace }}:/app \
+          -w /app \
+          lawrencegranda/pythonpoetry:3.10.7-1.7.1 \
+          poetry install --no-interaction --no-root
 
       - name: Run pylint on each file
         run: |
-          echo "Running pylint on all files..."
+          echo -e "\033[1;34mRunning pylint on all files...\033[0m"
+          docker run -it --rm \
+          -v ${{ github.workspace }}:/app \
+          -w /app \
+          lawrencegranda/pythonpoetry:3.10.7-1.7.1 \
           poetry run pylint $(find . -name "*.py") --output-format=colorized || exit 1
 
       - name: Run pylint on the entire project
         run: |
-          echo "Running pylint on the entire project..."
+          echo -e "\033[1;34mRunning pylint on the entire project...\033[0m"
+          docker run -it --rm \
+          -v ${{ github.workspace }}:/app \
+          -w /app \
+          lawrencegranda/pythonpoetry:3.10.7-1.7.1 \
           poetry run pylint . --disable=all --enable=cyclic-import,duplicate-code --output-format=colorized || exit 1
