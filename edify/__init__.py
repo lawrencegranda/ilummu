@@ -1,13 +1,12 @@
+"""Flask application factory and configuration for the Edify platform."""
+
 # Standard Library imports
 from http import HTTPStatus
 import traceback
 
 # Third-Party Framework imports
-import boto3
-from flask import Flask, request, jsonify, session, url_for, redirect, current_app
-from flask_bcrypt import Bcrypt
+from flask import Flask, request, jsonify, url_for, redirect
 from flask_jwt_extended import (
-    JWTManager,
     jwt_required,
     get_jwt_identity,
     verify_jwt_in_request,
@@ -18,60 +17,33 @@ from flask_jwt_extended.exceptions import (
     NoAuthorizationError,
     JWTExtendedException,
 )
-from flask_migrate import Migrate
-from flask_sqlalchemy import SQLAlchemy
-from flask_mail import Mail
-from werkzeug.exceptions import HTTPException
 from jwt.exceptions import ExpiredSignatureError, PyJWTError
 
 # Local Application imports
+from edify.core import init_db, init_extensions
 from edify.utils.utils import (
     internal_request,
-    get_request_cookie,
     get_access_header,
     handle_invalid_token,
 )
 
-# Initialize extensions
-db = SQLAlchemy()
-bcrypt = Bcrypt()
-jwt = JWTManager()
-migrate = Migrate()
-mail = Mail()
-s3_client = None
-
 
 def create_app(config_class):
+    """Flask application factory function."""
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    # Initialize S3 client only if not in testing mode
-    if not config_class.TESTING:
-        global s3_client
-        s3_client = boto3.client(
-            "s3",
-            endpoint_url=app.config["FILEBASE_ENDPOINT"],
-            aws_access_key_id=app.config["FILEBASE_ACCESS_KEY"],
-            aws_secret_access_key=app.config["FILEBASE_SECRET_KEY"],
-        )
+    # Initialize core components
+    init_db(app)
+    init_extensions(app)
 
-    # Passing app as a parameter here instead of on initialization
-    db.init_app(app)
-    bcrypt.init_app(app)
-    jwt.init_app(app)
-    migrate.init_app(app, db)
-
-    # Had to do this because there is an error in source code.
-    mail.state = mail.init_app(app)
-
+    # pylint: disable=import-outside-toplevel
     from edify.frontend.routes import frontend
     from edify.backend.routes import backend
 
     @frontend.before_request
     def enforce_https():
-        """
-        Refirect to HTTPS
-        """
+        """Redirect to HTTPS if not already using it."""
         if (
             config_class.PROD
             and not request.is_secure
@@ -79,6 +51,7 @@ def create_app(config_class):
         ):
             url = request.url.replace("http://", "https://", 1)
             return redirect(url, code=301)
+        return None
 
     @frontend.after_request
     def add_csp_header(response):
@@ -93,9 +66,9 @@ def create_app(config_class):
     @frontend.before_request
     @jwt_required(optional=True, refresh=True)
     def before_request_func():
-        id = get_jwt_identity()
+        user_id = get_jwt_identity()
 
-        if id and (
+        if user_id and (
             "access_token_cookie" not in request.cookies
             or not verify_jwt_in_request(optional=True)
         ):
@@ -132,7 +105,7 @@ def create_app(config_class):
 
     @frontend.errorhandler(ExpiredSignatureError)
     @frontend.errorhandler(NoAuthorizationError)
-    def expired_jwt(e):
+    def expired_jwt(_):
         return handle_invalid_token()
 
     @frontend.errorhandler(JWTExtendedException)

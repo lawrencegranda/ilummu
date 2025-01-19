@@ -1,37 +1,23 @@
+"""
+This script is used to create the database and populate it with initial data.
+"""
+
+# Third-Party Framework Imports
+from sqlalchemy.orm import Session
+
 # Local Application imports
 from app import app
-from edify import create_app, db
-from edify.config import Config
-from edify.database.fake_data import populate_fake
-from edify.database.populate import populate_constants
-from edify.models import (
-    AcademicField,
-    Course,
-    Major,
-    Method,
-    Notification,
-    NotificationType,
-    Offer,
-    Question,
-    School,
-    TimeInterval,
-    User,
-)
+from edify.database.setup_base import DatabaseSetup
+
+
+class BasicSetup(DatabaseSetup):
+    """Basic database setup with just constants."""
+
+    def additional_setup(self, db: Session):
+        """No additional setup needed."""
 
 
 # Run the Flask app
 if __name__ == "__main__":
-
-    # Create all tables defined in the SQLAlchemy models
-    with app.app_context():
-        from edify import db  # Import db within the app context
-
-        db.create_all()
-        db.session.commit()
-
-        print("Created database models.")
-
-        populate_constants()
-        db.session.commit()
-
-        print("Added constants.")
+    setup = BasicSetup(app)
+    setup.setup()
