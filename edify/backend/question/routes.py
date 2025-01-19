@@ -10,7 +10,7 @@ import uuid
 
 # Third-Party Framework imports
 from flask import Blueprint, current_app, jsonify, request
-from flask import typing as flask_typing
+from flask.typing import ResponseReturnValue
 from flask_jwt_extended import jwt_required
 from PIL import Image
 from sqlalchemy.exc import IntegrityError
@@ -229,14 +229,12 @@ def create_question(args):
         return error_response("Failed to create question.", ErrorType.BAD_REQUEST)
 
     # Create a notification for the new question
-    notification = Notification(
-        type=NotificationTypeEnum.QUESTION_CREATED,
-        message="Question created successfully.",
-        user_id=question_obj.user.id,
-        question_id=question_obj.id,
+    create_notification(
+        NotificationTypeEnum.QUESTION_CREATED,
+        "Question created successfully.",
+        question_obj.user.id,
+        question_obj.id,
     )
-    db.session.add(notification)
-    db.session.commit()
 
     # Return the created question as a JSON response with status 201 (Created)
     return jsonify(question_obj.to_dict(simplified=True)), HTTPStatus.CREATED
@@ -277,14 +275,12 @@ def delete_question(id_question: int):
     db.session.commit()
 
     # Create a notification for the updated question
-    notification = Notification(
-        type=NotificationTypeEnum.QUESTION_DELETED,
-        message="Question deleted successfully.",
-        user_id=question_obj.user.id,
-        question_id=question_obj.id,
+    create_notification(
+        NotificationTypeEnum.QUESTION_DELETED,
+        "Question deleted successfully.",
+        question_obj.user.id,
+        question_obj.id,
     )
-    db.session.add(notification)
-    db.session.commit()
 
     # Return the updated question as a JSON response with status 200 (OK)
     return jsonify(question_obj.to_dict(simplified=True)), HTTPStatus.OK
@@ -293,7 +289,7 @@ def delete_question(id_question: int):
 # Endpoint: /backend/question/all
 @question.route("/all", methods=["GET"])
 @jwt_required(optional=True)
-def get_all() -> flask_typing.ResponseReturnValue:
+def get_all() -> ResponseReturnValue:
     """
     Fetch all questions available in the system.
 
@@ -316,7 +312,7 @@ def get_all() -> flask_typing.ResponseReturnValue:
 # Endpoint: /backend/question/<id_question>
 @question.route("/<int:id_question>", methods=["GET"])
 @jwt_required(optional=True)
-def get(id_question: int) -> flask_typing.ResponseReturnValue:
+def get(id_question: int) -> ResponseReturnValue:
     """
     Fetch a specific question by its ID.
 
@@ -351,7 +347,7 @@ def get(id_question: int) -> flask_typing.ResponseReturnValue:
 # Endpoint: /backend/question/<id_question>/is_author
 @question.route("/<int:id_question>/is_author", methods=["GET"])
 @jwt_required()
-def is_author(id_question: int) -> flask_typing.ResponseReturnValue:
+def is_author(id_question: int) -> ResponseReturnValue:
     """
     Check if the current user is the author of a specific question.
 
@@ -389,7 +385,7 @@ def is_author(id_question: int) -> flask_typing.ResponseReturnValue:
 # Endpoint: /backend/question/<id_question>/offer
 @question.route("/<int:id_question>/offer", methods=["GET"])
 @jwt_required()
-def offer(id_question: int) -> flask_typing.ResponseReturnValue:
+def offer(id_question: int) -> ResponseReturnValue:
     """
     Check if the current user has made an offer for a specific question.
 
@@ -436,7 +432,7 @@ def offer(id_question: int) -> flask_typing.ResponseReturnValue:
 @question.route("/<int:id_question>/offers", methods=["GET"])
 @jwt_required()
 @author_required("id_question")
-def offers(id_question: int) -> flask_typing.ResponseReturnValue:
+def offers(id_question: int) -> ResponseReturnValue:
     """
     Fetch all offers received for a specific question.
 
@@ -481,7 +477,7 @@ def offers(id_question: int) -> flask_typing.ResponseReturnValue:
     location="json",  # Change to "json" to read from the body
 )
 @author_required("id_question")
-def change_price(args, id_question: int) -> flask_typing.ResponseReturnValue:
+def change_price(args, id_question: int) -> ResponseReturnValue:
     """
     Change the price of the question.
 
@@ -522,14 +518,12 @@ def change_price(args, id_question: int) -> flask_typing.ResponseReturnValue:
     db.session.commit()
 
     # Create a notification for the updated question
-    notification = Notification(
-        type=NotificationTypeEnum.QUESTION_UPDATED,
-        message=f"Question price updated to ${price:.2f}!",
-        user_id=question_obj.user.id,
-        question_id=question_obj.id,
+    create_notification(
+        NotificationTypeEnum.QUESTION_UPDATED,
+        f"Question price updated to ${price:.2f}!",
+        question_obj.user.id,
+        question_obj.id,
     )
-    db.session.add(notification)
-    db.session.commit()
 
     # Send notifications to those who made an offer.
     offer_list = (
@@ -539,17 +533,15 @@ def change_price(args, id_question: int) -> flask_typing.ResponseReturnValue:
     )
 
     for offer_obj in offer_list:
-        notification = Notification(
-            type=NotificationTypeEnum.PRICE_CHANGE,
-            message=(
+        create_notification(
+            NotificationTypeEnum.PRICE_CHANGE,
+            (
                 f"{question_obj.user.username} updated the question price to ${price:.2f}! "
                 "Check your offer."
             ),
             user_id=offer_obj.user.id,
             question_id=question_obj.id,
         )
-        db.session.add(notification)
-        db.session.commit()
 
     # Return the updated question as a JSON response with status 200 (OK)
     return jsonify(question_obj.to_dict(simplified=True)), HTTPStatus.OK
