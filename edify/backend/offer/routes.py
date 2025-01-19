@@ -15,7 +15,7 @@ from webargs.flaskparser import use_args
 
 # Local Application imports
 from edify import db
-from edify.models import Question, Offer, Notification
+from edify.models import Question, Offer
 from edify.utils.utils import error_response
 from edify.utils.constants import ErrorType, NotificationTypeEnum, OfferStatusEnum
 from edify.backend.user.utils import get_current_user
@@ -224,15 +224,15 @@ def update_offer(args, id_offer: int) -> ResponseReturnValue:
     create_notification(
         NotificationTypeEnum.UPDATED_OFFER,
         f"You changed the offer amount to ${new_amount:.2f}!",
-        offer_obj.user_id,
-        question.id,
+        user_id=offer_obj.user_id,
+        question_id=question.id,
     )
 
     create_notification(
         NotificationTypeEnum.UPDATED_OFFER,
         f"{offer_obj.user.username} changed their offer to ${new_amount:.2f}!",
-        question.user_id,
-        question.id,
+        user_id=question.user_id,
+        question_id=question.id,
     )
 
     return jsonify(offer_obj.to_dict()), HTTPStatus.OK
@@ -262,15 +262,15 @@ def delete_offer(id_offer: int) -> ResponseReturnValue:
     create_notification(
         NotificationTypeEnum.OFFER_REVOKED,
         f"You revoked an offer to {question.user.username}!",
-        offer_obj.user_id,
-        question.id,
+        user_id=offer_obj.user_id,
+        question_id=question.id,
     )
 
     create_notification(
         NotificationTypeEnum.OFFER_REVOKED,
         f"{offer_obj.user.username} revoked their offer!",
-        question.user_id,
-        question.id,
+        user_id=question.user_id,
+        question_id=question.id,
     )
 
     return jsonify({"msg": "Offer deleted"}), HTTPStatus.NO_CONTENT
@@ -341,8 +341,8 @@ def accept_offer(offer_id: int) -> ResponseReturnValue:
             f"Your offer to {question.user.username} was accepted! Check the "
             "question information as soon as possible to get in touch with them."
         ),
-        offer_obj.user_id,
-        question.id,
+        user_id=offer_obj.user_id,
+        question_id=question.id,
     )
 
     create_notification(
@@ -351,16 +351,16 @@ def accept_offer(offer_id: int) -> ResponseReturnValue:
             f"You accepted {offer_obj.user.username}'s offer! Check the question "
             "information as soon as possible to get in touch with them."
         ),
-        question.user_id,
-        question.id,
+        user_id=question.user_id,
+        question_id=question.id,
     )
 
     for other_offer in other_offers:
         create_notification(
             NotificationTypeEnum.OFFER_DECLINED,
             f"Your offer to {question.user.username} was declined!",
-            other_offer.user_id,
-            question.id,
+            user_id=other_offer.user_id,
+            question_id=question.id,
         )
 
     return jsonify(offer_obj.to_dict()), HTTPStatus.OK
@@ -391,15 +391,15 @@ def decline_offer(offer_id: int) -> ResponseReturnValue:
     create_notification(
         NotificationTypeEnum.OFFER_DECLINED,
         f"Your offer to {question.user.username} was declined!",
-        offer_obj.user_id,
-        question.id,
+        user_id=offer_obj.user_id,
+        question_id=question.id,
     )
 
     create_notification(
         NotificationTypeEnum.OFFER_DECLINED,
         f"You declined {offer_obj.user.username}'s offer!",
-        question.user_id,
-        question.id,
+        user_id=question.user_id,
+        question_id=question.id,
     )
 
     return jsonify(offer_obj.to_dict()), HTTPStatus.OK
