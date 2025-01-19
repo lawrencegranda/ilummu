@@ -27,7 +27,7 @@ jobs:
           virtualenvs-in-project: true
 
       - name: Cache Poetry dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
@@ -39,10 +39,8 @@ jobs:
 
       - name: Run pylint on each file
         run: |
-          echo "Running pylint on each file..."
-          for file in $(find . -name '*.py'); do
-            poetry run pylint "$file" --output-format=colorized || exit 1
-          done
+          echo "Running pylint on all files..."
+          poetry run pylint $(find . -name "*.py") --output-format=colorized || exit 1
 
       - name: Run pylint on the entire project
         run: |
