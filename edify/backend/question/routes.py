@@ -13,24 +13,23 @@ from flask import Blueprint, current_app, jsonify, request
 from flask.typing import ResponseReturnValue
 from flask_jwt_extended import jwt_required
 from PIL import Image
-from sqlalchemy.exc import IntegrityError
 from webargs import fields
 from webargs.flaskparser import use_args
 
 # Local Application imports
 from edify import db
-from edify.backend.question.utils import question_dictionary
-from edify.backend.user.utils import get_current_user, check_author
 from edify.models import (
     Course,
     Method,
     Question,
-    Notification,
     Offer,
 )
 from edify.utils.constants import ErrorType, QuestionSchema, NotificationTypeEnum
 from edify.utils.decorators import author_required
 from edify.utils.utils import error_response, data_response
+from edify.backend.question.utils import question_dictionary
+from edify.backend.user.utils import get_current_user, check_author
+from edify.backend.utils import commit_changes, create_notification
 
 # -----------------------------------------------------------------------------
 # Route Blueprint
@@ -221,12 +220,7 @@ def create_question(args):
     db.session.add(question_obj)
 
     # Commit and roll back if there's a database error
-    try:
-        db.session.commit()
-    except IntegrityError as e:
-        db.session.rollback()
-        print(f"IntegrityError: {e}")
-        return error_response("Failed to create question.", ErrorType.BAD_REQUEST)
+    commit_changes("Failed to create question.")
 
     # Create a notification for the new question
     create_notification(
@@ -272,7 +266,7 @@ def delete_question(id_question: int):
 
     # Set to not visible as deleted
     question_obj.visible = False
-    db.session.commit()
+    commit_changes("Failed to delete question")
 
     # Create a notification for the updated question
     create_notification(
@@ -515,7 +509,7 @@ def change_price(args, id_question: int) -> ResponseReturnValue:
         return error_response("New price is too high", ErrorType.BAD_REQUEST)
 
     question_obj.price = price
-    db.session.commit()
+    commit_changes("Failed to update question price")
 
     # Create a notification for the updated question
     create_notification(
