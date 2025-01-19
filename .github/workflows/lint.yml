@@ -1,0 +1,50 @@
+name: Lint with pylint
+
+on:
+  push:
+    branches:
+      - "**" # Run on any branch
+  pull_request:
+    branches:
+      - "**" # Run on pull requests for any branch
+
+jobs:
+  pylint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10.7"
+
+      - name: Install and configure Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.7.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            venv-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Run pylint on each file
+        run: |
+          echo "Running pylint on each file..."
+          for file in $(find . -name '*.py'); do
+            poetry run pylint "$file" --output-format=colorized || exit 1
+          done
+
+      - name: Run pylint on the entire project
+        run: |
+          echo "Running pylint on the entire project..."
+          poetry run pylint . --disable=all --enable=cyclic-import,duplicate-code --output-format=colorized || exit 1

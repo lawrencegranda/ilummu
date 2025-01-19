@@ -6,3 +6,4 @@ requirements.txt
 !env.test.sh
 **/.specstory/
 instance/
+.vscode/
