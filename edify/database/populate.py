@@ -1,20 +1,29 @@
+"""Database population scripts for initializing Edify's database with test and reference data."""
+
 # Standard Library imports
 import json
-import string
-from random import choice, choices
-
-# Third-Party Framework imports
-from faker import Faker
 
 # Local Application imports
 from edify import db
-from edify.models import *
+from edify.models import (
+    School,
+    AcademicField,
+    Major,
+    Course,
+    Method,
+    TimeInterval,
+    NotificationType,
+    AuthLevel,
+    SupportedLanguage,
+    OfferStatus,
+)
 from edify.utils.constants import (
     AuthLevelEnum,
     NotificationTypeEnum,
     OfferStatusEnum,
     SupportedLanguagesEnum,
 )
+from edify.database.utils import create_user
 
 
 def populate_universities():
@@ -168,7 +177,7 @@ def populate_majors():
 
     def load_majors_from_json(json_file):
         """Load majors data from a JSON file."""
-        with open(json_file) as f:
+        with open(json_file, encoding="utf-8") as f:
             majors_data = json.load(f)["majors"]
         return majors_data
 
@@ -199,7 +208,7 @@ def populate_majors():
                     db.session.add(major)
             elif not school:
                 print(
-                    f"School 'Cornell University' not found for major '{major_data['major']}'. Skipping."
+                    f"School 'Cornell University' not found for major '{major_data['major']}'."
                 )
 
     print("Majors populated.")
@@ -236,7 +245,8 @@ def populate_courses():
                     db.session.add(course)
                 else:
                     print(
-                        f"AcademicField '{course_data['academic_field']}' not found for course '{course_data['name']}'. Skipping."
+                        f"AcademicField '{course_data['academic_field']}' not found "
+                        f"for course '{course_data['name']}'."
                     )
 
     print("Courses populated.")
@@ -268,51 +278,15 @@ def populate_enums():
 
 def generate_test_users(num_users):
     """Generate test users for the database."""
-    # Initialize Faker for generating fake data
-    fake = Faker()
-
-    # Retrieve the specific school and all majors from the database
     school = db.session.query(School).filter_by(name="Cornell University").first()
     majors = db.session.query(Major).all()
 
     # Loop to create the specified number of test users
     for i in range(num_users):
-        # Generate test email
-        email = f"user{i}@{school.email_postfix}"
-
-        # Skip to the next iteration if email already exists
-        if db.session.query(User).filter_by(email=email).first():
-            continue
-
-        # Generate a valid phone number, ensuring it's unique and valid
-        phone = f"+1 {''.join(choices(string.digits, k=10))}"
-        while (
-            not validate_phone(phone)
-            or db.session.query(User).filter_by(phone=phone).first()
-        ):
-            phone = f"+1 {''.join(choices(string.digits, k=10))}"
-
-        # Hash the password for the user before saving
-        password = User.hash_password(f"password_user{i}")
-        print(f"password_user{i}")
-
-        # Create a new user instance with the fake data
-        user = User(
-            username=f"testUser{i}",
-            firstname=fake.first_name(),
-            lastname=fake.last_name(),
-            school_id=school.id,
-            major_id=choice(majors).id,
-            graduation=fake.future_date(end_date="+4y"),
-            email=email,
-            phone=phone,
-            password=password,
-            mail_is_verified=True,
-            phone_is_verified=True,
-            is_mock=False,
-            is_test=True,
-        )
-        db.session.add(user)
+        user, username, password = create_user(school, majors, is_test=True, i=i)
+        if user:  # Only add if email doesn't exist
+            db.session.add(user)
+            print(f"Username: {username}, Password: {password}")
 
     print("Test users populated.")
 
@@ -328,7 +302,8 @@ def populate_constants():
     populate_majors()
     populate_courses()
 
-    generate_test_users(3)
+    num_test_users = 3
+    generate_test_users(num_test_users)
 
 
 if __name__ == "__main__":

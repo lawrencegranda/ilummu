@@ -1,9 +1,8 @@
-# tests/conftest.py: Pytest configuration file
-# Specifies the client fixtures used for testing.
+"""Test fixtures and configuration for the Edify platform."""
 
 # Standard Library imports
 import os
-from random import choice, randint, choices
+from random import choices
 import string
 
 # Third-Party Framework imports
@@ -12,8 +11,7 @@ import pytest
 
 # Local Application imports
 from edify.database.populate import populate_constants
-from edify.database.fake_data import populate_fake
-from edify.models import *
+from edify.models import User, School, Major, Question, Method, Course, Offer
 from edify import db
 from edify.utils.utils import validate_phone
 from tests.test_app import create_test_app
@@ -25,44 +23,39 @@ fake = Faker()
 
 @pytest.fixture(scope="session")
 def app():
-    app = create_test_app()
-
-    yield app
-
+    """Create test Flask application."""
+    flask_app = create_test_app()
+    yield flask_app
     os.remove("instance/site.db")
 
 
 @pytest.fixture
 def client(app):
-    client = app.test_client()
-
+    """Create test client with application context."""
+    test_client = app.test_client()
     ctx = app.test_request_context()
     ctx.push()
-
-    yield client
-
+    yield test_client
     ctx.pop()
 
 
 @pytest.fixture
 def client_with_db(client):
+    """Create test client with empty database."""
     db.create_all()
-
     yield client
-
     db.drop_all()
 
 
 @pytest.fixture
 def client_with_data(client_with_db):
-    """
-    A fixture to set up constants.
-    """
+    """Create test client with populated database constants."""
     populate_constants()
     return client_with_db
 
 
 def create_user() -> User:
+    """Create a test user with random valid data."""
     school = db.session.query(School).filter_by(name="Cornell University").first()
     major = db.session.query(Major).first()
 
@@ -100,16 +93,15 @@ def create_user() -> User:
 
 @pytest.fixture
 def user_jwt(client_with_data):
+    """Create test user and return with JWT token."""
     user = create_user()
-
-    # Create and return a JWT token for the user
     jwt_header = get_jwt_header(user)
-
     return user, jwt_header
 
 
 @pytest.fixture
 def client_with_question(client_with_data):
+    """Create test client with a sample question."""
     user = create_user()
 
     method = db.session.query(Method).first()
@@ -134,13 +126,16 @@ def client_with_question(client_with_data):
 
 @pytest.fixture
 def client_with_offer(client_with_question):
+    """Create test client with a sample offer."""
     user = create_user()
 
     question = (
         db.session.query(Question)
-        .filter(Question.user_id != user.id)
-        .filter(Question.visible == True)
-        .filter(Question.solved == False)
+        .filter(
+            Question.user_id != user.id,
+            Question.visible.is_(True),
+            Question.solved.is_(False),
+        )
         .first()
     )
 

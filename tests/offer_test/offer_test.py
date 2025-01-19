@@ -1,23 +1,24 @@
+"""Test suite for the Offer model and related routes."""
+
 # Standard Library imports
 from http import HTTPStatus
-import datetime
 
 # Third-Party Framework imports
 from faker import Faker
-from flask import Flask, url_for
-import pytest
+from flask import url_for
 
 # Local Application imports
 from edify import db
-from edify.models import User, Offer, Question, Method, Course, Notification
-from edify.utils.constants import OfferStatusEnum, primitives
-from tests.utils import get_jwt_header
+from edify.models import Offer, Question, Notification
+from edify.utils.constants import OfferStatusEnum
+from tests.utils import get_jwt_header, compare_dicts
 
 # Initialize Faker for generating fake data
 fake = Faker()
 
 
 class TestCreateOffer:
+    """Test suite for creating offers."""
 
     def test_create_offer_success(self, client_with_question, user_jwt):
         """
@@ -28,9 +29,11 @@ class TestCreateOffer:
         # Query for a question not created by the current user, that is visible and unsolved
         question = (
             db.session.query(Question)
-            .filter(Question.user_id != user.id)
-            .filter(Question.visible == True)
-            .filter(Question.solved == False)
+            .filter(
+                Question.user_id != user.id,
+                Question.visible.is_(True),
+                Question.solved.is_(False),
+            )
             .first()
         )
 
@@ -89,10 +92,8 @@ class TestCreateOffer:
         ), "Notification user is not question_author"
 
     def test_create_offer_invalid_question(self, client_with_question, user_jwt):
-        """
-        Test creating an offer with an invalid question ID.
-        """
-        user, jwt = user_jwt
+        """Test creating an offer with an invalid question ID."""
+        _, jwt = user_jwt
 
         # Send a POST request with an invalid question ID
         response = client_with_question.post(
@@ -108,17 +109,17 @@ class TestCreateOffer:
         assert response.get_json()["msg"] == "Question does not exist"
 
     def test_create_offer_existing_offer(self, client_with_question, user_jwt):
-        """
-        Test creating an offer when the user has already made an offer.
-        """
+        """Test creating an offer when the user has already made an offer."""
         user, jwt = user_jwt
 
         # Query for a question not created by the current user, that is visible and unsolved
         question = (
             db.session.query(Question)
-            .filter(Question.user_id != user.id)
-            .filter(Question.visible == True)
-            .filter(Question.solved == False)
+            .filter(
+                Question.user_id != user.id,
+                Question.visible.is_(True),
+                Question.solved.is_(False),
+            )
             .first()
         )
 
@@ -150,17 +151,17 @@ class TestCreateOffer:
         assert response.get_json()["msg"] == "User already made offer to question"
 
     def test_create_offer_not_visible_question(self, client_with_question, user_jwt):
-        """
-        Test creating an offer when the question is not visible.
-        """
+        """Test creating an offer when the question is not visible."""
         user, jwt = user_jwt
 
         # Query for a question not created by the current user, that is visible and unsolved
         question = (
             db.session.query(Question)
-            .filter(Question.user_id != user.id)
-            .filter(Question.visible == True)
-            .filter(Question.solved == False)
+            .filter(
+                Question.user_id != user.id,
+                Question.visible.is_(True),
+                Question.solved.is_(False),
+            )
             .first()
         )
 
@@ -187,17 +188,17 @@ class TestCreateOffer:
         assert response.get_json()["msg"] == "Question is not visible"
 
     def test_create_offer_solved_question(self, client_with_question, user_jwt):
-        """
-        Test creating an offer when the question is already solved.
-        """
+        """Test creating an offer when the question is already solved."""
         user, jwt = user_jwt
 
         # Query for a question not created by the current user, that is visible and unsolved
         question = (
             db.session.query(Question)
-            .filter(Question.user_id != user.id)
-            .filter(Question.solved == False)
-            .filter(Question.visible == True)
+            .filter(
+                Question.user_id != user.id,
+                Question.solved.is_(False),
+                Question.visible.is_(True),
+            )
             .first()
         )
 
@@ -225,12 +226,11 @@ class TestCreateOffer:
 
 
 class TestGetOffer:
+    """Test suite for retrieving offers."""
 
     def test_get_offer_success(self, client_with_offer, user_jwt):
-        """
-        Test getting an offer successfully.
-        """
-        user, jwt = user_jwt
+        """Test successfully retrieving an offer."""
+        _, jwt = user_jwt
 
         # Query for the first offer in the database
         offer = db.session.query(Offer).first()
@@ -253,10 +253,8 @@ class TestGetOffer:
         assert offer, "Offer not found in database"
 
     def test_get_offer_invalid_id_offer(self, client_with_offer, user_jwt):
-        """
-        Test getting an offer with an invalid offer ID.
-        """
-        user, jwt = user_jwt
+        """Test getting an offer with an invalid offer ID."""
+        _, jwt = user_jwt
 
         # Send a GET request with an invalid offer ID
         response = client_with_offer.get(
@@ -274,12 +272,11 @@ class TestGetOffer:
 
 
 class TestUpdateOffer:
+    """Test suite for updating offers."""
 
     def test_update_offer_success(self, client_with_offer, user_jwt):
-        """
-        Test updating an offer successfully.
-        """
-        user, jwt = user_jwt
+        """Test updating an offer successfully."""
+        user, _ = user_jwt
 
         # Query for the first offer in the database
         offer = db.session.query(Offer).first()
@@ -313,21 +310,11 @@ class TestUpdateOffer:
         offer_dict = offer.to_dict(simplified=False)
 
         # Assert all attributes are equal except for the amount
-        for (k, v1), (k2, v2) in zip(original_offer_dict.items(), offer_dict.items()):
-            assert k == k2, f"Keys are not equal ({k} != {k2})"
-
-            # Skip checking for amount and non-primitive types
-            if k == "amount" or not isinstance(v1, primitives):
-                continue
-
-            # Assert that all other values remain unchanged
-            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
+        compare_dicts(original_offer_dict, offer_dict, keys_to_skip=["amount"])
 
     def test_update_offer_low_price(self, client_with_offer, user_jwt):
-        """
-        Test updating an offer with a price lower than the question price.
-        """
-        user, jwt = user_jwt
+        """Test updating an offer with a price lower than the question price."""
+        user, _ = user_jwt
 
         # Query for the first offer in the database
         offer = db.session.query(Offer).first()
@@ -337,7 +324,7 @@ class TestUpdateOffer:
         user = offer.user
 
         question = offer.question
-        amount = offer.amount
+        _amount = offer.amount
 
         # Retrieve the original offer as a dictionary
         original_offer_dict = offer.to_dict(simplified=False)
@@ -359,20 +346,10 @@ class TestUpdateOffer:
         offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
 
         # Assert all attributes are equal (no changes should have been made)
-        for (k, v1), (k2, v2) in zip(original_offer_dict.items(), offer_dict.items()):
-            assert k == k2, f"Keys are not equal ({k} != {k2})"
-
-            # Skip non-primitive types
-            if not isinstance(v1, primitives):
-                continue
-
-            # Assert that all values remain unchanged
-            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
+        compare_dicts(original_offer_dict, offer_dict)
 
     def test_update_offer_unauthorized_user(self, client_with_offer, user_jwt):
-        """
-        Test updating an offer by a user who is not the owner of the offer.
-        """
+        """Test updating an offer by a user who is not the owner of the offer."""
         user, jwt = user_jwt
 
         # Query for an offer not owned by the user
@@ -382,7 +359,7 @@ class TestUpdateOffer:
         assert offer, "User does not have any offer in Database"
 
         question = offer.question
-        amount = offer.amount
+        _amount = offer.amount
 
         # Retrieve the original offer as a dictionary
         original_offer_dict = offer.to_dict(simplified=False)
@@ -406,115 +383,67 @@ class TestUpdateOffer:
         offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
 
         # Assert all attributes are equal (no changes should have been made)
-        for (k, v1), (k2, v2) in zip(original_offer_dict.items(), offer_dict.items()):
-            assert k == k2, f"Keys are not equal ({k} != {k2})"
-
-            # Skip non-primitive types
-            if not isinstance(v1, primitives):
-                continue
-
-            # Assert that all values remain unchanged
-            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
+        compare_dicts(original_offer_dict, offer_dict)
 
 
 class TestAcceptOffer:
+    """Test suite for accepting offers."""
 
     def test_accept_offer_success(self, client_with_offer, user_jwt):
-        """
-        Test accepting an offer successfully.
-        """
-        # Extract user and JWT from the provided user_jwt fixture.
-        user, jwt = user_jwt
+        """Test accepting an offer successfully."""
+        user, _ = user_jwt
 
-        # Query the first active offer from the database.
-        offer = db.session.query(Offer).filter(Offer.active == True).first()
-
-        # Assert that the offer exists in the database.
+        # Query the first active offer and verify it exists
+        offer = db.session.query(Offer).filter(Offer.active.is_(True)).first()
         assert offer, "User does not have any offer in Database"
 
-        # Set the user to be the question's author associated with the offer.
+        # Set user as question author and get original offer state
         user = offer.question.user
+        original_offer_dict = offer.to_dict(simplified=False)
+        question = offer.question
 
-        # Make a POST request to accept the offer.
+        # Accept the offer
         response = client_with_offer.post(
             url_for("backend.offer.accept_offer", offer_id=offer.id),
             headers=get_jwt_header(user),
         )
-
-        # Assert that the response status code is 200 OK.
         assert response.status_code == HTTPStatus.OK, response.json
 
-        # Reload the offer to check for changes after the request.
+        # Verify offer status changes
         offer = db.session.query(Offer).filter(Offer.id == offer.id).first()
-        original_offer_dict = offer.to_dict(simplified=False)
-
-        # Assert that the offer status is updated to ACCEPTED and is still active.
         assert offer.status == OfferStatusEnum.ACCEPTED, "Offer status not updated"
-        assert offer.active == True, "Offer is not active"
+        assert offer.active, "Offer is not active"
 
-        # Get the question associated with the offer.
-        question = offer.question
-
-        # Fetch all other offers related to the same question, excluding the accepted one.
-        other_offers_for_question = (
+        # Verify other offers for same question are removed
+        other_offers = (
             db.session.query(Offer)
             .filter(Offer.question_id == question.id)
             .filter(Offer.id != offer.id)
             .all()
         )
-
-        # Assert that the statuses of all other offers are updated to REMOVED and inactive.
-        for other_offer in other_offers_for_question:
+        for other_offer in other_offers:
             assert (
                 other_offer.status == OfferStatusEnum.REMOVED
             ), "Other offer status not updated"
-            assert other_offer.active == False, "Other offer status not updated"
+            assert other_offer, "Other offer status not updated"
 
-        # Check if a notification was created for the offer creator.
-        notification_offer_creator = (
+        # Verify notifications were created
+        notifications = (
             db.session.query(Notification)
-            .filter(Notification.user_id == offer.user_id)
             .filter(Notification.question_id == question.id)
-            .first()
+            .all()
         )
+        assert any(n.user_id == offer.user_id for n in notifications)
+        assert any(n.user_id == question.user_id for n in notifications)
 
-        # Assert that a notification was created and it is associated with the offer creator.
-        assert notification_offer_creator, "Notification not created"
-        assert (
-            notification_offer_creator.user_id == offer.user_id
-        ), "Notification user is not offer_creator"
-
-        # Check if a notification was created for the question's author.
-        notification_question_author = (
-            db.session.query(Notification)
-            .filter(Notification.user_id == question.user_id)
-            .filter(Notification.question_id == question.id)
-            .first()
-        )
-
-        # Assert that a notification was created and it is associated with the question author.
-        assert notification_question_author, "Notification not created"
-        assert (
-            notification_question_author.user_id == question.user_id
-        ), "Notification user is not question_author"
-
-        # Reload the current offer's details and convert them to a dictionary.
+        # Assert that all attributes of the original and current offer dictionaries are equal.
         offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
-
-        # Compare all attributes of the original and current offer dictionaries, except 'active' and 'status'.
-        for (k, v1), (k2, v2) in zip(original_offer_dict.items(), offer_dict.items()):
-            assert k == k2, f"Keys are not equal ({k} != {k2})"
-
-            if (k == "active" or k == "status") and not isinstance(v1, primitives):
-                continue
-
-            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
+        compare_dicts(
+            original_offer_dict, offer_dict, keys_to_skip=["active", "status"]
+        )
 
     def test_accept_offer_unauthorized_user(self, client_with_offer, user_jwt):
-        """
-        Test accepting an offer with an invalid offer ID.
-        """
-        # Extract user and JWT from the provided user_jwt fixture.
+        """Test accepting an offer with an unauthorized user."""
         user, jwt = user_jwt
 
         # Query the first offer not owned by the user.
@@ -543,27 +472,16 @@ class TestAcceptOffer:
             response.get_json()["msg"] == "User is not author of the question"
         ), response.json
 
-        # Reload the current offer's details and convert them to a dictionary.
-        offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
-
         # Assert that all attributes of the original and current offer dictionaries are equal.
-        for (k, v1), (k2, v2) in zip(original_offer_dict.items(), offer_dict.items()):
-            assert k == k2, f"Keys are not equal ({k} != {k2})"
-
-            if not isinstance(v1, primitives):
-                continue
-
-            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
+        offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
+        compare_dicts(original_offer_dict, offer_dict)
 
     def test_offer_status_already_accepted_offer(self, client_with_offer, user_jwt):
-        """
-        Test accepting an offer with an invalid status.
-        """
-        # Extract user and JWT from the provided user_jwt fixture.
-        user, jwt = user_jwt
+        """Test accepting an offer with an invalid status."""
+        user, _ = user_jwt
 
         # Query the first active offer from the database.
-        offer = db.session.query(Offer).filter(Offer.active == True).first()
+        offer = db.session.query(Offer).filter(Offer.active.is_(True)).first()
 
         # Assert that the offer exists in the database.
         assert offer, "User does not have any offer in Database"
@@ -596,23 +514,14 @@ class TestAcceptOffer:
         offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
 
         # Assert that all attributes of the original and current offer dictionaries are equal.
-        for (k, v1), (k2, v2) in zip(original_offer_dict.items(), offer_dict.items()):
-            assert k == k2, f"Keys are not equal ({k} != {k2})"
-
-            if not isinstance(v1, primitives):
-                continue
-
-            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
+        compare_dicts(original_offer_dict, offer_dict)
 
     def test_offer_status_already_declined_offer(self, client_with_offer, user_jwt):
-        """
-        Test accepting an offer with an invalid status.
-        """
-        # Extract user and JWT from the provided user_jwt fixture.
-        user, jwt = user_jwt
+        """Test accepting an offer with an invalid status."""
+        user, _ = user_jwt
 
         # Query the first active offer from the database.
-        offer = db.session.query(Offer).filter(Offer.active == True).first()
+        offer = db.session.query(Offer).filter(Offer.active.is_(True)).first()
 
         # Assert that the offer exists in the database.
         assert offer, "User does not have any offer in Database"
@@ -644,26 +553,18 @@ class TestAcceptOffer:
         offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
 
         # Assert that all attributes of the original and current offer dictionaries are equal.
-        for (k, v1), (k2, v2) in zip(original_offer_dict.items(), offer_dict.items()):
-            assert k == k2, f"Keys are not equal ({k} != {k2})"
-
-            # Skip comparison for complex types
-            if not isinstance(v1, primitives):
-                continue
-
-            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
+        compare_dicts(original_offer_dict, offer_dict)
 
 
 class TestDeclineOffer:
+    """Test suite for declining offers."""
 
     def test_decline_offer_success(self, client_with_offer, user_jwt):
-        """
-        Test declining an offer successfully.
-        """
-        user, jwt = user_jwt
+        """Test declining an offer successfully."""
+        user, _ = user_jwt
 
         # Fetch an active offer from the database
-        offer = db.session.query(Offer).filter(Offer.active == True).first()
+        offer = db.session.query(Offer).filter(Offer.active.is_(True)).first()
 
         # Verify that there is an offer in the database
         assert offer, "User does not have any offer in Database"
@@ -685,7 +586,7 @@ class TestDeclineOffer:
 
         # Check if the offer status is correctly updated to 'DECLINED'
         assert offer.status == OfferStatusEnum.DECLINED, "Offer status not updated"
-        assert offer.active == False, "Offer still active"
+        assert not offer.active, "Offer still active"
 
         # Fetch the related question
         question = offer.question
@@ -722,19 +623,12 @@ class TestDeclineOffer:
         offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
 
         # Ensure that all attributes are equal except 'active' and 'status'
-        for (k, v1), (k2, v2) in zip(original_offer_dict.items(), offer_dict.items()):
-            assert k == k2, f"Keys are not equal ({k} != {k2})"
-
-            # Skip comparison for 'active' and 'status' or any complex types
-            if (k == "active" or k == "status") or not isinstance(v1, primitives):
-                continue
-
-            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
+        compare_dicts(
+            original_offer_dict, offer_dict, keys_to_skip=["active", "status"]
+        )
 
     def test_decline_offer_unauthorized_user(self, client_with_offer, user_jwt):
-        """
-        Test declining an offer with an unauthorized user.
-        """
+        """Test declining an offer with an unauthorized user."""
         user, jwt = user_jwt
 
         # Fetch an offer not associated with the current user
@@ -767,24 +661,15 @@ class TestDeclineOffer:
         offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
 
         # Ensure all attributes remain unchanged
-        for (k, v1), (k2, v2) in zip(original_offer_dict.items(), offer_dict.items()):
-            assert k == k2, f"Keys are not equal ({k} != {k2})"
-
-            # Skip comparison for complex types
-            if not isinstance(v1, primitives):
-                continue
-
-            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
+        compare_dicts(original_offer_dict, offer_dict)
 
     def test_decline_offer_invalid_status(self, client_with_offer, user_jwt):
-        """
-        Test declining an offer that has already been declined.
-        """
+        """Test declining an offer that has already been declined."""
 
-        user, jwt = user_jwt
+        user, _ = user_jwt
 
         # Fetch an active offer from the database
-        offer = db.session.query(Offer).filter(Offer.active == True).first()
+        offer = db.session.query(Offer).filter(Offer.active.is_(True)).first()
 
         # Verify that there is an offer in the database
         assert offer, "User does not have any offer in Database"
@@ -816,11 +701,4 @@ class TestDeclineOffer:
         offer_dict = db.session.get(Offer, offer.id).to_dict(simplified=False)
 
         # Ensure all attributes remain unchanged
-        for (k, v1), (k2, v2) in zip(original_offer_dict.items(), offer_dict.items()):
-            assert k == k2, f"Keys are not equal ({k} != {k2})"
-
-            # Skip comparison for complex types
-            if not isinstance(v1, primitives):
-                continue
-
-            assert v1 == v2, f"Values for '{k}' are not equal ({v1} != {v2})"
+        compare_dicts(original_offer_dict, offer_dict)

@@ -1,3 +1,7 @@
+"""
+Mail utils
+"""
+
 # Standard Library imports
 from http import HTTPStatus
 from typing import List
@@ -33,9 +37,10 @@ def send(subject: str, html: str, recipients: List[str]) -> tuple:
     msg.body = html
     msg.html = html
 
+    # pylint: disable=broad-exception-caught
     try:
         mail.send(msg)
-    except:
+    except Exception as _:
         return error_response(
             f"Failed to send email to {str(recipients)}.", ErrorType.INTERNAL_ERROR
         )

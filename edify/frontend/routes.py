@@ -1,16 +1,18 @@
+"""Frontend routes and view functions for the Edify platform."""
+
 # Standard Library imports
 import io
 import os
 import re
-import time
 from http import HTTPStatus
 from typing import Any, Dict, List, Optional
+from tempfile import mkdtemp
+import urllib.request
+from urllib.parse import quote
 
 # Third-Party Framework imports
 from flask import (
     Blueprint,
-    Flask,
-    current_app,
     jsonify,
     redirect,
     render_template,
@@ -19,22 +21,12 @@ from flask import (
     url_for,
 )
 from flask import typing as flask_typing
-from flask_jwt_extended import (
-    exceptions,
-    get_jwt_identity,
-    jwt_required,
-    unset_jwt_cookies,
-)
-from tempfile import mkdtemp
-import urllib.request
-from urllib.parse import quote
-from webargs import fields, validate
+from flask_jwt_extended import jwt_required, unset_jwt_cookies
+from webargs import fields
 from webargs.flaskparser import use_args
 from werkzeug.utils import secure_filename
 
 # Local Application imports
-from edify import bcrypt, db
-from edify.models import *
 from edify.utils.constants import ErrorType, QuestionSchema
 from edify.utils.decorators import no_token_allowed
 from edify.utils.utils import error_response, internal_request
@@ -84,15 +76,9 @@ def get_user() -> Optional[Dict[str, Any]]:
 
 
 def is_verified() -> bool:
-    """
-    Retrieve the current user's details.
-
-    Returns:
-        Optional[Dict]: User data if authenticated, else None.
-    """
+    """Check if current user's email is verified."""
     response = internal_request(url_for("backend.user.is_verified"), "GET")
-
-    return response.get_json() == True
+    return response.get_json() is True
 
 
 def filter_list(dlist: List[Dict], field: str, search: Optional[str]) -> List[Dict]:
@@ -154,8 +140,8 @@ def index() -> flask_typing.ResponseReturnValue:
 
     if user:
         return dashboard()
-    else:
-        return home()
+
+    return home()
 
 
 # Endpoint: /home
@@ -303,6 +289,12 @@ def signup() -> flask_typing.ResponseReturnValue:
 @use_args(QuestionSchema, location="form")
 @jwt_required(optional=True)
 def store_question(args) -> flask_typing.ResponseReturnValue:
+    """
+    Store question data in session and handle file uploads.
+
+    Returns:
+        Response: Redirect to verification or question submission.
+    """
     # Temporarily store the question data in the session
     session["temp_question"] = args
 
@@ -349,6 +341,12 @@ def store_question(args) -> flask_typing.ResponseReturnValue:
 @frontend.route("/submit_question_after_login", methods=["POST"])
 @jwt_required()
 def submit_question_after_login() -> flask_typing.ResponseReturnValue:
+    """
+    Submit stored question data after user authentication.
+
+    Returns:
+        Response: Result of question submission to backend.
+    """
     # Retrieve the question data and file from the session
     data = session.pop("temp_question", None)
     file_path = session.pop("temp_file", None)
@@ -368,8 +366,8 @@ def submit_question_after_login() -> flask_typing.ResponseReturnValue:
             # Flask test client format
             with open(file_path, "rb") as f:
                 file = (io.BytesIO(f.read()), os.path.basename(file_path))
-        except Exception as e:
-            print(f"Failed to retrieve file from path: {e}")
+        except (IOError, OSError) as e:
+            print(f"Failed to read file from path: {e}")
 
     # Submit the question using the existing endpoint
     # Create a request to submit the question to /backend/question/new
@@ -390,6 +388,12 @@ def submit_question_after_login() -> flask_typing.ResponseReturnValue:
 # Endpoint: /redirect_handler
 @frontend.route("/redirect_handler")
 def redirect_handler():
+    """
+    Handle redirects with custom URL and HTTP method.
+
+    Returns:
+        Response: Rendered template with redirect parameters.
+    """
     # Get `next_url` and `http_method` from query parameters
     next_url = request.args.get("next_url", url_for("frontend.dashboard"))
     http_method = request.args.get("http_method", "GET").upper()
@@ -537,30 +541,30 @@ def question_list(args) -> flask_typing.ResponseReturnValue:
 
 
 @jwt_required(optional=True)
-def list_questions(fields: List[str], search: str) -> str:
+def list_questions(field_lst: List[str], search: str) -> str:
     """
     List questions based on filter criteria.
 
     Parameters:
-        field (str): Subject to filter by.
+        field_lst (List[str]): Subjects to filter by.
         search (str): Search text.
 
     Returns:
         str: Rendered question list template.
     """
     # Fetch questions from the backend
-    qtns = fetch_data(url_for("backend.question.all"), "GET")
+    qtns = fetch_data(url_for("backend.question.get_all"), "GET")
     search = search.strip()
 
     # Initialize the questions slide
     questions = []
 
     # Get all if empty
-    if not fields:
+    if not field_lst:
         questions = qtns
 
     # Filter questions based on field/subject
-    for field in fields:
+    for field in field_lst:
         questions.extend(filter_list(qtns, "subject_code", field.strip()))
 
     # Filter questions based on search text if provided
@@ -637,29 +641,29 @@ def fetch_question(id_question: int) -> flask_typing.ResponseReturnValue:
 
     time_intervals = fetch_data(url_for("backend.data.fetch_intervals"), "GET")
 
-    question = fetch_data(
+    question_obj = fetch_data(
         url_for("backend.question.get", id_question=id_question), "GET"
     )
 
-    if not question:
+    if not question_obj:
         return error_response("Not a valid question", HTTPStatus.NOT_FOUND)
 
-    question = question[0]
+    question_obj = question_obj[0]
 
-    question["user"]["username"] = (
-        "You" if question["is_author"] else question["user"]["username"]
+    question_obj["user"]["username"] = (
+        "You" if question_obj["is_author"] else question_obj["user"]["username"]
     )
 
-    question["is_image"] = False
-    if question["image_url"]:
+    question_obj["is_image"] = False
+    if question_obj["image_url"]:
         # Fetch the MIME type of question
         try:
-            req = urllib.request.Request(question["image_url"], method="HEAD")
+            req = urllib.request.Request(question_obj["image_url"], method="HEAD")
             with urllib.request.urlopen(req) as response:
-                question["is_image"] = response.headers.get(
+                question_obj["is_image"] = response.headers.get(
                     "Content-Type", ""
                 ).startswith("image")
-        except Exception as e:
+        except urllib.error.URLError as e:
             print(f"Error fetching MIME type: {e}")
 
     return render_template(
@@ -669,7 +673,7 @@ def fetch_question(id_question: int) -> flask_typing.ResponseReturnValue:
         methods=methods,
         time_intervals=time_intervals,
         user=user,
-        question=question,
+        question=question_obj,
     )
 
 
@@ -688,15 +692,21 @@ verification_excluded_endpoints = [
 
 @frontend.before_request
 def ensure_verified():
+    """
+    Before request handler to ensure user's email is verified.
+
+    Returns:
+        Optional[Response]: Redirect to verification page if needed.
+    """
     # Only apply email verification logic for specific endpoints
     if request.endpoint in verification_excluded_endpoints:
-        return
+        return None
 
     # New user
     user = get_user()
 
     if request.method == "POST" or not user or user["mail_is_verified"] is True:
-        return
+        return None
 
     return email_verification(http_method=request.method, next_url=request.url)
 
