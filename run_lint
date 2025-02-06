@@ -1,0 +1,32 @@
+# Print header for Lines of Code section with green color
+echo "\n\033[1;32m=== Checking Lines of Code ===\033[0m\n"
+
+# Run cloc and capture its output
+cloc_output=$(poetry run cloc $(pwd) --exclude-dir=__pycache__,migrations --exclude-ext=.pyc --not-match-f="(^|/)\." --not-match-d="(^|/)\." --sum-one)
+
+# Extract comment and code lines using grep and awk
+comment_lines=$(echo "$cloc_output" | grep "SUM:" | awk '{print $4}')
+code_lines=$(echo "$cloc_output" | grep "SUM:" | awk '{print $5}')
+
+# Calculate total lines by adding comment and code lines
+total_lines=$((comment_lines + code_lines))
+
+# Print formatted output in white color showing the line counts
+echo "\033[1;37mA total of \033[1;32m$total_lines\033[1;37m lines with \033[1;32m$code_lines\033[1;37m code and \033[1;32m$comment_lines\033[1;37m comments.\033[0m"
+
+echo
+
+# Print header for Pylint section with green color
+echo "\n\033[1;32m=== Running Pylint Checks ===\033[0m\n"
+
+# Run pylint on individual Python files with cyan colored header
+echo "\033[1;36m>> Checking individual Python files...\033[0m"
+poetry run pylint $(find . -name "*.py") --output-format=colorized
+
+# Run pylint for project-wide checks with cyan colored header
+# Only checks for cyclic imports and duplicate code
+echo "\n\033[1;36m>> Checking project-wide patterns...\033[0m"
+poetry run pylint . --disable=all --enable=cyclic-import,duplicate-code --output-format=colorized
+
+# Print completion message in blue color
+echo "\n\033[1;34m=== Lint Checks Complete ===\033[0m\n"
