@@ -1,3 +1,5 @@
+"""Utility functions for authentication, data formatting, and request handling."""
+
 # Standard Library imports
 from http import HTTPStatus
 import io
@@ -10,10 +12,10 @@ from typing import Any, Optional, Tuple
 # Third-Party Framework Imports
 import flask
 from flask import current_app, jsonify, request, url_for, redirect
-from flask import typing as flask_typing
+from flask.typing import ResponseReturnValue
 from flask_jwt_extended import unset_jwt_cookies
+from marshmallow import Schema, ValidationError
 import phonenumbers
-from marshmallow import Schema
 from werkzeug.test import EnvironBuilder
 
 # Local Application imports
@@ -21,20 +23,20 @@ from edify.utils.constants import ErrorType, AuthSchema
 
 
 # Extracts the access token from the request headers
-def get_access_header(request: flask.Request) -> Optional[str]:
+def get_access_header(http_request: flask.Request) -> Optional[str]:
     """
     Extracts the access token from the request headers.
 
     Args:
-        request (flask.Request): The incoming HTTP request object.
+        http_request (flask.Request): The incoming HTTP request object.
 
     Returns:
         str: The access token if present, otherwise None.
     """
     token = None
 
-    if "HTTP_AUTHORIZATION" in request.environ:
-        auth_header = request.headers.get("Authorization")
+    if "HTTP_AUTHORIZATION" in http_request.environ:
+        auth_header = http_request.headers.get("Authorization")
         token = (
             auth_header.split(" ")[1] if auth_header and " " in auth_header else None
         )
@@ -43,21 +45,21 @@ def get_access_header(request: flask.Request) -> Optional[str]:
 
 
 # Extracts the access token from the request, either from headers or cookies
-def get_request_cookie(request: flask.Request) -> Optional[str]:
+def get_request_cookie(http_request: flask.Request) -> Optional[str]:
     """
     Extracts the access token from the request, either from headers or cookies.
 
     Args:
-        request (flask.Request): The incoming HTTP request object.
+        http_request (flask.Request): The incoming HTTP request object.
 
     Returns:
         str: The access token if present, otherwise None.
     """
-    token = get_access_header(request)
+    token = get_access_header(http_request)
     if token:
         return token
 
-    token = request.cookies.get("access_token_cookie")
+    token = http_request.cookies.get("access_token_cookie")
     if token:
         return token
 
@@ -71,7 +73,7 @@ def internal_request(
     data: Any = None,
     is_form: bool = False,
     file: Optional[Tuple[io.BytesIO, str]] = None,
-) -> flask_typing.ResponseReturnValue:
+) -> ResponseReturnValue:
     """
     Creates an internal request within the Flask application using test request context.
 
@@ -80,7 +82,7 @@ def internal_request(
         method (str, optional): The HTTP method to use. Defaults to "GET".
         data (Any, optional): The data to send.
         is_form (bool, optional): Whether to include data as form or not.
-        file (Optional[Tuple[io.BytesIO, str]], optional): File to include, as (file_object, filename).
+        file (Optional[Tuple[io.BytesIO, str]], optional): File to include, as (file_obj, filename).
 
     Returns:
         flask.Response: The response from the requested URL.
@@ -145,7 +147,7 @@ def internal_request(
 
 
 # Format a response to pass data
-def data_response(data: Any = []) -> tuple:
+def data_response(data: Any = None) -> tuple:
     """
     Helper function to pass data as JSON.
 
@@ -156,7 +158,9 @@ def data_response(data: Any = []) -> tuple:
         tuple: A tuple containing the JSON response and the HTTP status code.
     """
     # Make a list if not already one
-    if not isinstance(data, list):
+    if data is None:
+        data = []
+    elif not isinstance(data, list):
         data = [data]
 
     return jsonify({"data": data}), HTTPStatus.OK
@@ -185,36 +189,27 @@ def error_response(message: str, error_type: ErrorType) -> tuple:
 email_regex = re.compile(
     r"^[a-zA-Z0-9]([\w\-\.])+@[a-zA-Z0-9]+[\w\-\.]*\w\.[a-zA-Z]{2,6}$"
 )
-validate_email = lambda x: email_regex.match(x)
+validate_email = email_regex.match
 
 # Regex pattern to validate an email domain
 email_postfix_regex = re.compile(r"^[a-zA-Z0-9]+[\w\-\.]*\w\.[a-zA-Z]{2,6}$")
-validate_email_postfix = lambda x: email_postfix_regex.match(x)
+validate_email_postfix = email_postfix_regex.match
 
 
 # Validates a phone number using the phonenumbers library
 def validate_phone(phone: str) -> bool:
-    """
-    Validates a phone number using the phonenumbers library.
-
-    Args:
-        phone (str): The phone number to validate.
-
-    Returns:
-        bool: True if the phone number is valid, otherwise False.
-    """
+    """Validates a phone number using the phonenumbers library."""
     try:
         # Parse the phone number
         parsed_number = phonenumbers.parse(phone, None)
-
         # Check if the number is valid
         return phonenumbers.is_valid_number(parsed_number)
-    except:
+    except phonenumbers.NumberParseException as _:
         return False
 
 
 # Formats a phone number to international format if it is valid
-def format_phone(phone: str) -> str:
+def format_phone(phone: str) -> Optional[str]:
     """
     Formats a phone number to international format if it is valid.
 
@@ -222,10 +217,10 @@ def format_phone(phone: str) -> str:
         phone (str): The phone number to format.
 
     Returns:
-        str: The formatted phone number, or the original phone number if invalid.
+        Optional[str]: The formatted phone number, or None if invalid.
     """
     if not validate_phone(phone):
-        return phone
+        return None
 
     parsed_number = phonenumbers.parse(phone, None)
     phone = phonenumbers.format_number(
@@ -264,7 +259,7 @@ def load_username_data(file_path: str) -> dict:
     Returns:
         dict: The loaded username data.
     """
-    with open(file_path, "r") as file:
+    with open(file_path, "r", encoding="utf-8") as file:
         return json.load(file)
 
 
@@ -297,7 +292,7 @@ def generate_funny_username(n: int) -> str:
 
 
 # Strips leading and trailing whitespace from a string
-def format_strip(target: Any, value: str, oldvalue: Any, initiator: Any) -> str:
+def format_strip(_target: Any, value: str, _oldvalue: Any, _initiator: Any) -> str:
     """
     Strips leading and trailing whitespace from a string.
 
@@ -314,13 +309,21 @@ def format_strip(target: Any, value: str, oldvalue: Any, initiator: Any) -> str:
 
 
 # Converts a string to title case
-format_title_case = lambda *x: format_strip(*x).title()
+def format_title_case(*x: Any) -> str:
+    """Convert string to title case after stripping whitespace."""
+    return format_strip(*x).title()
+
 
 # Converts a string to lower case
-format_lower_case = lambda *x: format_strip(*x).lower()
+def format_lower_case(*x: Any) -> str:
+    """Convert string to lower case after stripping whitespace."""
+    return format_strip(*x).lower()
+
 
 # Converts a string to upper case
-format_upper_case = lambda *x: format_strip(*x).upper()
+def format_upper_case(*x: Any) -> str:
+    """Convert string to upper case after stripping whitespace."""
+    return format_strip(*x).upper()
 
 
 # Determines the college year based on the given date
@@ -339,15 +342,15 @@ def get_college_year(date: datetime) -> str:
     delta_years = (date - current).days / 365.0
 
     if delta_years < 0 or delta_years > 4:
-        return f"Class of '{date.year.__repr__()[-2:]}"
+        return f"Class of '{repr(date.year)[-2:]}"
     if delta_years < 1:
-        return f"Senior"
+        return "Senior"
     if delta_years < 2:
-        return f"Junior"
+        return "Junior"
     if delta_years < 3:
-        return f"Sophomore"
-    else:
-        return f"Freshman"
+        return "Sophomore"
+
+    return "Freshman"
 
 
 # Returns a human-readable string representing the time difference from the given date to now
@@ -363,35 +366,43 @@ def get_time_ago(date: datetime) -> str:
     """
     current = datetime.utcnow()
     diff = current - date
+    result = ""
 
+    # Handle recent times (less than a day)
     if diff < timedelta(minutes=1):
-        return "Just now"
+        result = "Just now"
     elif diff < timedelta(hours=1):
         minutes = int(diff.total_seconds() // 60)
-        return f"{minutes} minute{'s' if minutes > 1 else ''} ago"
+        result = f"{minutes} minute{'s' if minutes > 1 else ''} ago"
     elif diff < timedelta(days=1):
         hours = int(diff.total_seconds() // 3600)
-        return f"{hours} hour{'s' if hours > 1 else ''} ago"
+        result = f"{hours} hour{'s' if hours > 1 else ''} ago"
+
+    # Handle days and weeks
     elif diff < timedelta(days=2):
-        return "Yesterday"
+        result = "Yesterday"
     elif diff < timedelta(weeks=1):
         days = diff.days
-        return f"{days} day{'s' if days > 1 else ''} ago"
+        result = f"{days} day{'s' if days > 1 else ''} ago"
     elif diff < timedelta(weeks=2):
-        return "Last week"
+        result = "Last week"
     elif diff < timedelta(weeks=4):
         weeks = diff.days // 7
-        return f"{weeks} week{'s' if weeks > 1 else ''} ago"
+        result = f"{weeks} week{'s' if weeks > 1 else ''} ago"
+
+    # Handle months and years
     elif diff < timedelta(days=60):
-        return "Last month"
+        result = "Last month"
     elif diff < timedelta(days=365):
         months = diff.days // 30
-        return f"{months} month{'s' if months > 1 else ''} ago"
+        result = f"{months} month{'s' if months > 1 else ''} ago"
     elif diff < timedelta(years=2):
-        return "Last year"
+        result = "Last year"
     else:
         years = diff.days // 365
-        return f"{years} year{'s' if years > 1 else ''} ago"
+        result = f"{years} year{'s' if years > 1 else ''} ago"
+
+    return result
 
 
 # Returns a int from the given date to now
@@ -427,7 +438,9 @@ def trim_text(string: str, length: int) -> str:
 
 
 # Encode datetime as int
-date_to_int = lambda d: int(d.strftime("%Y%m%d%H%M%S"))
+def date_to_int(d: datetime) -> int:
+    """Convert datetime to integer format YYYYMMDDHHMMSS."""
+    return int(d.strftime("%Y%m%d%H%M%S"))
 
 
 # Validate password
@@ -444,7 +457,8 @@ def validate_password(password: str) -> Tuple[bool, str]:
         password (str): The password to validate.
 
     Returns:
-        Tuple[bool, str]: True if the password is valid, False otherwise, along with a message indicating the result of the validation.
+        Tuple[bool, str]: True if the password is valid, False otherwise, along with
+        a message indicating the result of the validation.
     """
     if len(password) < 8:
         return False, "Password must be at least 8 characters long."
@@ -465,20 +479,18 @@ def validate_password(password: str) -> Tuple[bool, str]:
 
 
 def validate_auth_data(input_data: dict) -> bool:
-    """
-    Validates input data against the AuthSchema. Returns true if successful.
-    """
+    """Validates input data against the AuthSchema. Returns true if successful."""
     try:
         # Dynamically create a marshmallow schema from the dictionary
         schema = Schema.from_dict(AuthSchema)()
-        result = schema.load(input_data)  # Validate the input data
+        _ = schema.load(input_data)  # Validate the input data
         return True
-    except Exception as e:
+    except ValidationError as e:
         print("ERROR: Encountered an error validating the Auth schema", e)
         return False
 
 
-def handle_invalid_token() -> flask_typing.ResponseReturnValue:
+def handle_invalid_token() -> ResponseReturnValue:
     """
     Handle invalid or missing JWT tokens by unsetting cookies and redirecting to the logout page.
 

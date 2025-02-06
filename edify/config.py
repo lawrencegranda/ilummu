@@ -1,3 +1,5 @@
+"""Configuration for the Edify application."""
+
 # Standard Library imports
 from datetime import timedelta
 import os
@@ -6,31 +8,36 @@ import os
 from edify.utils.constants import EdifyEnvironments
 
 
+# pylint: disable=too-few-public-methods
 class Config:
+    """Configuration for the Edify application."""
+
     MAINTENANCE_MODE = int(os.environ["MAINTENANCE_MODE"]) == 1
 
     SECRET_KEY = os.environ["SECRET_KEY"]
     JWT_SECRET_KEY = SECRET_KEY
 
     if not any(member.name == os.environ["ENV"] for member in EdifyEnvironments):
-        raise Exception(f"Invalid Environment {os.environ['ENV']}")
+        raise EnvironmentError(f"Invalid Environment {os.environ['ENV']}")
 
     ENV = os.environ["ENV"]
-    TESTING = False
 
-    if ENV == EdifyEnvironments.PRODUCTION.value:
+    PROD = ENV == EdifyEnvironments.PRODUCTION.value
+    LOCAL = ENV == EdifyEnvironments.LOCAL.value
+    TESTING = ENV == EdifyEnvironments.TEST.value
+
+    if PROD:
         SQLALCHEMY_DATABASE_URI = os.environ["DB_URL"]
 
         # Web settings
         HOST = os.environ["HOST"]
         PORT = os.environ["PORT"]
 
-    elif ENV == EdifyEnvironments.LOCAL.value:
+    elif LOCAL:
         SQLALCHEMY_DATABASE_URI = os.environ["DB_URL"]
 
-    elif ENV == EdifyEnvironments.TEST.value:
-        TESTING = True
-        SQLALCHEMY_DATABASE_URI = "sqlite:///site.db"
+    elif TESTING:
+        SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
 
     # Configure all the ways you want to allow JWTs to be sent.
     JWT_TOKEN_LOCATION = ["headers", "cookies"]
@@ -76,3 +83,42 @@ class Config:
     FILEBASE_BUCKET: str = os.environ["FILEBASE_BUCKET"]
     FILEBASE_ENDPOINT: str = os.environ["FILEBASE_ENDPOINT"]
     FILEBASE_URL: str = os.environ["FILEBASE_URL"]
+
+    # CSP Policy
+    CSP_POLICY = {
+        "default-src": "'self'",
+        "script-src": [
+            "'self'",
+            "https://ajax.googleapis.com",
+            "https://cdn.jsdelivr.net",
+            "https://cdnjs.cloudflare.com",
+            "https://code.jquery.com",  # Add this to allow jQuery CDN
+            "'unsafe-inline'",  # Use hashes or nonces in production
+        ],
+        "style-src": [
+            "'self'",
+            "https://maxcdn.bootstrapcdn.com",
+            "https://fonts.googleapis.com",
+            "https://cdn.jsdelivr.net",
+            "https://cdnjs.cloudflare.com",
+            "'unsafe-inline'",  # Use hashes in production
+        ],
+        "font-src": [
+            "'self'",
+            "https://fonts.gstatic.com",
+            "https://maxcdn.bootstrapcdn.com",
+        ],
+        "img-src": [
+            "'self'",
+            "data:",
+            "https://cdnjs.cloudflare.com",  # Allow images from cdnjs.cloudflare.com
+            "https://robohash.org",  # For the pictures
+            FILEBASE_URL,  # Files
+        ],
+    }
+
+    # Convert the CSP_POLICY dictionary to a string for the header
+    CSP_HEADER = "; ".join(
+        f"{key} {' '.join(value) if isinstance(value, list) else value}"
+        for key, value in CSP_POLICY.items()
+    )
