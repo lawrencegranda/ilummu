@@ -44,5 +44,6 @@ def send(subject: str, html: str, recipients: List[str]) -> tuple:
         return error_response(
             f"Failed to send email to {str(recipients)}.", ErrorType.INTERNAL_ERROR
         )
+    # pylint: enable=all
 
     return jsonify("Success."), HTTPStatus.OK
