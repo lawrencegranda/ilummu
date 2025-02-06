@@ -1,7 +1,7 @@
 """Core components initialization."""
 
 from edify.core.database import db, migrate, init_db
-from edify.core.extensions import bcrypt, jwt, mail, socketio, init_extensions
+from edify.core.extensions import bcrypt, jwt, mail, init_extensions
 
 __all__ = [
     "db",
@@ -10,6 +10,5 @@ __all__ = [
     "bcrypt",
     "jwt",
     "mail",
-    "socketio",
     "init_extensions",
 ]
