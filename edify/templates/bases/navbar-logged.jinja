@@ -39,6 +39,7 @@
                         Log Out
                     </button>
                 </div>
+                {% if request.path != '/home' %}
                 <div id="notification-wrapper" style="display: none;">
                     <div class="notification-center-dimensions notification-background">
                     </div>
@@ -68,6 +69,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>

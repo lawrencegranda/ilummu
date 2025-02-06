@@ -1,31 +1,25 @@
+"""Data-related endpoints for fetching courses, subjects, and other reference data."""
+
 # Standard Library imports
-from http import HTTPStatus
-from typing import Any, Dict, List, Optional
 
 # Third-Party Framework imports
-from flask import Blueprint, current_app, jsonify, redirect, url_for
-from flask import typing as flask_typing
-from flask_jwt_extended import jwt_required, current_user
+from flask import Blueprint, url_for
+from flask.typing import ResponseReturnValue
+from flask_jwt_extended import jwt_required
 
 # Local Application imports
-from edify import db
-from edify.backend.user.utils import get_current_user, check_author
-from edify.backend.question.utils import question_dictionary
+from edify.core import db
+from edify.backend.user.utils import get_current_user
 from edify.models import (
     AcademicField,
     Course,
     Major,
     Method,
     Notification,
-    NotificationType,
-    Offer,
-    Question,
     School,
     TimeInterval,
-    User,
 )
 from edify.utils.constants import ErrorType
-from edify.utils.decorators import author_required
 from edify.utils.utils import error_response, internal_request, data_response
 
 
@@ -44,7 +38,7 @@ data = Blueprint("data", __name__, url_prefix="/data")
 # Endpoint: /backend/data/courses
 @data.route("/courses", methods=["GET"])
 @jwt_required(optional=True)
-def fetch_user_courses() -> flask_typing.ResponseReturnValue:
+def fetch_user_courses() -> ResponseReturnValue:
     """
     Fetch the courses associated with the current user if authenticated,
     otherwise fetch courses for 'Cornell University'.
@@ -69,7 +63,7 @@ def fetch_user_courses() -> flask_typing.ResponseReturnValue:
 
 # Endpoint: /backend/data/school/<id_school>/courses
 @data.route("/school/<int:id_school>/courses", methods=["GET"])
-def fetch_school_courses(id_school: int) -> flask_typing.ResponseReturnValue:
+def fetch_school_courses(id_school: int) -> ResponseReturnValue:
     """
     Fetch all courses for a given school ID.
 
@@ -86,7 +80,7 @@ def fetch_school_courses(id_school: int) -> flask_typing.ResponseReturnValue:
 # Endpoint: /backend/data/subjects
 @data.route("/subjects", methods=["GET"])
 @jwt_required(optional=True)
-def fetch_user_subjects() -> flask_typing.ResponseReturnValue:
+def fetch_user_subjects() -> ResponseReturnValue:
     """
     Fetch the subjects associated with the current user if authenticated,
     otherwise fetch subjects for 'Cornell University'.
@@ -111,7 +105,7 @@ def fetch_user_subjects() -> flask_typing.ResponseReturnValue:
 
 # Endpoint: /backend/data/school/<id_school>/subjects
 @data.route("/school/<int:id_school>/subjects", methods=["GET"])
-def fetch_school_subjects(id_school: int) -> flask_typing.ResponseReturnValue:
+def fetch_school_subjects(id_school: int) -> ResponseReturnValue:
     """
     Fetch all subjects for a given school ID.
 
@@ -121,6 +115,7 @@ def fetch_school_subjects(id_school: int) -> flask_typing.ResponseReturnValue:
     Returns:
         JSON response with the subjects related to the specified school.
     """
+    AcademicField.query.filter_by(school_id=id_school).all()
     subjects = AcademicField.to_dict_all(
         db.session.query(AcademicField).filter_by(school_id=id_school).all()
     )
@@ -130,7 +125,7 @@ def fetch_school_subjects(id_school: int) -> flask_typing.ResponseReturnValue:
 # Endpoint: /backend/data/majors
 @data.route("/majors", methods=["GET"])
 @jwt_required(optional=True)
-def fetch_user_majors() -> flask_typing.ResponseReturnValue:
+def fetch_user_majors() -> ResponseReturnValue:
     """
     Fetch the majors associated with the current user if authenticated,
     otherwise fetch majors for 'Cornell University'.
@@ -155,7 +150,7 @@ def fetch_user_majors() -> flask_typing.ResponseReturnValue:
 
 # Endpoint: /backend/data/school/<id_school>/majors
 @data.route("/school/<int:id_school>/majors", methods=["GET"])
-def fetch_school_majors(id_school: int) -> flask_typing.ResponseReturnValue:
+def fetch_school_majors(id_school: int) -> ResponseReturnValue:
     """
     Fetch all majors for a given school ID.
 
@@ -173,7 +168,7 @@ def fetch_school_majors(id_school: int) -> flask_typing.ResponseReturnValue:
 
 # Endpoint: /backend/data/methods
 @data.route("/methods", methods=["GET"])
-def fetch_methods() -> flask_typing.ResponseReturnValue:
+def fetch_methods() -> ResponseReturnValue:
     """
     Fetch all supported methods.
 
@@ -188,7 +183,7 @@ def fetch_methods() -> flask_typing.ResponseReturnValue:
 
 # Endpoint: /backend/data/intervals
 @data.route("/intervals", methods=["GET"])
-def fetch_intervals() -> flask_typing.ResponseReturnValue:
+def fetch_intervals() -> ResponseReturnValue:
     """
     Fetch all time intervals.
 
@@ -201,7 +196,7 @@ def fetch_intervals() -> flask_typing.ResponseReturnValue:
 
 # Endpoint: /backend/data/notifications
 @data.route("/notifications", methods=["GET"])
-def fetch_user_notifications() -> flask_typing.ResponseReturnValue:
+def fetch_user_notifications() -> ResponseReturnValue:
     """
     Fetch notifications for the current user.
 
