@@ -10,10 +10,42 @@ from flask.typing import ResponseReturnValue
 from sqlalchemy.exc import IntegrityError
 
 # Local Application imports
-from edify.core import db
+from edify.core import db, socketio
 from edify.models import Notification
-from edify.utils.constants import ErrorType
+from edify.utils.constants import ErrorType, NotificationTypeEnum
 from edify.utils.utils import error_response
+
+
+def emit_notification(notification: Notification) -> None:
+    """
+    Emit a socketio notification to the user's room.
+    """
+    notification_type_map = {
+        NotificationTypeEnum.OFFER_ACCEPTED: "success",
+        NotificationTypeEnum.NEW_OFFER: "success",
+        NotificationTypeEnum.OFFER_REVOKED: "warning",
+        NotificationTypeEnum.PASSWORD_RESET: "warning",
+        NotificationTypeEnum.QUESTION_DELETED: "warning",
+        NotificationTypeEnum.OFFER_DECLINED: "warning",
+    }
+
+    # Determine reload URL based on notification properties
+    reload_url = None
+    if notification.question_id:
+        reload_url = f"/question/{notification.question_id}"
+    elif notification.link:
+        reload_url = notification.link
+
+    # Emit banner
+    socketio.emit(
+        "offer_notification",
+        {
+            "type": notification_type_map.get(notification.type, "info"),
+            "message": notification.message,
+            "reload_url": reload_url,
+        },
+        room=f"user_{notification.user_id}",
+    )
 
 
 def commit_changes(error_msg: str) -> Optional[ResponseReturnValue]:
@@ -40,6 +72,7 @@ def create_notification(
     user_id: int,
     question_id: Optional[int] = None,
     link: Optional[str] = None,
+    emit: Optional[bool] = False,
 ) -> Optional[ResponseReturnValue]:
     """Create and commit a notification"""
     notification = Notification(
@@ -50,6 +83,9 @@ def create_notification(
         link=link,
     )
     db.session.add(notification)
+
+    if emit:
+        emit_notification(notification)
 
     return commit_changes("Failed to create notification")
 

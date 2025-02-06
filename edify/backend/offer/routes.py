@@ -166,6 +166,7 @@ def create_offer(args) -> ResponseReturnValue:
         f"You have a new offer from {user.username} for ${price:.2f}!",
         question.user_id,
         question.id,
+        emit=True,
     )
 
     return jsonify(offer_obj.to_dict(simplified=True)), HTTPStatus.CREATED
@@ -232,6 +233,7 @@ def update_offer(args, id_offer: int) -> ResponseReturnValue:
         f"{offer_obj.user.username} updated their offer to ${new_amount:.2f}!",
         user_id=question.user_id,
         question_id=question.id,
+        emit=True,
     )
 
     return jsonify(offer_obj.to_dict()), HTTPStatus.OK
@@ -270,6 +272,7 @@ def delete_offer(id_offer: int) -> ResponseReturnValue:
         f"{offer_obj.user.username} revoked their offer!",
         user_id=question.user_id,
         question_id=question.id,
+        emit=True,
     )
 
     return jsonify({"msg": "Offer deleted"}), HTTPStatus.NO_CONTENT
@@ -342,6 +345,7 @@ def accept_offer(offer_id: int) -> ResponseReturnValue:
         ),
         user_id=offer_obj.user_id,
         question_id=question.id,
+        emit=True,
     )
 
     create_notification(
@@ -357,6 +361,7 @@ def accept_offer(offer_id: int) -> ResponseReturnValue:
             f"Your offer to {question.user.username} was declined!",
             user_id=other_offer.user_id,
             question_id=question.id,
+            emit=True,
         )
 
     return jsonify(offer_obj.to_dict()), HTTPStatus.OK
@@ -389,6 +394,7 @@ def decline_offer(offer_id: int) -> ResponseReturnValue:
         f"Your offer to {question.user.username} was declined!",
         user_id=offer_obj.user_id,
         question_id=question.id,
+        emit=True,
     )
 
     create_notification(
