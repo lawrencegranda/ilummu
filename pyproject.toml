@@ -41,6 +41,7 @@ flask-socketio = "^5.5.1"
 pylint = "^3.3.3"
 PyJWT = ">=2.0,<2.10"
 cloc = "^0.2.5"
+black = "^25.1.0"
 
 [build-system]
 requires = ["poetry-core"]
