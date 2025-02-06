@@ -12,10 +12,9 @@ from flask.typing import ResponseReturnValue
 from flask_jwt_extended import jwt_required
 from webargs import fields
 from webargs.flaskparser import use_args
-from socketio_ext import socketio
 
 # Local Application imports
-from edify.core import db
+from edify.core import db, socketio
 from edify.models import Question, Offer
 from edify.utils.utils import error_response
 from edify.utils.constants import ErrorType, NotificationTypeEnum, OfferStatusEnum
@@ -153,36 +152,21 @@ def create_offer(args) -> ResponseReturnValue:
     if commit_error:
         return commit_error
 
-    # Send notifications
-    notifications = [
-        (
-            NotificationTypeEnum.NEW_OFFER,
-            f"You made a new offer for ${price:.2f}!",
-            user.id,
-        ),
-        (
-            NotificationTypeEnum.NEW_OFFER,
-            f"You have a new offer from {user.username} for ${price:.2f}!",
-            question.user_id,
-        ),
-    ]
+    # Create notification for the offer creator
+    create_notification(
+        NotificationTypeEnum.NEW_OFFER,
+        f"You made a new offer for ${price:.2f}!",
+        user.id,
+        question.id,
+    )
 
-    for n_type, msg, u_id in notifications:
-        create_notification(n_type, msg, u_id, question.id)
-
-    # after committing offer, we want to push to the question author’s room:
-    question_author_id = question.user_id
-    room_name = f"user_{question_author_id}"
-
-    # socketio emission! this sends a real time notification to the author
-    socketio.emit(
-        "offer_notification",
-        {
-            "type": "info",
-            "message": f"You have a new offer from {user.username} for ${price:.2f}!",
-            "reload_url": f"/question/{question.id}",
-        },
-        room=room_name,  # question author
+    # Create notification for the question author
+    create_notification(
+        NotificationTypeEnum.NEW_OFFER,
+        f"You have a new offer from {user.username} for ${price:.2f}!",
+        question.user_id,
+        question.id,
+        emit=True,
     )
 
     return jsonify(offer_obj.to_dict(simplified=True)), HTTPStatus.CREATED
@@ -249,18 +233,8 @@ def update_offer(args, id_offer: int) -> ResponseReturnValue:
         f"{offer_obj.user.username} updated their offer to ${new_amount:.2f}!",
         user_id=question.user_id,
         question_id=question.id,
+        emit=True,
     )
-
-    socketio.emit(
-        "offer_notification",
-        {
-            "type": "info",
-            "message": f"{offer_obj.user.username} updated their offer to ${offer_obj.amount:.2f}",
-            "reload_url": f"/question/{offer_obj.question.id}",
-        },
-        room=f"user_{offer_obj.question.user_id}",
-    )
-    db.session.commit()
 
     return jsonify(offer_obj.to_dict()), HTTPStatus.OK
 
@@ -298,16 +272,7 @@ def delete_offer(id_offer: int) -> ResponseReturnValue:
         f"{offer_obj.user.username} revoked their offer!",
         user_id=question.user_id,
         question_id=question.id,
-    )
-
-    socketio.emit(
-        "offer_notification",
-        {
-            "type": "warning",
-            "message": f"{offer_obj.user.username} revoked their offer on question {offer_obj.question.id}.",
-            "reload_url": f"/question/{offer_obj.question.id}",
-        },
-        room=f"user_{offer_obj.question.user_id}",
+        emit=True,
     )
 
     return jsonify({"msg": "Offer deleted"}), HTTPStatus.NO_CONTENT
@@ -380,14 +345,12 @@ def accept_offer(offer_id: int) -> ResponseReturnValue:
         ),
         user_id=offer_obj.user_id,
         question_id=question.id,
+        emit=True,
     )
 
     create_notification(
         NotificationTypeEnum.OFFER_ACCEPTED,
-        (
-            f"You accepted {offer_obj.user.username}'s offer! Check the question "
-            "information as soon as possible to get in touch with them."
-        ),
+        f"You accepted {offer_obj.user.username}'s offer!",
         user_id=question.user_id,
         question_id=question.id,
     )
@@ -398,17 +361,8 @@ def accept_offer(offer_id: int) -> ResponseReturnValue:
             f"Your offer to {question.user.username} was declined!",
             user_id=other_offer.user_id,
             question_id=question.id,
+            emit=True,
         )
-
-    socketio.emit(
-        "offer_notification",
-        {
-            "type": "success",
-            "message": f"Your offer for question {offer_obj.question.id} was accepted!",
-            "reload_url": f"/question/{offer_obj.question.id}",
-        },
-        room=f"user_{offer_obj.user_id}",
-    )
 
     return jsonify(offer_obj.to_dict()), HTTPStatus.OK
 
@@ -440,6 +394,7 @@ def decline_offer(offer_id: int) -> ResponseReturnValue:
         f"Your offer to {question.user.username} was declined!",
         user_id=offer_obj.user_id,
         question_id=question.id,
+        emit=True,
     )
 
     create_notification(
@@ -448,16 +403,5 @@ def decline_offer(offer_id: int) -> ResponseReturnValue:
         user_id=question.user_id,
         question_id=question.id,
     )
-
-    socketio.emit(
-        "offer_notification",
-        {
-            "type": "info",
-            "message": f"Your offer for question {offer_obj.question.id} was declined!",
-            "reload_url": f"/question/{offer_obj.question.id}",
-        },
-        room=f"user_{offer_obj.user_id}",
-    )
-    db.session.commit()
 
     return jsonify(offer_obj.to_dict()), HTTPStatus.OK
