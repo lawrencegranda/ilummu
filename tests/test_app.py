@@ -35,4 +35,6 @@ def create_test_app():
     # pylint: disable=import-outside-toplevel
     from edify.config import Config
 
+    # pylint: enable=all
+
     return create_app(Config)

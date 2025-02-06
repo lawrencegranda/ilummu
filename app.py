@@ -11,6 +11,8 @@ from edify.config import Config
 from edify.models import *
 from edify.utils.constants import EdifyEnvironments
 
+# pylint: enable=all
+
 # Create the Flask app
 app = create_app(Config)
 

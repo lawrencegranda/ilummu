@@ -179,7 +179,7 @@ def create_question(args):
     )
     if recent_question and datetime.now(
         timezone.utc
-    ) - recent_question.created_at < timedelta(seconds=10):
+    ) - recent_question.created_at.replace(tzinfo=timezone.utc) < timedelta(seconds=10):
         return error_response(
             "Too many requests, wait",
             ErrorType.BAD_REQUEST,
