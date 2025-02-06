@@ -41,6 +41,8 @@ def create_app(config_class):
     from edify.frontend.routes import frontend
     from edify.backend.routes import backend
 
+    # pylint: enable=all
+
     @frontend.before_request
     def enforce_https():
         """Redirect to HTTPS if not already using it."""
