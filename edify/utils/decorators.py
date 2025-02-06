@@ -1,7 +1,7 @@
 """Decorators for managing access to endpoints."""
 
 # Standard Library Imports
-from functools import wraps
+from functools import wraps  # pylint: disable=no-name-in-module
 from http import HTTPStatus
 from typing import Callable, List, Union
 

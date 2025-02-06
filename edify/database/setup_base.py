@@ -20,6 +20,8 @@ class DatabaseSetup(ABC):
             from edify.core import db
             from edify.database.populate import populate_constants
 
+            # pylint: enable=all
+
             # Create tables
             db.create_all()
             db.session.commit()

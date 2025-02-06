@@ -32,6 +32,8 @@ def commit_changes(error_msg: str) -> Optional[ResponseReturnValue]:
     return None
 
 
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-positional-arguments
 def create_notification(
     notification_type: str,
     message: str,
@@ -50,3 +52,6 @@ def create_notification(
     db.session.add(notification)
 
     return commit_changes("Failed to create notification")
+
+
+# pylint: enable=all

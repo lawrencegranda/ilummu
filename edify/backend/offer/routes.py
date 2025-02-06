@@ -152,22 +152,21 @@ def create_offer(args) -> ResponseReturnValue:
     if commit_error:
         return commit_error
 
-    # Send notifications
-    notifications = [
-        (
-            NotificationTypeEnum.NEW_OFFER,
-            f"You made a new offer for ${price:.2f}!",
-            user.id,
-        ),
-        (
-            NotificationTypeEnum.NEW_OFFER,
-            f"You have a new offer from {user.username} for ${price:.2f}!",
-            question.user_id,
-        ),
-    ]
+    # Create notification for the offer creator
+    create_notification(
+        NotificationTypeEnum.NEW_OFFER,
+        f"You made a new offer for ${price:.2f}!",
+        user.id,
+        question.id,
+    )
 
-    for n_type, msg, u_id in notifications:
-        create_notification(n_type, msg, u_id, question.id)
+    # Create notification for the question author
+    create_notification(
+        NotificationTypeEnum.NEW_OFFER,
+        f"You have a new offer from {user.username} for ${price:.2f}!",
+        question.user_id,
+        question.id,
+    )
 
     return jsonify(offer_obj.to_dict(simplified=True)), HTTPStatus.CREATED
 
@@ -230,7 +229,7 @@ def update_offer(args, id_offer: int) -> ResponseReturnValue:
 
     create_notification(
         NotificationTypeEnum.UPDATED_OFFER,
-        f"{offer_obj.user.username} changed their offer to ${new_amount:.2f}!",
+        f"{offer_obj.user.username} updated their offer to ${new_amount:.2f}!",
         user_id=question.user_id,
         question_id=question.id,
     )
@@ -347,10 +346,7 @@ def accept_offer(offer_id: int) -> ResponseReturnValue:
 
     create_notification(
         NotificationTypeEnum.OFFER_ACCEPTED,
-        (
-            f"You accepted {offer_obj.user.username}'s offer! Check the question "
-            "information as soon as possible to get in touch with them."
-        ),
+        f"You accepted {offer_obj.user.username}'s offer!",
         user_id=question.user_id,
         question_id=question.id,
     )
