@@ -185,7 +185,7 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
     def hash_password(password: str) -> str:
         return bcrypt.generate_password_hash(password).decode("utf-8")
 
-    def get_access_token(self) -> Any:
+    def get_access_token(self) -> str:
         """
         Generate an access token for the user and update the user's token information.
 
@@ -195,12 +195,12 @@ class User(BaseModel, UserMixin, metaclass=UserModelABCMeta):
         Returns:
             str: The generated access token.
         """
-        access_token = create_access_token(identity=self.id)
+        access_token = create_access_token(identity=str(self.id))
 
         return access_token
 
-    def get_refresh_token(self) -> Any:
-        return create_refresh_token(identity=self.id)
+    def get_refresh_token(self) -> str:
+        return create_refresh_token(identity=str(self.id))
 
     def generate_reset_token(self):
         serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])

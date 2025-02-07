@@ -23,6 +23,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
 from werkzeug.exceptions import HTTPException
 from jwt.exceptions import ExpiredSignatureError, PyJWTError
+from flask_session import Session
 
 # Local Application imports
 from edify.utils.utils import (
@@ -39,7 +40,7 @@ jwt = JWTManager()
 migrate = Migrate()
 mail = Mail()
 s3_client = None
-
+oauth_session = None
 
 def create_app(config_class):
     app = Flask(__name__)
@@ -60,12 +61,19 @@ def create_app(config_class):
     bcrypt.init_app(app)
     jwt.init_app(app)
     migrate.init_app(app, db)
+    Session(app)
+
+    # Google OAuth2 Config
+    app.config["GOOGLE_CLIENT_ID"] = config_class.GOOGLE_CLIENT_ID
+    app.config["GOOGLE_CLIENT_SECRET"] = config_class.GOOGLE_CLIENT_SECRET
+    app.config["GOOGLE_REDIRECT_URI"] = config_class.GOOGLE_REDIRECT_URI
+    app.config["SESSION_TYPE"] = "filesystem"
 
     # Had to do this because there is an error in source code.
     mail.state = mail.init_app(app)
-
     from edify.frontend.routes import frontend
     from edify.backend.routes import backend
+    from edify.backend.routes import oauth
 
     @frontend.before_request
     def enforce_https():
@@ -150,9 +158,24 @@ def create_app(config_class):
             jsonify("An unexpected error occurred."),
             HTTPStatus.INTERNAL_SERVER_ERROR,
         )
+    
+    @oauth.errorhandler(HTTPException)
+    def handle_http_exception(e):
+        return jsonify(error=str(e)), e.code
+    
+    @oauth.errorhandler(Exception)
+    def handle_error(e):
+        print(f"ERROR: Uncaught error ({type(e)}): {e}")
+        print(traceback.format_exc())
+
+        return (
+            jsonify("An unexpected error occurred."),
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+        )
 
     app.register_blueprint(frontend)
     app.register_blueprint(backend)
+    app.register_blueprint(oauth)
 
     print("\n------ URL MAP: ------\n", app.url_map, "\n----------------------\n")
 

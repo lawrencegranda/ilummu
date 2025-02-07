@@ -79,6 +79,14 @@ class Config:
     FILEBASE_ENDPOINT: str = os.environ["FILEBASE_ENDPOINT"]
     FILEBASE_URL: str = os.environ["FILEBASE_URL"]
 
+    # Google OAuth2 Config
+    SESSION_TYPE = "filesystem"
+    SESSION_PERMANENT = False # Session is not permanent
+
+    GOOGLE_CLIENT_ID = os.environ["GOOGLE_CLIENT_ID"]
+    GOOGLE_CLIENT_SECRET = os.environ["GOOGLE_CLIENT_SECRET"]
+    GOOGLE_REDIRECT_URI = os.environ["GOOGLE_REDIRECT_URI"]
+
     # CSP Policy
     CSP_POLICY = {
         "default-src": "'self'",

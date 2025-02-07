@@ -270,7 +270,6 @@ def login() -> flask_typing.ResponseReturnValue:
     )
 
 
-# Endpoint: /signup
 @frontend.route("/signup")
 @no_token_allowed
 def signup() -> flask_typing.ResponseReturnValue:
@@ -283,6 +282,9 @@ def signup() -> flask_typing.ResponseReturnValue:
     majors = fetch_data(url_for("backend.data.fetch_user_majors"), "GET")
     majors.sort(key=lambda d: d["name"])
 
+    # Google OAuth URL
+    oauth_url = url_for("oauth.login", _external=True)
+
     next_url = request.args.get("next_url", url_for("frontend.index"))
     http_method = request.args.get("http_method", "GET")
 
@@ -292,6 +294,7 @@ def signup() -> flask_typing.ResponseReturnValue:
         majors=majors,
         next_url=next_url,
         http_method=http_method,
+        oauth_url=oauth_url,
     )
 
 
