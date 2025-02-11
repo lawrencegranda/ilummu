@@ -1,7 +1,0 @@
-[MASTER]
-# Ignore specific files or directories
-ignore-paths=^migrations/.*$,
-             ^.*/migrations/.*$,
-             ^.*/conftest.py$,
-             ^.venv/.*$,
-             ^.*/\.venv/.*$

@@ -1,13 +1,13 @@
 # Run black formatter
-echo "\n\033[1;32m=== Running Black Formatter on Python ===\033[0m"
+echo "\n\033[1;33m=== Running Black Formatter on Python ===\033[0m"
 poetry run black .
 
 # Run djlint formatter
-echo "\n\033[1;32m=== Running DJLint Formatter on Jinja ===\033[0m"
+echo "\n\033[1;33m=== Running DJLint Formatter on Jinja ===\033[0m"
 poetry run djlint . --reformat
 
-# Print header for Lines of Code section with green color
-echo "\n\033[1;32m=== Checking Lines of Code ===\033[0m"
+# Print header for Lines of Code section with yellow color
+echo "\n\033[1;33m=== Checking Lines of Code ===\033[0m"
 
 # Run cloc and capture its output
 cloc_output=$(poetry run cloc $(pwd) --exclude-dir=__pycache__,migrations --exclude-ext=.pyc --not-match-f="(^|/)\." --not-match-d="(^|/)\." --sum-one)
@@ -20,10 +20,10 @@ code_lines=$(echo "$cloc_output" | grep "SUM:" | awk '{print $5}')
 total_lines=$((comment_lines + code_lines))
 
 # Print formatted output in white color showing the line counts
-echo "\033[1;37mA total of \033[1;32m$total_lines\033[1;37m lines with \033[1;32m$code_lines\033[1;37m code and \033[1;32m$comment_lines\033[1;37m comments.\033[0m"
+echo "\033[1;37mA total of \033[1;33m$total_lines\033[1;37m lines with \033[1;33m$code_lines\033[1;37m code and \033[1;33m$comment_lines\033[1;37m comments.\033[0m"
 
-# Print header for Pylint section with green color
-echo "\n\033[1;32m=== Running Pylint Checks ===\033[0m"
+# Print header for Pylint section with yellow color
+echo "\n\033[1;33m=== Running Pylint Checks ===\033[0m"
 
 # Run pylint on individual Python files with cyan colored header
 echo "\033[1;36m>> Checking individual Python files...\033[0m"
