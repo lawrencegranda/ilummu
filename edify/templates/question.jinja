@@ -2,22 +2,22 @@
 {% set increment = 2 %}
 
 {% block title %}
-  Question
+    Question
 {% endblock title %}
 
 {% block navbar %}
-  {% include "bases/navbar-logged.jinja" if user else "bases/navbar-not-logged.jinja" %}
+    {% include "bases/navbar-logged.jinja" if user else "bases/navbar-not-logged.jinja" %}
 {% endblock navbar %}
 
 {% block top %}
-  {% include "bases/create-question.jinja" %}
+    {% include "bases/create-question.jinja" %}
 {% endblock top %}
 
 {% block javascript %}
-  {{ super() }}
+    {{ super() }}
 
-  {% if user and not question.solved and not question.is_author and not question.offer_made %}
-    <script>
+    {% if user and not question.solved and not question.is_author and not question.offer_made %}
+        <script>
       function makeOffer(value) {
           // Define the data to be sent in the request
           const data = {
@@ -51,12 +51,12 @@
               makeOffer(value)          
           });
        });
-    </script>
-  {% endif %}
+        </script>
+    {% endif %}
 
-  {% if user and not question.solved and not question.is_author
-    and question.offer_made and (not question.offer_made.status == "ACCEPTED") %}
-    <script>
+    {% if user and not question.solved and not question.is_author
+        and question.offer_made and (not question.offer_made.status == "ACCEPTED") %}
+        <script>
       function revokeOffer() {
           $.ajax({
               url: '{{ url_for("backend.offer.delete_offer", id_offer=question.offer_made.id) }}',
@@ -76,11 +76,11 @@
               revokeOffer()
           });
        });
-    </script>
-  {% endif %}
+        </script>
+    {% endif %}
 
-  {% if user and not question.solved and question.is_author and (not question.offer_accepted) %}
-    <script>
+    {% if user and not question.solved and question.is_author and (not question.offer_accepted) %}
+        <script>
       // Calculate bounds
       const lowestValue = {{ question.original_price }};
       const highestValue = 3 * lowestValue;
@@ -184,11 +184,11 @@
               changePrice($("#bid-value").data('value'));
           });
        });
-    </script>
-  {% endif %}
+        </script>
+    {% endif %}
 
-  {% if user and not question.solved and question.is_author and (not question.offer_accepted) %}
-    <script>
+    {% if user and not question.solved and question.is_author and (not question.offer_accepted) %}
+        <script>
       function cancelQuestion() {
           $.ajax({
               url: '{{  url_for("backend.question.delete_question", id_question=question.id) }}',
@@ -209,10 +209,10 @@
               cancelQuestion()
           });
        });
-    </script>
-  {% endif %}
+        </script>
+    {% endif %}
 
-  <script>
+    <script>
     function openModal(fileUrl, isImage) {
       // Determine the type based on the provided `isImage` flag
       const modal = document.getElementById(isImage ? "imageModal" : "pdfModal");
@@ -244,328 +244,327 @@
       if (modalImage) modalImage.src = "";
       if (modalPdf) modalPdf.src = "";
   }
-  </script>
+    </script>
 {% endblock javascript %}
 
 {% block content %}
-  <div class="{{ 'container main-content logged' if user else 'container main-content' }}">
-    <div class="question-wrapper">
-      <div class="question-body">
-        <div class="question-top">
-          <div class="question-left">
-            <div id="question-user-profile">
-              <img src="https://robohash.org/{{ question.user.username }}"
-                   alt="Avatar"
-                   class="avatar"
-                   height="auto"
-                   width="auto" />
-            </div>
-            <div class="question-user">
-              <p class="question-user-name">
-                {{ question.user.username }}
-              </p>
-              <p class="question-user-info">
-                {{ question.user.major }} • {{ question.user.year }}
-              </p>
-            </div>
-          </div>
-          <div class="question-right">
-            <p id="question-date">
-              {{ question.time_ago }}
-            </p>
-            <div class="question-labels">
-              <div class="question-price">
-                ${{ '%.2f' % question.price | float }}
-              </div>
+    <div class="{{ 'container main-content logged' if user else 'container main-content' }}">
+        <div class="question-wrapper">
+            <div class="question-body">
+                <div class="question-top">
+                    <div class="question-left">
+                        <div id="question-user-profile">
+                            <img src="https://robohash.org/{{ question.user.username }}"
+                                 alt="Avatar"
+                                 class="avatar"
+                                 height="auto"
+                                 width="auto" />
+                        </div>
+                        <div class="question-user">
+                            <p class="question-user-name">
+                                {{ question.user.username }}
+                            </p>
+                            <p class="question-user-info">
+                                {{ question.user.major }} • {{ question.user.year }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="question-right">
+                        <p id="question-date">
+                            {{ question.time_ago }}
+                        </p>
+                        <div class="question-labels">
+                            <div class="question-price">
+                                ${{ '%.2f' % question.price | float }}
+                            </div>
 
-              {% if question.solved %}
-                <p class="question-status solved">
-                  solved
-                </p>
-              {% else %}
-                <p class="question-status unsolved">
-                  unsolved
-                </p>
-              {% endif %}
+                            {% if question.solved %}
+                                <p class="question-status solved">
+                                    solved
+                                </p>
+                            {% else %}
+                                <p class="question-status unsolved">
+                                    unsolved
+                                </p>
+                            {% endif %}
 
-            </div>
-          </div>
-        </div>
-        <div class="question-bottom">
-          <p class="question-class">
-            {{ question.course_code }}: {{ question.course_name }}
-          </p>
-          <p class="question-info">
-            {{ question.solve_time }} solve time • {{ question.method }}
-          </p>
-          <p class="question-text">
-            {{ question.request }}
-          </p>
-
-          {% if question.image_url %}
-            <div class="question-wrapper-main">
-
-              {% if question.is_image %}
-                <!-- Mini preview for images -->
-                <div class="question-img-preview-container">
-                  <div class="question-img-preview">
-                    <img class="question-img"
-                         src="{{ question.image_url }}"
-                         alt="Question Image" />
-                    <p class="overlay-text"
-                       onclick="openModal('{{ question.image_url }}', true)">
-                      Click to see full image
+                        </div>
+                    </div>
+                </div>
+                <div class="question-bottom">
+                    <p class="question-class">
+                        {{ question.course_code }}: {{ question.course_name }}
                     </p>
-                  </div>
-                </div>
-                <!-- Full-view modal -->
-                <div id="imageModal" class="image-modal" onclick="closeModal()">
-                  <span class="modal-close" onclick="closeModal()">&times;</span>
-                  <img id="modalImage" class="modal-content" alt="Full View Image" />
-                </div>
-              {% else %}
-                <!-- Mini preview for PDF -->
-                <div class="question-img-preview-container">
-                  <div class="question-img-preview">
-                    <img class="question-img"
-                         src="{{ question.image_url }}"
-                         alt="Question Image" />
-                    <p class="overlay-text"
-                       onclick="openModal('{{ question.image_url }}', false)">
-                      Click to see full PDF file
+                    <p class="question-info">
+                        {{ question.solve_time }} solve time • {{ question.method }}
                     </p>
-                  </div>
+                    <p class="question-text">
+                        {{ question.request }}
+                    </p>
+
+                    {% if question.image_url %}
+                        <div class="question-wrapper-main">
+
+                            {% if question.is_image %}
+                                <!-- Mini preview for images -->
+                                <div class="question-img-preview-container">
+                                    <div class="question-img-preview">
+                                        {# djlint:off H006 #}
+                                        <img class="question-img" src="{{ question.image_url }}" alt="Question Image" />
+                                        {# djlint:on H006 #}
+                                        <p class="overlay-text" onclick="openModal('{{ question.image_url }}', true)">
+                                            Click to see full image
+                                        </p>
+                                    </div>
+                                </div>
+                                <!-- Full-view modal -->
+                                <div id="imageModal" class="image-modal" onclick="closeModal()">
+                                    <span class="modal-close" onclick="closeModal()">&times;</span>
+                                    {# djlint:off H006 #}
+                                    <img id="modalImage" class="modal-content" alt="Full View Image" />
+                                    {# djlint:on H006 #}
+                                </div>
+                            {% else %}
+                                <!-- Mini preview for PDF -->
+                                <div class="question-img-preview-container">
+                                    <div class="question-img-preview">
+                                        {# djlint:off H006 #}
+                                        <img class="question-img" src="{{ question.image_url }}" alt="Question Image" />
+                                        {# djlint:on H006 #}
+                                        <p class="overlay-text" onclick="openModal('{{ question.image_url }}', false)">
+                                            Click to see full PDF file
+                                        </p>
+                                    </div>
+                                </div>
+                                <!-- Full-view modal for PDF -->
+                                <div id="pdfModal" class="image-modal" onclick="closeModal()">
+                                    <span class="modal-close">&times;</span>
+                                    <iframe id="modalPdf" class="modal-content pdf-modal-content" frameborder="0"></iframe>
+                                </div>
+                            {% endif %}
+
+                        </div>
+                    {% endif %}
+
                 </div>
-                <!-- Full-view modal for PDF -->
-                <div id="pdfModal" class="image-modal" onclick="closeModal()">
-                  <span class="modal-close">&times;</span>
-                  <iframe id="modalPdf" class="modal-content pdf-modal-content" frameborder="0"></iframe>
+            </div>
+
+            {% if not user %}
+                <div class="separator">
                 </div>
-              {% endif %}
+                <p class="question-statement">
+                    Please <a href='{{ url_for("frontend.signup") }}'>sign up</a> to see more details or interact with this
+                    question.
+                </p>
+            {% else %}
 
-            </div>
-          {% endif %}
+                {% if question.is_author %}
 
-        </div>
-      </div>
+                    {% if question.offer_accepted %}
+                        <div class="separator">
+                        </div>
+                        <div class="accepted-offer-wrapper">
+                            <div class="accepted-offer">
+                                <div class="offer-left">
+                                    <div class="offer-user-profile">
+                                        <img src="https://robohash.org/{{ question.offer_accepted.user.username }}"
+                                             alt="Avatar"
+                                             class="avatar"
+                                             height="100"
+                                             width="100" />
+                                    </div>
+                                    <div class="question-user">
+                                        <p class="question-user-name">
+                                            {{ question.offer_accepted.user.username }}
+                                            &nbsp;
+                                            <span class="rating">
 
-      {% if not user %}
-        <div class="separator">
-        </div>
-        <p class="question-statement">
-          Please <a href='{{ url_for("frontend.signup") }}'>sign up</a> to see more details or interact with this
-          question.
-        </p>
-      {% else %}
+                                                {% if not question.offer_accepted.rating %}
+                                                {% elif question.offer_accepted.rating >= 3 %}
+                                                    {{ '%.1f' % question.offer_accepted.rating }}
+                                                    <span class="glyphicon glyphicon-star"></span>
+                                                {% else %}
+                                                    {{ '%.1f' % question.offer_accepted.rating }}
+                                                    <span class="glyphicon glyphicon-star-empty"></span>
+                                                {% endif %}
 
-        {% if question.is_author %}
-          {% if question.offer_accepted %}
-            <div class="separator">
-            </div>
-            <div class="accepted-offer-wrapper">
-              <div class="accepted-offer">
-                <div class="offer-left">
-                  <div class="offer-user-profile">
-                    <img src="https://robohash.org/{{ question.offer_accepted.user.username }}"
-                         alt="Avatar"
-                         class="avatar"
-                         height="100"
-                         width="100" />
-                  </div>
-                  <div class="question-user">
-                    <p class="question-user-name">
-                      {{ question.offer_accepted.user.username }}
-                      &nbsp;
-                      <span class="rating">
+                                            </span>
+                                        </p>
+                                        <p class="question-user-info">
+                                            {{ question.offer_accepted.user.major }} • {{
+                                            question.offer_accepted.user.year }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="accepted-offer-price">
+                                    Pay ${{ '%.2f' % question.offer_accepted.amount | float }}
+                                </div>
+                            </div>
+                            <p class="accepted-offer-statement">
+                                Please contact the tutor through this phone number:
+                            </p>
+                            <p class="accepted-offer-phone">
+                                {{ question.offer_accepted.user.phone }}
+                            </p>
+                            <p class="accepted-offer-message">
+                                ** Arrange payment on your own **
+                            </p>
+                        </div>
+                    {% else %}
 
-                        {% if not question.offer_accepted.rating %}
-                        {% elif question.offer_accepted.rating >= 3 %}
-                          {{ '%.1f' % question.offer_accepted.rating }}
-                          <span class="glyphicon glyphicon-star"></span>
+                        {% if question.solved %}
+                            <div class="separator">
+                            </div>
+                            <p class="question-statement">
+                                No offers received.
+                            </p>
                         {% else %}
-                          {{ '%.1f' % question.offer_accepted.rating }}
-                          <span class="glyphicon glyphicon-star-empty"></span>
+                            {% include "bases/question-author-offer-list.jinja" %}
+                            <div class="bid-wrapper">
+                                <div class="bid-body">
+                                    <p id="question-wait-header" class="offer-title">
+                                        Looking For Tutors...
+                                    </p>
+                                    <div id="bid-progress" onload="move_progress()">
+                                        <div id="bid-bar">
+                                        </div>
+                                    </div>
+                                    <p class="bid-label">
+                                        Your Offer:
+                                    </p>
+                                    <div class="bid-update-buttons">
+                                        <button id="btn-bid-lower"
+                                                data-value="-{{ increment }}"
+                                                class="btn btn-primary btn-bid-update disabled"
+                                                type="button">
+                                            -${{ increment }}
+                                        </button>
+                                        <p id="bid-value" data-value="{{ '%.2f' % question.price | float }}">
+                                            ${{ '%.2f' % question.price | float }}
+                                        </p>
+                                        <button id="btn-bid-raise"
+                                                data-value="{{ increment }}"
+                                                class="btn btn-primary btn-bid-update"
+                                                type="button">
+                                            +${{ increment }}
+                                        </button>
+                                    </div>
+                                    <button id="btn-update-price" class="btn btn-primary" type="button">
+                                        Update Price
+                                    </button>
+                                    <button id="btn-bid-cancel" class="btn btn-dark" type="button">
+                                        Cancel Request
+                                    </button>
+                                    <p class="bid-tip">
+                                        Tip: if no one is accepting the offer, then probably current price is not attractive.
+                                        <br />
+                                        We recommend raising your price.
+                                    </p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+
+                {% else %}
+                    {% import "macros/offer-declined-macro.jinja" as macro %}
+
+                    {% if question.offer_made and question.offer_made.status == "ACCEPTED" %}
+                        <div class="separator">
+                        </div>
+                        <div class="accepted-offer-wrapper">
+                            <div class="accepted-offer">
+                                <div class="offer-left">
+                                    <div class="offer-user-profile">
+                                        <img src="https://robohash.org/{{ question.user.username }}"
+                                             alt="Avatar"
+                                             class="avatar"
+                                             height="100"
+                                             width="100" />
+                                    </div>
+                                    <div class="question-user">
+                                        <p class="question-user-name">
+                                            {{ question.user.username }}
+                                        </p>
+                                        <p class="question-user-info">
+                                            {{ question.user.major }} • {{ question.user.year | int }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="accepted-offer-price">
+                                    Earn ${{ '%.2f' % question.offer_made.amount | float }}
+                                </div>
+                            </div>
+                            <p class="accepted-offer-statement">
+                                Please contact the student through this phone number:
+                            </p>
+                            <p class="accepted-offer-phone">
+                                {{ question.user.phone }}
+                            </p>
+                            <p class="accepted-offer-message">
+                                ** Arrange payment on your own **
+                            </p>
+                        </div>
+                    {% elif question.solved %}
+
+                        {% if question.offer_made %}
+                            {{ macro.declined_offer("You can find another question.") }}
+                        {% else %}
                         {% endif %}
 
-                      </span>
-                    </p>
-                    <p class="question-user-info">
-                      {{ question.offer_accepted.user.major }} • {{
-                      question.offer_accepted.user.year }}
-                    </p>
-                  </div>
-                </div>
-                <div class="accepted-offer-price">
-                  Pay ${{ '%.2f' % question.offer_accepted.amount | float }}
-                </div>
-              </div>
-              <p class="accepted-offer-statement">
-                Please contact the tutor through this phone number:
-              </p>
-              <p class="accepted-offer-phone">
-                {{ question.offer_accepted.user.phone }}
-              </p>
-              <p class="accepted-offer-message">
-                ** Arrange payment on your own **
-              </p>
-            </div>
-          {% else %}
+                    {% else %}
 
-            {% if question.solved %}
-              <div class="separator">
-              </div>
-              <p class="question-statement">
-                No offers received.
-              </p>
-            {% else %}
-              {% include "bases/question-author-offer-list.jinja" %}
-              <div class="bid-wrapper">
-                <div class="bid-body">
-                  <p id="question-wait-header" class="offer-title">
-                    Looking For Tutors...
-                  </p>
-                  <div id="bid-progress" onload="move_progress()">
-                    <div id="bid-bar">
-                    </div>
-                  </div>
-                  <p class="bid-label">
-                    Your Offer:
-                  </p>
-                  <div class="bid-update-buttons">
-                    <button id="btn-bid-lower"
-                            data-value="-{{ increment }}"
-                            class="btn btn-primary btn-bid-update disabled"
-                            type="button">
-                      -${{ increment }}
-                    </button>
-                    <p id="bid-value" data-value="{{ '%.2f' % question.price | float }}">
-                      ${{ '%.2f' % question.price | float }}
-                    </p>
-                    <button id="btn-bid-raise"
-                            data-value="{{ increment }}"
-                            class="btn btn-primary btn-bid-update"
-                            type="button">
-                      +${{ increment }}
-                    </button>
-                  </div>
-                  <button id="btn-update-price" class="btn btn-primary" type="button">
-                    Update Price
-                  </button>
-                  <button id="btn-bid-cancel" class="btn btn-dark" type="button">
-                    Cancel Request
-                  </button>
-                  <p class="bid-tip">
-                    Tip: if no one is accepting the offer, then probably current price is not attractive.
-                    <br />
-                    We recommend raising your price.
-                  </p>
-                </div>
-              </div>
-            {% endif %}
-          {% endif %}
-
-        {% else %}
-          {% import "macros/offer-declined-macro.jinja" as macro %}
-
-          {% if question.offer_made and question.offer_made.status == "ACCEPTED" %}
-            <div class="separator">
-            </div>
-            <div class="accepted-offer-wrapper">
-              <div class="accepted-offer">
-                <div class="offer-left">
-                  <div class="offer-user-profile">
-                    <img src="https://robohash.org/{{ question.user.username }}"
-                         alt="Avatar"
-                         class="avatar"
-                         height="100"
-                         width="100" />
-                  </div>
-                  <div class="question-user">
-                    <p class="question-user-name">
-                      {{ question.user.username }}
-                    </p>
-                    <p class="question-user-info">
-                      {{ question.user.major }} • {{ question.user.year | int }}
-                    </p>
-                  </div>
-                </div>
-                <div class="accepted-offer-price">
-                  Earn ${{ '%.2f' % question.offer_made.amount | float }}
-                </div>
-              </div>
-              <p class="accepted-offer-statement">
-                Please contact the student through this phone number:
-              </p>
-              <p class="accepted-offer-phone">
-                {{ question.user.phone }}
-              </p>
-              <p class="accepted-offer-message">
-                ** Arrange payment on your own **
-              </p>
-            </div>
-          {% elif question.solved %}
-
-            {% if question.offer_made %}
-              {{ macro.declined_offer("You can find another question.") }}
-            {% else %}
+                        {% if not question.offer_made %}
+                            <div class="offer-wrapper">
+                                <div class="offer-body">
+                                    <p class="offer-title">
+                                        Make an Offer!
+                                    </p>
+                                    <p class="offer-statement">
+                                        For what price will you help this student?
+                                    </p>
+                                    <div class="offer-pair">
+                                        <p class="make-offer-label">
+                                            Your fare:
+                                        </p>
+                                        <input type="range"
+                                               class="form-range"
+                                               id="offer-fare"
+                                               value="{{ question.price }}"
+                                               min="{{ question.price }}"
+                                               max="{{ 2 * question.price }}"
+                                               step="0.25"
+                                               oninput="this.nextElementSibling.value = '$' + parseFloat(this.value).toFixed(2)" />
+                                        <output class="offer-value">${{ '%.2f' % question.price | float }}</output>
+                                    </div>
+                                    <div class="offer-pair">
+                                        <button id="button-agree-offer" class="btn btn-primary btn-offer" type="button">
+                                            Accept for ${{ '%.2f' % question.price | float }}
+                                        </button>
+                                        <button id="button-make-offer" class="btn btn-dark btn-offer" type="button">
+                                            Counter ${{ '%.2f' % question.price | float }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% elif question.offer_made.status == "DECLINED" %}
+                            {{ macro.declined_offer("You can make another offer or find another question.") }}
+                        {% else %}
+                            <div class="separator">
+                            </div>
+                            <div class="double-col">
+                                <p class="question-statement wait-offer">
+                                    Waiting for the student to accept your offer for
+                                    <strong>${{ '%.2f' % question.offer_made.amount | float }}</strong>.
+                                </p>
+                                <button id="revoke-offer" class="btn btn-primary">
+                                    Revoke Offer
+                                </button>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
             {% endif %}
 
-          {% else %}
-
-            {% if not question.offer_made %}
-              <div class="offer-wrapper">
-                <div class="offer-body">
-                  <p class="offer-title">
-                    Make an Offer!
-                  </p>
-                  <p class="offer-statement">
-                    For what price will you help this student?
-                  </p>
-                  <div class="offer-pair">
-                    <p class="make-offer-label">
-                      Your fare:
-                    </p>
-                    <input type="range"
-                           class="form-range"
-                           id="offer-fare"
-                           value="{{ question.price }}"
-                           min="{{ question.price }}"
-                           max="{{ 2 * question.price }}"
-                           step="0.25"
-                           oninput="this.nextElementSibling.value = '$' + parseFloat(this.value).toFixed(2)" />
-                    <output class="offer-value">${{ '%.2f' % question.price | float }}</output>
-                  </div>
-                  <div class="offer-pair">
-                    <button id="button-agree-offer"
-                            class="btn btn-primary btn-offer"
-                            type="button">
-                      Accept for ${{ '%.2f' % question.price | float }}
-                    </button>
-                    <button id="button-make-offer" class="btn btn-dark btn-offer" type="button">
-                      Counter ${{ '%.2f' % question.price | float }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            {% elif question.offer_made.status == "DECLINED" %}
-              {{ macro.declined_offer("You can make another offer or find another question.") }}
-            {% else %}
-              <div class="separator">
-              </div>
-              <div class="double-col">
-                <p class="question-statement wait-offer">
-                  Waiting for the student to accept your offer for
-                  <strong>${{ '%.2f' % question.offer_made.amount | float }}</strong>.
-                </p>
-                <button id="revoke-offer" class="btn btn-primary">
-                  Revoke Offer
-                </button>
-              </div>
-            {% endif %}
-          {% endif %}
-        {% endif %}
-      {% endif %}
-
+        </div>
     </div>
-  </div>
 {% endblock content %}

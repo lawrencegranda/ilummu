@@ -37,7 +37,11 @@ psycopg2-binary = "^2.9.9"
 gunicorn = "^23.0.0"
 boto3 = "^1.35.54"
 pillow = "^11.0.0"
-
+flask-socketio = "^5.5.1"
+pylint = "^3.3.3"
+PyJWT = ">=2.0,<2.10"
+cloc = "^0.2.5"
+black = "^25.1.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -47,3 +51,30 @@ build-backend = "poetry.core.masonry.api"
 pythonpath = [
     "."
 ]
+
+[tool.pylint.MASTER]
+ignore-paths = [
+    "^migrations/.*$",
+    "^.*/migrations/.*$",
+    "^.*/conftest.py$",
+    "^.venv/.*$",
+    "^.*/\\.venv/.*$"
+]
+
+[tool.djlint]
+blank_line_after_tag="endblock,endfor,endif"
+blank_line_before_tag="block,for,if"
+line_break_after_multiline_tag=true
+use_gitignore=true
+ignore="H023,H021,H014"
+format_css=true
+format_js=false
+indent=4
+max_line_length=120
+profile="jinja"
+max_attribute_length=80
+format_attributes="multi-line"
+format_attribute_template_tags=true
+close_void_tags=true
+max_blank_lines=1
+extension=".jinja"

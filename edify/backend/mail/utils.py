@@ -1,3 +1,7 @@
+"""
+Mail utils
+"""
+
 # Standard Library imports
 from http import HTTPStatus
 from typing import List
@@ -7,7 +11,7 @@ from flask import current_app, jsonify
 from flask_mail import Message
 
 # Local Application imports
-from edify import mail
+from edify.core import mail
 from edify.utils.constants import ErrorType
 from edify.utils.utils import error_response
 
@@ -33,11 +37,13 @@ def send(subject: str, html: str, recipients: List[str]) -> tuple:
     msg.body = html
     msg.html = html
 
+    # pylint: disable=broad-exception-caught
     try:
         mail.send(msg)
-    except:
+    except Exception as _:
         return error_response(
             f"Failed to send email to {str(recipients)}.", ErrorType.INTERNAL_ERROR
         )
+    # pylint: enable=all
 
     return jsonify("Success."), HTTPStatus.OK
