@@ -1,0 +1,8 @@
+[default]
+blank_line_after_tag = endblock, endfor, endif
+blank_line_before_tag = block, for, if
+line_break_after_multiline_tag = true
+use_gitignore = true
+format_languages = django-html, jinja, jinja-html, njk, nunjucks, twig, handlebars, hbs, mustache, html
+ignore = H021, H014
+format_css = true
