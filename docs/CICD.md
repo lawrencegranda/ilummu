@@ -1,7 +1,5 @@
 # CI/CD Pipeline Documentation
 
-## Overview
-
 This document outlines the Continuous Integration and Continuous Deployment (CI/CD) pipeline for the Edify project. The pipeline is implemented using GitHub Actions and is designed to ensure code quality, run tests, and automate deployments.
 
 ## Branch Strategy
@@ -101,27 +99,7 @@ The application is configured to run on different environments:
 
 2. **Database Migration**
 
-   When modifying database models, follow these steps to ensure proper migration:
-   <ol>
-       <li>Get database to latest version:
-           <pre><code>flask db upgrade</code></pre>
-       </li>
-       <li>Generate migration for model changes:
-           <pre><code>flask db migrate</code></pre>
-       </li>
-       <li>Apply new migration:
-           <pre><code>flask db upgrade</code></pre>
-       </li>
-       <li>Test downgrade functionality:
-           <pre><code>flask db downgrade</code></pre>
-       </li>
-       <li>Fix any downgrade script issues if needed by manually editing the downgrade function in the migration file</li>
-       <li>Verify upgrade works after downgrade:
-           <pre><code>flask db upgrade</code></pre>
-       </li>
-   </ol>
-
-   **Always test that both upgrade and downgrade operations work correctly before committing or pushing changes.** This ensures database changes can be safely rolled back if needed.
+   When modifying database models, follow the steps outlined in the [database models documentation](MODELS.md#database-migrations)
 
 3. **Application Deployment**
 
@@ -139,9 +117,8 @@ The application is configured to run on different environments:
    - Automated deployment will handle the rest
 
 2. **Database Rollback**
-   ```bash
-   flask db downgrade
-   ```
+
+   - `flask db downgrade`
 
 ## Commit Guidelines
 
@@ -163,35 +140,20 @@ The application is configured to run on different environments:
 
 2. **Pre-commit Checks**
 
-   - Run linting before every commit:
-     ```bash
-     ./run_lint
-     ```
+   - Run linting before every commit: `./run_lint`
    - Fix any linting issues before committing
-   - Run tests if changes affect functionality:
-     ```bash
-     poetry run pytest
-     ```
-   - Set up Git hooks to automate these checks:
-
-     ```bash
-     # Configure Git to use custom hooks directory
-     git config core.hooksPath .githooks
-
-     # Make the pre-commit hook executable
-     chmod +x .githooks/pre-commit
-     ```
-
-   - The pre-commit hook will automatically run linting before each commit
-   - Commits will be blocked if linting fails
+   - Run tests if changes affect functionality: `poetry run pytest`
 
 3. **Branch Management**
+
    - Keep feature branches up to date with main
    - Rebase feature branches before merging
    - Delete branches after merging
-   - Use meaningful branch names:
+   - Use meaningful branch names (similar to commits):
+
      ```
      feature/add-user-auth
      fix/login-error
      docs/update-readme
+     chore/add-linting
      ```
