@@ -1,6 +1,10 @@
 # Run black formatter
-echo "\n\033[1;32m=== Running Black Formatter ===\033[0m"
+echo "\n\033[1;32m=== Running Black Formatter on Python ===\033[0m"
 poetry run black .
+
+# Run djlint formatter
+echo "\n\033[1;32m=== Running DJLint Formatter on Jinja ===\033[0m"
+poetry run djlint . --reformat
 
 # Print header for Lines of Code section with green color
 echo "\n\033[1;32m=== Checking Lines of Code ===\033[0m"

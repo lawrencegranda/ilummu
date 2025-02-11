@@ -39,37 +39,39 @@
                         Log Out
                     </button>
                 </div>
+
                 {% if request.path != '/home' %}
-                <div id="notification-wrapper" style="display: none;">
-                    <div class="notification-center-dimensions notification-background">
-                    </div>
-                    <div class="notification-center-dimensions">
-                        <div class="notification-center">
-                            <p class="notifications-title">
-                                Notifcations
-                            </p>
+                    <div id="notification-wrapper" style="display: none;">
+                        <div class="notification-center-dimensions notification-background">
+                        </div>
+                        <div class="notification-center-dimensions">
+                            <div class="notification-center">
+                                <p class="notifications-title">
+                                    Notifcations
+                                </p>
 
-                            {% for notification in user.notifications | sort(reverse=true, attribute='created_at') %}
-                                <div class="notification">
-                                    <p class="notification-text">
-                                        {{ notification.message }}
-                                    </p>
+                                {% for notification in user.notifications | sort(reverse=true, attribute='created_at') %}
+                                    <div class="notification">
+                                        <p class="notification-text">
+                                            {{ notification.message }}
+                                        </p>
 
-                                    {% if notification.link %}
-                                        <button class="btn btn-view"
-                                                type="button"
-                                                onclick="location.href='{{ notification.link }}';">
-                                            view
-                                        </button>
-                                    {% endif %}
+                                        {% if notification.link %}
+                                            <button class="btn btn-view"
+                                                    type="button"
+                                                    onclick="location.href='{{ notification.link }}';">
+                                                view
+                                            </button>
+                                        {% endif %}
 
-                                </div>
-                            {% endfor %}
+                                    </div>
+                                {% endfor %}
 
+                            </div>
                         </div>
                     </div>
-                </div>
                 {% endif %}
+
             </div>
         </div>
     </div>
