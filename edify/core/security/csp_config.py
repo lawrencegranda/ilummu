@@ -25,7 +25,6 @@ def get_csp_policy(filebase_url: str) -> dict:
         ],
         "style-src": [
             "'self'",
-            "https://maxcdn.bootstrapcdn.com",
             "https://fonts.googleapis.com",
             "https://cdn.jsdelivr.net",
             "https://cdnjs.cloudflare.com",
@@ -34,9 +33,9 @@ def get_csp_policy(filebase_url: str) -> dict:
         "font-src": [
             "'self'",
             "https://fonts.gstatic.com",
-            "https://maxcdn.bootstrapcdn.com",
-            "https://cdn.jsdelivr.net",  # Allow Bootstrap fonts
-            "https://cdnjs.cloudflare.com",  # Allow Font Awesome fonts
+            "https://cdn.jsdelivr.net",  # Bootstrap 4 fonts
+            "https://cdnjs.cloudflare.com",  # Font Awesome fonts
+            "data:",  # Allow data URIs for fonts
         ],
         "img-src": [
             "'self'",
