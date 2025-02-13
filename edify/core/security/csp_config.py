@@ -46,9 +46,13 @@ def get_csp_policy(filebase_url: str) -> dict:
         ],
         "connect-src": [
             "'self'",
+            "wss://*.ilummu.com",  # Allow WebSocket connections
+            "https://*.ilummu.com",  # Allow HTTP/HTTPS connections
             "https://www.google-analytics.com",
             "https://www.googletagmanager.com",  # Required for Google Analytics
         ],
+        "worker-src": ["'self'", "blob:"],  # Allow Web Workers if needed
+        "child-src": ["'self'", "blob:"],  # Allow blob: for dynamic scripts
     }
 
 
