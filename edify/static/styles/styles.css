@@ -253,6 +253,7 @@ strong:hover {
 }
 
 #search-box {
+  font-size: 1rem;
   padding-left: 15px;
   padding-right: 15px;
   height: 38px;
