@@ -92,7 +92,9 @@ class Config:
             "https://ajax.googleapis.com",
             "https://cdn.jsdelivr.net",
             "https://cdnjs.cloudflare.com",
-            "https://code.jquery.com",  # Add this to allow jQuery CDN
+            "https://code.jquery.com",  # allow jQuery CDN
+            "https://cdn.socket.io/4.5.0/socket.io.min.js",  # allow SocketIO
+            "https://www.googletagmanager.com/gtag/js?id=G-MVYD33Q5SH",  # allow analytics
             "'unsafe-inline'",  # Use hashes or nonces in production
         ],
         "style-src": [
@@ -111,8 +113,8 @@ class Config:
         "img-src": [
             "'self'",
             "data:",
-            "https://cdnjs.cloudflare.com",  # Allow images from cdnjs.cloudflare.com
-            "https://robohash.org",  # For the pictures
+            "https://cdnjs.cloudflare.com",  # allow images from cdnjs.cloudflare.com
+            "https://robohash.org",  # pictures
             FILEBASE_URL,  # Files
         ],
     }
