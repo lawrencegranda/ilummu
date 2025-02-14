@@ -1,1 +1,1 @@
-web: gunicorn -b ${HOST}:${PORT} app:app
+web: gunicorn --worker-class gevent --workers 1 --timeout 120 -b 0.0.0.0:${PORT} app:app
