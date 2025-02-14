@@ -6,6 +6,7 @@ import os
 
 # Local Application imports
 from edify.utils.constants import EdifyEnvironments
+from edify.core.security.csp_config import get_csp_policy, generate_csp_header
 
 
 # pylint: disable=too-few-public-methods
@@ -84,43 +85,6 @@ class Config:
     FILEBASE_ENDPOINT: str = os.environ["FILEBASE_ENDPOINT"]
     FILEBASE_URL: str = os.environ["FILEBASE_URL"]
 
-    # CSP Policy
-    CSP_POLICY = {
-        "default-src": "'self'",
-        "script-src": [
-            "'self'",
-            "https://ajax.googleapis.com",
-            "https://cdn.jsdelivr.net",
-            "https://cdnjs.cloudflare.com",
-            "https://code.jquery.com",  # allow jQuery CDN
-            "https://cdn.socket.io/4.5.0/socket.io.min.js",  # allow SocketIO
-            "https://www.googletagmanager.com/gtag/js?id=G-MVYD33Q5SH",  # allow analytics
-            "'unsafe-inline'",  # Use hashes or nonces in production
-        ],
-        "style-src": [
-            "'self'",
-            "https://maxcdn.bootstrapcdn.com",
-            "https://fonts.googleapis.com",
-            "https://cdn.jsdelivr.net",
-            "https://cdnjs.cloudflare.com",
-            "'unsafe-inline'",  # Use hashes in production
-        ],
-        "font-src": [
-            "'self'",
-            "https://fonts.gstatic.com",
-            "https://maxcdn.bootstrapcdn.com",
-        ],
-        "img-src": [
-            "'self'",
-            "data:",
-            "https://cdnjs.cloudflare.com",  # allow images from cdnjs.cloudflare.com
-            "https://robohash.org",  # pictures
-            FILEBASE_URL,  # Files
-        ],
-    }
-
-    # Convert the CSP_POLICY dictionary to a string for the header
-    CSP_HEADER = "; ".join(
-        f"{key} {' '.join(value) if isinstance(value, list) else value}"
-        for key, value in CSP_POLICY.items()
-    )
+    # CSP Policy (imported from security config)
+    CSP_POLICY = get_csp_policy(FILEBASE_URL)
+    CSP_HEADER = generate_csp_header(CSP_POLICY)
