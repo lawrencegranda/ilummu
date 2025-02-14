@@ -16,11 +16,13 @@ socketio = SocketIO(
         "https://ilummu.com",
         "https://*.ilummu.com",
         "http://localhost:5000",
+        "http://127.0.0.1:5000",
     ],
-    async_mode="threading",
+    async_mode="gevent",
     ping_timeout=60,
     ping_interval=25,
-    transports=["websocket", "polling"],
+    logger=True,
+    engineio_logger=True,
 )
 
 
