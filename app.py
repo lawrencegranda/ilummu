@@ -5,6 +5,7 @@ This script is used to run the Flask app.
 # Local Application imports
 from edify import create_app
 from edify.config import Config
+from edify.core import socketio
 
 # pylint: disable=wildcard-import
 # pylint: disable=unused-wildcard-import
@@ -22,11 +23,25 @@ if __name__ == "__main__":
 
     if app.config["ENV"] == EdifyEnvironments.LOCAL.value:
         print("Running locally...\n")
-        app.run(debug=False)
+        socketio.run(
+            app,
+            host="127.0.0.1",
+            port=5000,
+            debug=False,
+            use_reloader=False,
+            log_output=True,
+        )
 
     elif app.config["ENV"] == EdifyEnvironments.TEST.value:
         print("Running tests...\n")
-        app.run(debug=True)
+        socketio.run(
+            app,
+            host="127.0.0.1",
+            port=5000,
+            debug=True,
+            use_reloader=False,
+            log_output=True,
+        )
 
     else:
         print("Invalid environment.")

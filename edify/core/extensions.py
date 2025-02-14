@@ -11,7 +11,19 @@ from flask_socketio import SocketIO, join_room
 bcrypt = Bcrypt()
 jwt = JWTManager()
 mail = Mail()
-socketio = SocketIO(cors_allowed_origins="*", async_mode="threading")
+socketio = SocketIO(
+    cors_allowed_origins=[
+        "https://ilummu.com",
+        "https://*.ilummu.com",
+        "http://localhost:5000",
+        "http://127.0.0.1:5000",
+    ],
+    async_mode="gevent",
+    ping_timeout=60,
+    ping_interval=25,
+    logger=True,
+    engineio_logger=True,
+)
 
 
 @socketio.on("join")

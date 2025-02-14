@@ -1,27 +1,27 @@
 {% extends "bases/layout.jinja" %}
 
 {% block title %}
-  Dashboard
+    Dashboard
 {% endblock title %}
 
 {% block navbar %}
-  {% include "bases/navbar-logged.jinja" if user else "bases/navbar-not-logged.jinja" %}
-  <style>
-      input#search-box {
-          display: initial !important;
-          pointer-events: initial !important;
-      }
-  </style>
+    {% include "bases/navbar-logged.jinja" if user else "bases/navbar-not-logged.jinja" %}
+    <style>
+        input#search-box {
+            display: initial !important;
+            pointer-events: initial !important;
+        }
+    </style>
 {% endblock navbar %}
 
 {% block top %}
-  {% include "bases/add-button.jinja" %}
-  {% include "bases/create-question.jinja" %}
+    {% include "bases/add-button.jinja" %}
+    {% include "bases/create-question.jinja" %}
 {% endblock top %}
 
 {% block javascript %}
-  {{ super() }}
-  <script>
+    {{ super() }}
+    <script>
       function getSelectedCategoryCountAndValues() {
           const container = $('.dashboard-menu-container');
           const selectedValues = [];
@@ -134,15 +134,15 @@
           $('#category-selector').on('change', handleUpdate);
           $('#search-box').on('input', handleUpdate);
       });
-  </script>
+    </script>
 {% endblock javascript %}
 
 {% block content %}
-  <div class="{{ 'container main-content logged' if user else 'container main-content' }}">
-    <div class="dashboard-container">
-      <div class="dashboard-menu-container">
-        <div class="dashboard-menu">
-          {#
+    <div class="{{ 'container main-content logged' if user else 'container main-content' }}">
+        <div class="dashboard-container">
+            <div class="dashboard-menu-container">
+                <div class="dashboard-menu">
+                    {#
           <div class="method-selector-container">
             <select name="method-selector" id="method-selector">
               <option value="any-method">Any Method</option>
@@ -152,34 +152,34 @@
             </select>
           </div>
 #}
-          <button class="btn category all-subjects selected" value="">
-            All Questions
-          </button>
+                    <button class="btn category all-subjects selected" value="">
+                        All Questions
+                    </button>
 
-          {% for subject in subjects %}
-            <button class="btn category" value="{{ subject['value'] }}">
-              {{ subject['name'] }}
-            </button>
-          {% endfor %}
+                    {% for subject in subjects %}
+                        <button class="btn category" value="{{ subject['value'] }}">
+                            {{ subject['name'] }}
+                        </button>
+                    {% endfor %}
 
-        </div>
-      </div>
-      <div class="dashboard-menu-container-small">
-        <div class="dashboard-menu-small">
-          <select name="category-selector" id="category-selector">
-            <option value="">
-              All Questions
-            </option>
+                </div>
+            </div>
+            <div class="dashboard-menu-container-small">
+                <div class="dashboard-menu-small">
+                    <select name="category-selector" id="category-selector">
+                        <option value="">
+                            All Questions
+                        </option>
 
-            {% for subject in subjects %}
-              <option value="{{ subject['value'] }}">
-                {{ subject['name'] }}
-              </option>
-            {% endfor %}
+                        {% for subject in subjects %}
+                            <option value="{{ subject['value'] }}">
+                                {{ subject['name'] }}
+                            </option>
+                        {% endfor %}
 
-          </select>
-        </div>
-        {#
+                    </select>
+                </div>
+                {#
         <div class="dashboard-menu-small">
           <select name="method-selector" id="method-selector">
             <option value="any-method">Any Method</option>
@@ -189,14 +189,14 @@
           </select>
         </div>
 #}
-      </div>
-      <div id="question_list" class="grid">
+            </div>
+            <div id="question_list" class="grid">
 
-        {% block question_list %}
-          {{ question_list | safe }}
-        {% endblock question_list %}
+                {% block question_list %}
+                    {{ question_list | safe }}
+                {% endblock question_list %}
 
-      </div>
+            </div>
+        </div>
     </div>
-  </div>
 {% endblock content %}
