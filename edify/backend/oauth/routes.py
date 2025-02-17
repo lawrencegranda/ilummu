@@ -127,18 +127,7 @@ def callback() -> flask_typing.ResponseReturnValue:
 
             if user:
                 if not user.is_google_account:
-                    return (
-                        jsonify(
-                            {
-                                "error": (
-                                    "This account was created with a password. "
-                                    "Please log in manually."
-                                ),
-                                "redirect_to": url_for("frontend.login"),
-                            }
-                        ),
-                        HTTPStatus.FOUND,
-                    )
+                    return redirect(url_for("frontend.login", error="manual_account"))
 
                 # Generate tokens and set cookies
                 access_token = user.get_access_token()
