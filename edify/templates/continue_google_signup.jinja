@@ -1,4 +1,6 @@
 {% extends "bases/layout.jinja" %}
+{% set http_method = http_method | default('GET') %}
+{% set next_url = next_url | default(url_for('frontend.dashboard')) %}
 
 {% block title %}
     Complete Signup
@@ -48,8 +50,8 @@
             }
 
             const major = $("#signup-major").val().trim();
-            if (!major) {
-                showError("Major cannot be empty.");
+            if (!major || $('option[value="' + major + '"]').length == 0) {
+                showError("Please select a valid major from the list.");
                 return;
             }
 
@@ -133,56 +135,49 @@
                 </div>
                 <div class="signup-middle">
                     <div class="mb-3">
-                        <label>
-                            Email
-                        </label>
+                        <label>Email</label>
                         <input type="email" class="form-control" value="{{ email }}" readonly required />
                     </div>
                     <div class="mb-3">
-                        <label>
-                            First Name
-                        </label>
+                        <label>First Name</label>
                         <input type="text" class="form-control" value="{{ firstname }}" readonly required />
                     </div>
                     <div class="mb-3">
-                        <label>
-                            Last Name
-                        </label>
+                        <label>Last Name</label>
                         <input type="text" class="form-control" value="{{ lastname }}" readonly required />
                     </div>
                     <div class="mb-3">
-                        <label for="signup-phone">
-                            Phone Number
-                        </label>
+                        <label for="signup-phone">Phone Number</label>
                         <input id="signup-phone" type="tel" name="phone" class="form-control" required />
                     </div>
                     <div class="mb-3">
-                        <label for="signup-major">
-                            Major
-                        </label>
+                        <label for="signup-major">Major</label>
                         <input id="signup-major"
-                               type="text"
+                               list="majors-list"
                                name="major"
                                class="form-control"
-                               placeholder="Enter your major"
+                               placeholder="Select your major"
+                               autocomplete="off"
                                required />
+                        <datalist id="majors-list">
+                            {% for major in majors %}
+                                <option value="{{ major['name'] }}"></option>
+                            {% endfor %}
+                        </datalist>
                     </div>
                     <div class="mb-3">
-                        <label for="signup-grade">
-                            Graduation Year
-                        </label>
+                        <label for="signup-grade">Graduation Year</label>
                         <input id="signup-grade"
                                type="number"
                                min="1900"
-                               max="2100"
+                               max="2099"
                                step="1"
                                name="graduation"
                                class="form-control"
                                placeholder="Graduation Year (e.g., 2025)"
                                required />
                     </div>
-                    <p id="error-msg" class="text-danger">
-                    </p>
+                    <p id="error-msg" class="text-danger"></p>
                 </div>
                 <div class="signup-bottom">
                     <button id="signup-button" type="submit" class="btn btn-primary w-100">
@@ -195,5 +190,4 @@
 {% endblock content %}
 
 {% block footer %}
-
 {% endblock footer %}

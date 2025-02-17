@@ -3,6 +3,7 @@
 # Standard Library imports
 from http import HTTPStatus
 import os
+from typing import List, Any
 
 # Third-Party Framework imports
 from flask import (
@@ -33,6 +34,7 @@ from edify.utils.utils import (
     validate_phone,
     format_phone,
     generate_funny_username,
+    internal_request,
 )
 from edify.backend.user.utils import generate_refresh_token
 
@@ -167,6 +169,27 @@ def callback() -> flask_typing.ResponseReturnValue:
         )
     return response
 
+def fetch_data(url: str, method: str = "GET") -> List[Any]:
+    """
+    Fetch data from the backend API.
+
+    Parameters:
+        url (str): Endpoint to fetch data from.
+        method (str): HTTP method to use (default is "GET").
+
+    Returns:
+        List: Parsed data returned from the backend or an empty list on error.
+    """
+    response = internal_request(url, method)
+
+    # Parse the response
+    data, status = response.get_json(), response.status_code
+
+    if status != HTTPStatus.OK:
+        print(f"fetch_data: {status}")
+        return []
+
+    return data.get("data", [])
 
 @oauth.route("/signup/form", methods=["GET"])
 def google_signup_form() -> flask_typing.ResponseReturnValue:
@@ -184,12 +207,26 @@ def google_signup_form() -> flask_typing.ResponseReturnValue:
         set_access_cookies(response, access_token)
         set_refresh_cookies(response, refresh_token)
         return response
+    
+    majors = fetch_data(url_for("backend.data.fetch_user_majors"), "GET")
+    majors.sort(key=lambda d: d["name"])
+
+    # Google OAuth URL
+    oauth_url = url_for("backend.oauth.login", _external=True)
+
+    next_url = request.args.get("next_url", url_for("frontend.index"))
+    http_method = request.args.get("http_method", "GET")
 
     return render_template(
         "continue_google_signup.jinja",
         email=user_info.get("email"),
         firstname=user_info.get("given_name"),
         lastname=user_info.get("family_name"),
+        majors=majors,
+        login=False,
+        next_url=next_url,
+        http_method=http_method,
+        oauth_url=oauth_url,
     )
 
 
