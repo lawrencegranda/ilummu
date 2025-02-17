@@ -18,7 +18,6 @@ from flask_jwt_extended.exceptions import (
     JWTExtendedException,
 )
 from jwt.exceptions import ExpiredSignatureError, PyJWTError
-from flask_session import Session
 
 # Local Application imports
 from edify.core import init_db, init_extensions
@@ -28,45 +27,12 @@ from edify.utils.utils import (
     handle_invalid_token,
 )
 
-# Initialize extensions
-db = SQLAlchemy()
-bcrypt = Bcrypt()
-jwt = JWTManager()
-migrate = Migrate()
-mail = Mail()
-s3_client = None
-oauth_session = None
 
 def create_app(config_class):
     """Flask application factory function."""
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    # Initialize S3 client only if not in testing mode
-    if not config_class.TESTING:
-        global s3_client
-        s3_client = boto3.client(
-            "s3",
-            endpoint_url=app.config["FILEBASE_ENDPOINT"],
-            aws_access_key_id=app.config["FILEBASE_ACCESS_KEY"],
-            aws_secret_access_key=app.config["FILEBASE_SECRET_KEY"],
-        )
-
-    # Passing app as a parameter here instead of on initialization
-    db.init_app(app)
-    bcrypt.init_app(app)
-    jwt.init_app(app)
-    migrate.init_app(app, db)
-    Session(app)
-
-    # Google OAuth2 Config
-    app.config["GOOGLE_CLIENT_ID"] = config_class.GOOGLE_CLIENT_ID
-    app.config["GOOGLE_CLIENT_SECRET"] = config_class.GOOGLE_CLIENT_SECRET
-    app.config["GOOGLE_REDIRECT_URI"] = config_class.GOOGLE_REDIRECT_URI
-    app.config["SESSION_TYPE"] = "filesystem"
-
-    # Had to do this because there is an error in source code.
-    mail.state = mail.init_app(app)
     # Initialize core components
     init_db(app)
     init_extensions(app)
@@ -74,7 +40,6 @@ def create_app(config_class):
     # pylint: disable=import-outside-toplevel
     from edify.frontend.routes import frontend
     from edify.backend.routes import backend
-    from edify.backend.routes import oauth
 
     # pylint: enable=all
 
@@ -160,24 +125,9 @@ def create_app(config_class):
             jsonify("An unexpected error occurred."),
             HTTPStatus.INTERNAL_SERVER_ERROR,
         )
-    
-    @oauth.errorhandler(HTTPException)
-    def handle_http_exception(e):
-        return jsonify(error=str(e)), e.code
-    
-    @oauth.errorhandler(Exception)
-    def handle_error(e):
-        print(f"ERROR: Uncaught error ({type(e)}): {e}")
-        print(traceback.format_exc())
-
-        return (
-            jsonify("An unexpected error occurred."),
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-        )
 
     app.register_blueprint(frontend)
     app.register_blueprint(backend)
-    app.register_blueprint(oauth)
 
     print("\n------ URL MAP: ------\n", app.url_map, "\n----------------------\n")
 

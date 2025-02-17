@@ -269,7 +269,7 @@ def signup() -> ResponseReturnValue:
     majors.sort(key=lambda d: d["name"])
 
     # Google OAuth URL
-    oauth_url = url_for("oauth.login", _external=True)
+    oauth_url = url_for("backend.oauth.login", _external=True)
 
     next_url = request.args.get("next_url", url_for("frontend.index"))
     http_method = request.args.get("http_method", "GET")

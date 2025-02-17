@@ -27,7 +27,7 @@ from webargs import validate
 from requests_oauthlib import OAuth2Session
 
 # Local Application imports
-from edify import db
+from edify.core import db
 from edify.models import User, School, Major
 from edify.utils.constants import SupportedLanguagesEnum
 from edify.utils.utils import (
