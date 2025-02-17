@@ -50,24 +50,32 @@ oauth = Blueprint("oauth", __name__)
 # -----------------------------------------------------------------------------
 # OAuth Setup
 # -----------------------------------------------------------------------------
-@oauth.before_app_first_request
-def setup_oauth():
+def init_oauth(app):
     """Initialize the OAuth2 session."""
-    current_app.config["OAUTH_SESSION"] = OAuth2Session(
-        client_id=current_app.config["GOOGLE_CLIENT_ID"],
-        redirect_uri=current_app.config["GOOGLE_REDIRECT_URI"],
-        scope=[
-            "openid",
-            "https://www.googleapis.com/auth/userinfo.profile",
-            "https://www.googleapis.com/auth/userinfo.email",
-        ],
-    )
-    current_app.logger.info("OAuth2 session configured successfully.")
+    # Only set up OAuth if we're not in testing mode and not already configured
+    if not app.config.get("TESTING") and "OAUTH_SESSION" not in app.config:
+        app.config["OAUTH_SESSION"] = OAuth2Session(
+            client_id=app.config["GOOGLE_CLIENT_ID"],
+            redirect_uri=app.config["GOOGLE_REDIRECT_URI"],
+            scope=[
+                "openid",
+                "https://www.googleapis.com/auth/userinfo.profile",
+                "https://www.googleapis.com/auth/userinfo.email",
+            ],
+        )
+        app.logger.info("OAuth2 session configured successfully.")
 
 
 def get_oauth_session():
     """Retrieve the OAuth session from Flask's app context."""
+    # Return None if we're in testing mode
+    if current_app.config.get("TESTING"):
+        return None
     return current_app.config.get("OAUTH_SESSION")
+
+
+# Register init_oauth to be called when the blueprint is registered
+oauth.record(lambda state: init_oauth(state.app))
 
 
 # -----------------------------------------------------------------------------
@@ -206,7 +214,7 @@ def google_signup_form() -> flask_typing.ResponseReturnValue:
         "phone": fields.Str(required=True, validate=validate.Length(min=10, max=15)),
         "major": fields.Str(required=True),
         "graduation": fields.Date(required=True),
-        "language": fields.Str(missing=SupportedLanguagesEnum.ENGLISH),
+        "language": fields.Str(load_default=SupportedLanguagesEnum.ENGLISH),
     },
     location="json",
 )
