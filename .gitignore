@@ -4,3 +4,7 @@ requirements.txt
 *.sh
 .pytest*
 !env.test.sh
+**/.specstory/
+instance/
+.vscode/
+.specstory

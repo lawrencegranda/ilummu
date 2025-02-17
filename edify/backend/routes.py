@@ -1,5 +1,9 @@
+"""
+This module is used to define the backend routes.
+"""
+
 # Third-Party Framework imports
-from flask import Blueprint, Flask, jsonify, render_template, request
+from flask import Blueprint
 
 # Local Application imports
 from edify.backend.data.routes import data

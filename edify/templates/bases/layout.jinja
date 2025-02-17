@@ -1,10 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-MVYD33Q5SH"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-MVYD33Q5SH');
+        </script>
+        <!-- Meta Tags -->
         <meta name="description"
-              content="ilummu - Get help and help others wiith their homework.">
+              content="ilummu - Get help and help others wiith their homework." />
         <meta name="keywords"
-              content="ilummu, homework, cornell, university, chegg, quizlet, brainly">
+              content="ilummu, homework, cornell, university, chegg, quizlet, brainly" />
 
         {% block head %}
             <meta charset="utf-8" />
@@ -20,13 +30,119 @@
         {% include "bases/headers.jinja" %}
 
         {% block headers %}
+            <style>
+                #notification-container {
+                    position: fixed;
+                    top: 120px;
+                    left: 120px;
+                    width: 600px;
+                    z-index: 1000;
+                }
+
+                .notification-box {
+                    background: #fff;
+                    border-radius: 8px;
+                    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+                    padding: 30px;
+                    margin-bottom: 10px;
+                    animation: fadeInUp 0.3s ease-out;
+                    border: 1px solid #ccc;
+                    /* Gray border added */
+                    border-left: 5px solid #3DACF3;
+                }
+
+                .notif-subtitle {
+                    font-size: 16px;
+                    color: #555;
+                    /* Slightly dim to give hierarchy */
+                    margin: 8px;
+                }
+
+                .notif-header {
+                    display: flex;
+                    justify-content: space-between;
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                    font-size: 15px;
+                    gap: 8px;
+                }
+
+                .notif-icon {
+                    margin-right: 8px;
+                    font-size: 16px;
+                }
+
+                .notif-close {
+                    cursor: pointer;
+                    color: #aaa;
+                }
+
+                .notif-close:hover {
+                    color: #333;
+                }
+
+                .notif-actions {
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                    margin-top: 10px;
+                }
+
+                .notif-btn {
+                    background-color: #007bff;
+                    color: white;
+                    border: none;
+                    padding: 6px 12px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-size: 12px;
+                }
+
+                .notif-message {
+                    margin-left: 0;
+                }
+
+                .notif-btn:hover {
+                    background-color: #0056b3;
+                }
+
+                .notif-dismiss {
+                    color: #007bff;
+                    font-size: 12px;
+                    text-decoration: none;
+                    cursor: pointer;
+                }
+
+                .notif-dismiss:hover {
+                    text-decoration: underline;
+                }
+
+                @keyframes fadeInUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                .notif-icon svg {
+                    width: 16px;
+                    height: 16px;
+                }
+            </style>
         {% endblock headers %}
 
         {% block javascript %}
         {% endblock javascript %}
 
     </head>
-    <body>
+    <body 
+        {% if user %}data-user-id="{{ user['id'] }}"{% endif %}
+        >
         <!-- Navbar -->
 
         {% block navbar %}
@@ -48,5 +164,96 @@
             {% include "bases/footer.jinja" %}
         {% endblock footer %}
 
+        <!-- Socket.IO client script -->
+        <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+        <script>
+            const socket = io({
+                transports: ['websocket', 'polling'],
+                reconnection: true,
+                reconnectionAttempts: 5,
+                reconnectionDelay: 1000,
+                timeout: 20000,
+                path: '/socket.io/',
+                autoConnect: true,
+                forceNew: true
+            });
+
+            socket.on('connect_error', (error) => {
+                console.error('Socket.IO connection error:', error);
+            });
+
+            socket.on('connect', () => {
+                console.log('Socket.IO connected successfully');
+                {% if user %}
+                // Join user's room if authenticated
+                socket.emit('join', { user_id: {{ user['id'] }} });
+                {% endif %}
+            });
+
+            // Listen for 'offer_notification' events
+            socket.on("offer_notification", function (data) {
+                console.log("Offer notification received:", data);
+
+                // Display a notification with a reload option
+                displayNotification(data.message, data.reload_url);
+            });
+
+            // Function to display a notification
+            function displayNotification(message, reloadUrl) {
+                // Create a notification container if it doesn't exist
+                
+                let notificationContainer = document.getElementById("notification-container");
+                if (!notificationContainer) {
+                    notificationContainer = document.createElement("div");
+                    notificationContainer.id = "notification-container";
+                    document.body.appendChild(notificationContainer);
+                }
+
+                
+
+                // Create the notification element
+                const notification = document.createElement("div");
+                notification.className = "notification-box";
+                notification.innerHTML = `
+                    <div class="notif-header">
+                        <span class="notif-icon">
+                            <svg width="16" height="16" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M11 7V8M11 10.5V15M11 21C16.5228 21 21 16.5228 21 11C21 5.47715 16.5228 1 11 1C5.47715 1 1 5.47715 1 11C1 16.5228 5.47715 21 11 21Z" stroke="#3DACF3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </span>
+                        <div class="notif-message">
+                            <strong>${message}</strong> <!-- Now message appears first -->
+                        </div>
+                        <span class="notif-close">&times;</span>
+                    </div>
+                    <p class="notif-subtitle">Your Offer Has Been Accepted!</p> <!-- Now below message -->
+                    <div class="notif-actions">
+                        <button class="notif-btn" onclick="window.location.href='${reloadUrl}'">Go to Question</button>
+                        <a href="#" class="notif-dismiss">Dismiss</a>
+                    </div>
+                `;
+
+                // Close functionality
+                notification.querySelector(".notif-close").addEventListener("click", () => {
+                    notification.remove();
+                });
+
+                // Dismiss link removes notification
+                notification.querySelector(".notif-dismiss").addEventListener("click", (e) => {
+                    e.preventDefault();
+                    notification.remove();
+                });
+
+                // Append notification
+                notificationContainer.appendChild(notification);
+
+                // Auto-remove notification after 10 seconds
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 10000);
+            }
+        </script>
     </body>
 </html>

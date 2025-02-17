@@ -12,8 +12,8 @@
 {% set next_url = next_url | default(url_for('frontend.dashboard')) %}
 
 {% block javascript %}
-  {{ super() }}
-  <script>
+    {{ super() }}
+    <script>
     var errorMsg;
 
     // Function to reset error messages
@@ -134,19 +134,19 @@
          sendEmail();
     });
 
-  </script>
+    </script>
 {% endblock javascript %}
 
 {% block form_content %}
-  <input id="code-input"
-         type="number"
-         autocomplete="off"
-         min="1"
-         placeholder="Enter your code..."
-         required />
-  <button id="send-email" class="btn btn-primary" type="button">
-    Send email!
-  </button>
+    <input id="code-input"
+           type="number"
+           autocomplete="off"
+           min="1"
+           placeholder="Enter your code..."
+           required />
+    <button id="send-email" class="btn btn-primary" type="button">
+        Send email!
+    </button>
 {% endblock form_content %}
 
 {% block additional_links %}

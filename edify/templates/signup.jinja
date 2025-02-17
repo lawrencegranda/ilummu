@@ -3,24 +3,24 @@
 {% set next_url = next_url | default(url_for('frontend.dashboard')) %}
 
 {% if login == true %}
-{% set login = true %}
+    {% set login = true %}
 {% else %}
-{% set login = false %}
+    {% set login = false %}
 {% endif %}
 
 {% block title %}
 
-{% if login == true %}
-Log In
-{% else %}
-Sign Up
-{% endif %}
+    {% if login == true %}
+        Log In
+    {% else %}
+        Sign Up
+    {% endif %}
 
 {% endblock title %}
 
 {% block javascript %}
-{{ super() }}
-<script>
+    {{ super() }}
+    <script>
   var errorMsg;
 
   // Function to reset error messages
@@ -216,148 +216,145 @@ Sign Up
   });
   {% endif %}
 
-</script>
+    </script>
 {% endblock javascript %}
 
 {% block head %}
-{{ super() }}
-<link rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+    {{ super() }}
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
 {% endblock head %}
 
 {% block headers %}
-<style>
-  .footer {
-    display: none;
-  }
+    <style>
+        .footer {
+            display: none;
+        }
 
-  body {
-    background-color: var(--blue--base);
-  }
-</style>
+        body {
+            background-color: var(--blue--base);
+        }
+    </style>
 {% endblock headers %}
 
 {% block content %}
-<div class="signup-wrapper">
-  <div class="signup-container">
-    <form class="signup-body"
-            id="{{ 'signup-form' if login == false else 'login-form' }}"
-            method="post">
-      <div class="signup-top">
-        <div class="logo-wrapper">
-          <div class="signup-logo">
-            <a class="brand" href='{{ url_for("frontend.home") }}'>
-              <img class="image brand-image"
-              src="{{ url_for('static', filename='logo.svg') }}"
-              alt=""
-              width="auto"
-                height="auto" />
-            </a>
-            <div class="brand-name" onclick="location.href='/home';">
-              ilummu
-            </div>
-          </div>
-          <p class="made-students">
-            Made by <strong style="color: var(--red)">Cornell</strong> Students
-          </p>
-        </div>
-        <p class="signup-title">
+    <div class="signup-wrapper">
+        <div class="signup-container">
+            <form class="signup-body"
+                  id="{{ 'signup-form' if login == false else 'login-form' }}"
+                  method="post">
+                <div class="signup-top">
+                    <div class="logo-wrapper">
+                        <div class="signup-logo">
+                            <a class="brand" href='{{ url_for("frontend.home") }}'>
+                                <img class="image brand-image"
+                                     src="{{ url_for('static', filename='logo.svg') }}"
+                                     alt=""
+                                     width="auto"
+                                     height="auto" />
+                            </a>
+                            <div class="brand-name" onclick="location.href='/home';">
+                                ilummu
+                            </div>
+                        </div>
+                        <p class="made-students">
+                            Made by <strong style="color: var(--red)">Cornell</strong> Students
+                        </p>
+                    </div>
+                    <p class="signup-title">
 
-          {% if login == true %}
-          Log In
-          {% else %}
-          Create Account
-          {% endif %}
-        </p>
-      </div>
-      <div class="signup-middle">
-        <div class="signup-email-box">
-          <input id="signup-email"
-          type="text"
-          placeholder="netid"
-          autocomplete="off"
-          required />
-          <span class="signup-email-cornell">@cornell.edu</span>
-        </div>
+                        {% if login == true %}
+                            Log In
+                        {% else %}
+                            Create Account
+                        {% endif %}
 
-        {% if login == false %}
-        <input id="signup-phone" type="tel" name="phone" required />
-        <input id="signup-major"
-        list="majors-list"
-        placeholder="Major"
-        autocomplete="off"
-        required />
-        <datalist id="majors-list">
+                    </p>
+                </div>
+                <div class="signup-middle">
+                    <div class="signup-email-box">
+                        <input id="signup-email" type="text" placeholder="netid" autocomplete="off" required />
+                        <span class="signup-email-cornell">@cornell.edu</span>
+                    </div>
 
-          {% for major in majors %}
-          <option value="{{ major['name'] }}" />
-          {% endfor %}
+                    {% if login == false %}
+                        <input id="signup-phone" type="tel" name="phone" required />
+                        <input id="signup-major"
+                               list="majors-list"
+                               placeholder="Major"
+                               autocomplete="off"
+                               required />
+                        <datalist id="majors-list">
 
-        </datalist>
-        <input id="signup-grade"
-        type="number"
-        min="1900"
-        max="2099"
-        step="1"
-        placeholder="Graduation Year (ex.: 2024)"
-          autocomplete="off"
-          required />
-        {% endif %}
+                            {% for major in majors %}
+                                <option value="{{ major['name'] }}" />
+                            {% endfor %}
 
-        <input id="signup-password"
-        type="password"
-        autocomplete="off"
-        minlength="8"
-        placeholder="Password"
-        required />
-        <p id="error-msg">
-        </p>
-      </div>
-      <div class="signup-bottom">
-        <div class="signup-pair">
-          <div class="signup-remember">
-            <input type="checkbox" id="signup-remember-box" />
-            <p class="signup-remember-text">
-              Remember Me
-            </p>
-          </div>
+                        </datalist>
+                        <input id="signup-grade"
+                               type="number"
+                               min="1900"
+                               max="2099"
+                               step="1"
+                               placeholder="Graduation Year (ex.: 2024)"
+                               autocomplete="off"
+                               required />
+                    {% endif %}
 
-          {% if login == true %}
-          <p class="signup-forgot">
-            <a href='{{ url_for("frontend.forgot_password", next_url=next_url, http_method=http_method) }}'>Forgot Password?</a>
-          </p>
-          {% endif %}
+                    <input id="signup-password"
+                           type="password"
+                           autocomplete="off"
+                           minlength="8"
+                           placeholder="Password"
+                           required />
+                    <p id="error-msg">
+                    </p>
+                </div>
+                <div class="signup-bottom">
+                    <div class="signup-pair">
+                        <div class="signup-remember">
+                            <input type="checkbox" id="signup-remember-box" />
+                            <p class="signup-remember-text">
+                                Remember Me
+                            </p>
+                        </div>
 
-        </div>
+                        {% if login == true %}
+                            <p class="signup-forgot">
+                                <a href='{{ url_for("frontend.forgot_password", next_url=next_url, http_method=http_method) }}'>Forgot Password?</a>
+                            </p>
+                        {% endif %}
 
-        {% if login == false %}
-        <div class="signup-terms">
-          <input type="checkbox" id="signup-terms-box" required />
-          <p class="signup-terms-text">
-            I accept to display my contact information to tutors when I accept their offers. I also agree to receiving
-            emails and text messages from ilummu.
-          </p>
-        </div>
-        {% endif %}
+                    </div>
 
-        {% if login == false %}
-        <button id="signup-button"
-        form="signup-form"
-        type="submit"
-        class="btn btn-primary"
-        type="button">
-          Sign Up
-        </button>
-        {% else %}
-        <button id="signup-button"
-        form="login-form"
-        type="submit"
-        class="btn btn-primary"
-        type="button">
-          Log In
-        </button>
-        {% endif %}
+                    {% if login == false %}
+                        <div class="signup-terms">
+                            <input type="checkbox" id="signup-terms-box" required />
+                            <p class="signup-terms-text">
+                                I accept to display my contact information to tutors when I accept their offers. I also agree to receiving
+                                emails and text messages from ilummu.
+                            </p>
+                        </div>
+                    {% endif %}
+
+                  {% if login == false %}
+                    <button id="signup-button"
+                    form="signup-form"
+                    type="submit"
+                    class="btn btn-primary"
+                    type="button">
+                        Sign Up
+                    </button>
+                  {% else %}
+                    <button id="signup-button"
+                    form="login-form"
+                    type="submit"
+                    class="btn btn-primary"
+                    type="button">
+                        Log In
+                    </button>
+                  {% endif %}
 
         {% if login == false %}
         <div class="signup-google">
@@ -375,21 +372,21 @@ Sign Up
         </div>
         {% endif %}
 
-        <div class="signup-login">
+                    <div class="signup-login">
 
-          {% if login == false %}
-          Already have an account? <a href='{{ url_for("frontend.login", next_url=next_url, http_method=http_method) }}'>Log In</a>
-          {% else %}
-          Do not have an account? <a href='{{ url_for("frontend.signup", next_url=next_url, http_method=http_method) }}'>Sign Up</a>
-          {% endif %}
+                        {% if login == false %}
+                            Already have an account? <a href='{{ url_for("frontend.login", next_url=next_url, http_method=http_method) }}'>Log In</a>
+                        {% else %}
+                            Do not have an account? <a href='{{ url_for("frontend.signup", next_url=next_url, http_method=http_method) }}'>Sign Up</a>
+                        {% endif %}
 
-          <br />
-          Continue as a <a href='{{ url_for("frontend.dashboard") }}'>Guest</a>
+                        <br />
+                        Continue as a <a href='{{ url_for("frontend.dashboard") }}'>Guest</a>
+                    </div>
+                </div>
+            </form>
         </div>
-      </div>
-    </form>
-  </div>
-</div>
+    </div>
 {% endblock content %}
 
 {% block footer %}

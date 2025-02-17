@@ -1,14 +1,14 @@
+"""This module contains functions to generate fake data for testing purposes."""
+
 # Standard Library imports
-import string
-from random import choice, randint, choices
+from random import choice, randint
 
 # Third-Party Framework imports
 from faker import Faker
 
 # Local Application imports
-from edify import db
+from edify.core import db
 from edify.models import (
-    AcademicField,
     Course,
     Major,
     Notification,
@@ -20,8 +20,8 @@ from edify.models import (
     User,
     Method,
 )
-from edify.utils.constants import AuthLevelEnum, OfferStatusEnum, SupportedLanguagesEnum
-from edify.utils.utils import validate_phone
+from edify.utils.constants import OfferStatusEnum
+from edify.database.utils import create_user
 
 
 # Initialize Faker for generating fake data
@@ -35,34 +35,9 @@ def generate_fake_users(num_users):
 
     # Loop to create the specified number of fake users
     for _ in range(num_users):
-        # Generate a valid phone number
-        phone = f"+1 {''.join(choices(string.digits, k=10))}"
-        while (
-            not validate_phone(phone)
-            or db.session.query(User).filter_by(phone=phone).first()
-        ):
-            phone = f"+1 {''.join(choices(string.digits, k=10))}"
-
-        # Generate a password using Faker
-        password = User.hash_password(fake.password(length=12))
-
-        # Create a new user instance with the fake data
-        user = User(
-            username=fake.user_name(),
-            firstname=fake.first_name(),
-            lastname=fake.last_name(),
-            school_id=school.id,
-            major_id=choice(majors).id,
-            graduation=fake.future_date(end_date="+4y"),
-            email=fake.email(),
-            phone=phone,
-            password=password,
-            mail_is_verified=fake.boolean(),
-            phone_is_verified=fake.boolean(),
-            is_mock=True,
-        )
-        db.session.add(user)
-    return
+        user = create_user(school, majors, is_test=False)
+        if user:
+            db.session.add(user)
 
 
 def generate_fake_questions(num_questions):
@@ -93,13 +68,12 @@ def generate_fake_offers(num_offers):
     users = db.session.query(User).all()
     questions = db.session.query(Question).all()
 
-    offers = []
     for _ in range(num_offers):
         # Randomly select a user and a question
         user_id = choice(users).id
         question_id = choice(questions).id
         status = choice(OfferStatusEnum.keys())
-        active = not (status in OfferStatusEnum.inactive)
+        active = not status in OfferStatusEnum.inactive
 
         # Ensure that the combination of user and question is unique and active
         while (
@@ -111,7 +85,7 @@ def generate_fake_offers(num_offers):
             user_id = choice(users).id
             question_id = choice(questions).id
             status = choice(OfferStatusEnum.keys())
-            active = not (status in OfferStatusEnum.inactive)
+            active = not status in OfferStatusEnum.inactive
 
         # Create a new Offer instance with randomized data
         offer = Offer(
@@ -122,7 +96,6 @@ def generate_fake_offers(num_offers):
             active=active,
         )
         db.session.add(offer)
-    return
 
 
 def generate_fake_notifications(num_notifications):
@@ -152,13 +125,9 @@ def generate_fake_notifications(num_notifications):
     return notifications
 
 
-# Add more functions for other models (AcademicField, Method, TimeInterval, Course, School, NotificationType) if needed
-
-
 def populate_fake():
     """Populate the database with fake data."""
     # Define the number of each type of data to generate
-    num_test_users = 3
     num_users = 5
     num_questions = 20
     num_offers = 30

@@ -1,0 +1,36 @@
+name: Lint with pylint
+
+on:
+  push:
+    branches:
+      - "**" # Run on any branch
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10.7"
+
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2.1.0
+        with:
+          poetry-version: "1.7.1"
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Run pylint on each file
+        run: |
+          echo "Running pylint on all files..."
+          poetry run pylint $(find . -name "*.py") --output-format=colorized || exit 1
+
+      - name: Run pylint on the entire project
+        run: |
+          echo "Running pylint on the entire project..."
+          poetry run pylint . --disable=all --enable=cyclic-import,duplicate-code --output-format=colorized || exit 1
