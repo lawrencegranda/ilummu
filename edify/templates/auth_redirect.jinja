@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Redirecting...</title>
+        <script>
+        // Update auth state in localStorage or wherever your frontend stores it
+        window.onload = function() {
+            // Trigger any necessary auth state updates
+            window.localStorage.setItem('isAuthenticated', 'true');
+            
+            // Redirect to the dashboard
+            window.location.href = "{{ redirect_url }}";
+        }
+        </script>
+    </head>
+    <body>
+        <p>
+            Redirecting you to the dashboard...
+        </p>
+    </body>
+</html>

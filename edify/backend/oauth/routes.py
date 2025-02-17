@@ -14,6 +14,7 @@ from flask import (
     redirect,
     session,
     render_template,
+    make_response,
 )
 from flask import typing as flask_typing
 from flask_jwt_extended import (
@@ -143,10 +144,15 @@ def callback() -> flask_typing.ResponseReturnValue:
                 access_token = user.get_access_token()
                 refresh_token = generate_refresh_token(user)
 
-                response = redirect(url_for("frontend.dashboard"))
+                # Instead of redirecting directly, render a template that will handle the auth state
+                response = make_response(
+                    render_template(
+                        "auth_redirect.jinja",
+                        redirect_url=url_for("frontend.dashboard"),
+                    )
+                )
                 set_access_cookies(response, access_token)
                 set_refresh_cookies(response, refresh_token)
-
                 return response
 
             # Store user info in session for new signups
@@ -266,8 +272,12 @@ def google_signup(args) -> flask_typing.ResponseReturnValue:
     access_token = user.get_access_token()
     refresh_token = generate_refresh_token(user)
 
-    response = redirect(url_for("frontend.dashboard"))
+    # Instead of redirecting directly to dashboard
+    response = make_response(
+        render_template(
+            "auth_redirect.jinja", redirect_url=url_for("frontend.dashboard")
+        )
+    )
     set_access_cookies(response, access_token)
     set_refresh_cookies(response, refresh_token)
-
     return response
