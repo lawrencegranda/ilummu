@@ -87,7 +87,7 @@ class Config:
 
     # Google OAuth2 Config
     SESSION_TYPE = "filesystem"
-    SESSION_PERMANENT = False # Session is not permanent
+    SESSION_PERMANENT = False  # Session is not permanent
 
     GOOGLE_CLIENT_ID = os.environ["GOOGLE_CLIENT_ID"]
     GOOGLE_CLIENT_SECRET = os.environ["GOOGLE_CLIENT_SECRET"]

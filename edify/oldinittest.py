@@ -37,6 +37,7 @@ mail = Mail()
 s3_client = None
 oauth_session = None
 
+
 def create_app(config_class):
     """Flask application factory function."""
     app = Flask(__name__)
@@ -160,11 +161,11 @@ def create_app(config_class):
             jsonify("An unexpected error occurred."),
             HTTPStatus.INTERNAL_SERVER_ERROR,
         )
-    
+
     @oauth.errorhandler(HTTPException)
     def handle_http_exception(e):
         return jsonify(error=str(e)), e.code
-    
+
     @oauth.errorhandler(Exception)
     def handle_error(e):
         print(f"ERROR: Uncaught error ({type(e)}): {e}")

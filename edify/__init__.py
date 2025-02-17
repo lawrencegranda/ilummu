@@ -5,7 +5,7 @@ from http import HTTPStatus
 import traceback
 
 # Third-Party Framework imports
-from flask import Flask, request, jsonify, url_for, redirect
+from flask import Flask, request, jsonify, url_for, redirect, current_app
 from flask_jwt_extended import (
     jwt_required,
     get_jwt_identity,
@@ -27,6 +27,7 @@ from edify.utils.utils import (
     handle_invalid_token,
 )
 
+
 def create_app(config_class):
     """Flask application factory function."""
     app = Flask(__name__)
@@ -39,6 +40,7 @@ def create_app(config_class):
     # pylint: disable=import-outside-toplevel
     from edify.frontend.routes import frontend
     from edify.backend.routes import backend
+    from edify.backend.oauth.routes import oauth
 
     # pylint: enable=all
 
@@ -125,8 +127,21 @@ def create_app(config_class):
             HTTPStatus.INTERNAL_SERVER_ERROR,
         )
 
+    # -----------------------------------------------------------------------------
+    # OAuth Error Handlers
+    # -----------------------------------------------------------------------------
+
+    @oauth.errorhandler(Exception)
+    def handle_general_oauth_error(e):
+        current_app.logger.error(f"General OAuth exception: {e}")
+        return (
+            jsonify({"error": "An unexpected error occurred during OAuth processing."}),
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+        )
+
     app.register_blueprint(frontend)
     app.register_blueprint(backend)
+    app.register_blueprint(oauth)
 
     print("\n------ URL MAP: ------\n", app.url_map, "\n----------------------\n")
 

@@ -84,7 +84,10 @@ def login() -> flask_typing.ResponseReturnValue:
         return redirect(authorization_url)
     except Exception as e:
         current_app.logger.error(f"Error generating authorization URL: {e}")
-        return jsonify({"error": "Failed to initiate login. Please try again."}), HTTPStatus.INTERNAL_SERVER_ERROR
+        return (
+            jsonify({"error": "Failed to initiate login. Please try again."}),
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+        )
 
 
 @oauth.route("/login/google/callback")
@@ -104,7 +107,9 @@ def callback() -> flask_typing.ResponseReturnValue:
             authorization_response=request.url,
             client_secret=current_app.config["GOOGLE_CLIENT_SECRET"],
         )
-        user_info = oauth_session.get("https://www.googleapis.com/oauth2/v1/userinfo").json()
+        user_info = oauth_session.get(
+            "https://www.googleapis.com/oauth2/v1/userinfo"
+        ).json()
 
         # Check if the user already exists
         user = db.session.query(User).filter_by(email=user_info["email"]).first()
@@ -184,7 +189,11 @@ def google_signup(args) -> flask_typing.ResponseReturnValue:
 
     # Get school and major information
     school = db.session.query(School).filter_by(name="Cornell University").first()
-    major = db.session.query(Major).filter_by(name=args["major"], school_id=school.id).first()
+    major = (
+        db.session.query(Major)
+        .filter_by(name=args["major"], school_id=school.id)
+        .first()
+    )
     if not school or not major:
         return jsonify({"error": "Invalid school or major."}), HTTPStatus.BAD_REQUEST
 
@@ -206,7 +215,7 @@ def google_signup(args) -> flask_typing.ResponseReturnValue:
         language=args["language"],
         mail_is_verified=True,  # Automatically mark email as verified
     )
-    
+
     db.session.add(user)
     db.session.commit()
 
