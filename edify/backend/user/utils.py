@@ -86,9 +86,16 @@ def validate_signup_data(args: dict) -> Optional[ResponseReturnValue]:
     if not validate_email(args["email"]):
         return error_response("Invalid email format.", ErrorType.BAD_REQUEST)
 
-    # Check existing email/phone
-    if db.session.query(User).filter_by(email=args["email"]).first():
+    # Check if email is a Google OAuth account
+    user = db.session.query(User).filter_by(email=args["email"]).first()
+    if user and user.is_google_account:
+        return error_response("This email is associated with a Google account. Please log in using Google OAuth.", ErrorType.BAD_REQUEST)
+    
+    # Check existing email
+    if user:
         return error_response("Email is already taken", ErrorType.BAD_REQUEST)
+
+    # Check existing phone
     if db.session.query(User).filter_by(phone=args["phone"]).first():
         return error_response("Phone is already taken", ErrorType.BAD_REQUEST)
 

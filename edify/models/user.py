@@ -75,7 +75,7 @@ class User(BaseModel, UserMixin):
 
     # Account password
     # Must be hashed
-    password = db.Column(db.String(90), nullable=False)
+    password = db.Column(db.String(90), nullable=True)
 
     # User's school/university
     # Many-to-One relationship with School model
@@ -117,6 +117,9 @@ class User(BaseModel, UserMixin):
 
     # Whether or not the user verified it's phone number. NOT IMPLEMENTED
     phone_is_verified = db.Column(db.Boolean, nullable=False, default=False)
+
+    # Whether or not the user is a Google account.
+    is_google_account = db.Column(db.Boolean, nullable=False, default=False)
 
     # Indicates whether the user is a mock user or not.
     is_mock = db.Column(db.Boolean, nullable=False, default=False)

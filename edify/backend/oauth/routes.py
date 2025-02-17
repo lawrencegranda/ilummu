@@ -107,67 +107,53 @@ def login() -> flask_typing.ResponseReturnValue:
 
 @oauth.route("/login/google/callback")
 def callback() -> flask_typing.ResponseReturnValue:
-    """
-    Handle the callback from Google OAuth.
-    """
+    """Handle Google OAuth callback."""
     oauth_session = get_oauth_session()
-    response = None
     try:
         if request.args.get("state") != session.get("oauth_state"):
             current_app.logger.error("State mismatch detected.")
-            response = redirect(url_for("frontend.signup"))
-        else:
-            # Exchange authorization code for token and fetch user info
-            oauth_session.fetch_token(
-                "https://oauth2.googleapis.com/token",
-                authorization_response=request.url,
-                client_secret=current_app.config["GOOGLE_CLIENT_SECRET"],
-            )
-            user_info = oauth_session.get(
-                "https://www.googleapis.com/oauth2/v1/userinfo"
-            ).json()
+            return redirect(url_for("frontend.signup"))
 
-            # Check if the user already exists
-            user = db.session.query(User).filter_by(email=user_info["email"]).first()
-
-            if user:
-                # Generate tokens for existing user and refresh page
-                access_token = user.get_access_token()
-                refresh_token = generate_refresh_token(user)
-
-                response = redirect(url_for("frontend.dashboard"))
-                set_access_cookies(response, access_token)
-                set_refresh_cookies(response, refresh_token)
-            else:
-                # Store user info in session to complete signup later
-                session["user"] = user_info
-                response = redirect(url_for("oauth.google_signup_form"))
-
-    except ConnectionError as e:
-        current_app.logger.error(f"ConnectionError during OAuth callback: {e}")
-        response = (
-            jsonify(
-                {
-                    "error": "Failed to connect to Google. Please check your network and try again."
-                }
-            ),
-            HTTPStatus.SERVICE_UNAVAILABLE,
+        oauth_session.fetch_token(
+            "https://oauth2.googleapis.com/token",
+            authorization_response=request.url,
+            client_secret=current_app.config["GOOGLE_CLIENT_SECRET"],
         )
-    except ValueError as e:
-        current_app.logger.error(f"ValueError during OAuth callback: {e}")
-        response = (
-            jsonify({"error": "Invalid response from Google. Please try again."}),
-            HTTPStatus.BAD_REQUEST,
-        )
-    except KeyError as e:
-        current_app.logger.error(f"KeyError during OAuth callback: {e}")
-        response = (
-            jsonify(
-                {"error": "Missing data in response from Google. Please try again."}
-            ),
-            HTTPStatus.BAD_REQUEST,
-        )
-    return response
+        user_info = oauth_session.get(
+            "https://www.googleapis.com/oauth2/v1/userinfo"
+        ).json()
+
+        user = db.session.query(User).filter_by(email=user_info["email"]).first()
+
+        if user:
+            if not user.is_google_account:
+                return (
+                    jsonify(
+                        {
+                            "error": "This account was created with a password. Please log in manually.",
+                            "redirect_to": url_for("frontend.login"),
+                        }
+                    ),
+                    HTTPStatus.FOUND,
+                )
+
+            # Generate tokens for Google users
+            access_token = user.get_access_token()
+            refresh_token = generate_refresh_token(user)
+
+            response = redirect(url_for("frontend.dashboard"))
+            set_access_cookies(response, access_token)
+            set_refresh_cookies(response, refresh_token)
+            return response
+
+        # Store user info in session for new signups
+        session["user"] = user_info
+        return redirect(url_for("oauth.google_signup_form"))
+
+    except Exception as e:
+        current_app.logger.error(f"Error during OAuth callback: {e}")
+        return redirect(url_for("frontend.signup"))
+
 
 def fetch_data(url: str, method: str = "GET") -> List[Any]:
     """
@@ -191,6 +177,7 @@ def fetch_data(url: str, method: str = "GET") -> List[Any]:
 
     return data.get("data", [])
 
+
 @oauth.route("/signup/form", methods=["GET"])
 def google_signup_form() -> flask_typing.ResponseReturnValue:
     """Render signup form for users authenticated with Google but do not have an account yet."""
@@ -198,16 +185,14 @@ def google_signup_form() -> flask_typing.ResponseReturnValue:
     if not user_info:
         return redirect(url_for("frontend.signup"))
 
-    # Check if user exists (shouldn't reach here)
-    user = db.session.query(User).filter_by(email=user_info["email"]).first()
-    if user:
-        access_token = user.get_access_token()
-        refresh_token = generate_refresh_token(user)
-        response = redirect(url_for("frontend.dashboard"))
-        set_access_cookies(response, access_token)
-        set_refresh_cookies(response, refresh_token)
-        return response
-    
+    # Check if email already exists in the database
+    existing_user = db.session.query(User).filter_by(email=user_info["email"]).first()
+    if existing_user:
+        current_app.logger.info(
+            f"Google Signup Attempt with Existing Email: {user_info['email']}"
+        )
+        return redirect(url_for("frontend.login"))
+
     majors = fetch_data(url_for("backend.data.fetch_user_majors"), "GET")
     majors.sort(key=lambda d: d["name"])
 
@@ -244,10 +229,11 @@ def google_signup_form() -> flask_typing.ResponseReturnValue:
     location="json",
 )
 def google_signup(args) -> flask_typing.ResponseReturnValue:
-    """Complete the Google OAuth-based signup process."""
-    user = db.session.query(User).filter_by(email=args["email"]).first()
-    if user:
-        return redirect(url_for("frontend.login"))
+    """Prevent signing up with Google if email already exists for a manual login account."""
+    existing_user = db.session.query(User).filter_by(email=args["email"]).first()
+
+    if existing_user and not existing_user.is_google_account:
+        return redirect(url_for("frontend.login", error="manual_account"))
 
     # Validate and format phone number
     phone = args["phone"]
@@ -262,7 +248,6 @@ def google_signup(args) -> flask_typing.ResponseReturnValue:
         .filter_by(name=args["major"], school_id=school.id)
         .first()
     )
-
     if not school or not major:
         return jsonify({"error": "Invalid school or major."}), HTTPStatus.BAD_REQUEST
 
@@ -271,19 +256,20 @@ def google_signup(args) -> flask_typing.ResponseReturnValue:
     while db.session.query(User).filter_by(username=username).first():
         username = generate_funny_username(4)
 
-    # Create user
+    # Create user with Google account flag
     user = User(
         username=username,
         firstname=args["firstname"],
         lastname=args["lastname"],
         email=args["email"],
         phone=phone,
-        password=User.hash_password("google_oauth"),
+        password=None,  # Google accounts have no manual password
         school_id=school.id,
         major_id=major.id,
         graduation=args["graduation"],
         language=args["language"],
-        mail_is_verified=True,  # Automatically mark email as verified
+        is_google_account=True,  # Mark as a Google account
+        mail_is_verified=True,
     )
 
     db.session.add(user)
