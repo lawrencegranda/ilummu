@@ -105,51 +105,43 @@ def login() -> flask_typing.ResponseReturnValue:
 
 @oauth.route("/login/google/callback")
 def callback() -> flask_typing.ResponseReturnValue:
-    """Handle the callback from Google OAuth."""
+    """
+    Handle the callback from Google OAuth.
+    """
     oauth_session = get_oauth_session()
     try:
         if request.args.get("state") != session.get("oauth_state"):
-            current_app.logger.error(
-                "State mismatch detected in Google OAuth callback."
-            )
+            current_app.logger.error("State mismatch detected.")
             return redirect(url_for("frontend.signup"))
 
-        # Fetch user info from Google
-        user_info = oauth_session.get(
-            "https://www.googleapis.com/oauth2/v1/userinfo"
-        ).json()
+        # Exchange authorization code for token and fetch user info
+        oauth_session.fetch_token(
+            "https://oauth2.googleapis.com/token",
+            authorization_response=request.url,
+            client_secret=current_app.config["GOOGLE_CLIENT_SECRET"],
+        )
+        user_info = oauth_session.get("https://www.googleapis.com/oauth2/v1/userinfo").json()
 
         # Check if the user already exists
         user = db.session.query(User).filter_by(email=user_info["email"]).first()
 
         if user:
-            # Generate tokens for existing user
+            # Generate tokens for existing user and refresh page
             access_token = user.get_access_token()
             refresh_token = generate_refresh_token(user)
 
             response = redirect(url_for("frontend.dashboard"))
             set_access_cookies(response, access_token)
             set_refresh_cookies(response, refresh_token)
-
             return response
 
         # Store user info in session to complete signup later
         session["user"] = user_info
         return redirect(url_for("oauth.google_signup_form"))
 
-    except KeyError as e:
-        current_app.logger.error(f"Missing key in Google OAuth response: {e}")
+    except Exception as e:
+        current_app.logger.error(f"Error during OAuth callback: {e}")
         return redirect(url_for("frontend.signup"))
-    except ConnectionError as e:
-        current_app.logger.error(f"ConnectionError during Google OAuth callback: {e}")
-        return (
-            jsonify(
-                {
-                    "error": "Failed to connect to Google. Please check your network and try again."
-                }
-            ),
-            HTTPStatus.SERVICE_UNAVAILABLE,
-        )
 
 
 @oauth.route("/signup/form", methods=["GET"])
