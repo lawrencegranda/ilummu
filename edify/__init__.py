@@ -27,7 +27,6 @@ from edify.utils.utils import (
     handle_invalid_token,
 )
 
-
 def create_app(config_class):
     """Flask application factory function."""
     app = Flask(__name__)
