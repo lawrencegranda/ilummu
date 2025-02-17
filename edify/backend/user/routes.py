@@ -124,6 +124,7 @@ def refresh() -> ResponseReturnValue:
     print(f"Refreshing token... User {curr_user.id}")
     return make_login_response(curr_user, False), HTTPStatus.OK
 
+
 # Endpoint: /backend/user/login
 @user.route("/login", methods=["POST"])
 @use_args(
@@ -144,7 +145,9 @@ def login(args: dict) -> ResponseReturnValue:
         Response: JSON response with the access token and user information or redirection error.
     """
     # Get the user corresponding to the email that is logging in
-    curr_user = db.session.query(User).filter_by(email=args["email"], is_mock=False).first()
+    curr_user = (
+        db.session.query(User).filter_by(email=args["email"], is_mock=False).first()
+    )
 
     # If user does not exist
     if not curr_user:
@@ -154,10 +157,18 @@ def login(args: dict) -> ResponseReturnValue:
 
     # Prevent Google accounts from logging in with a password
     if curr_user.is_google_account:
-        return jsonify({
-            "error": "This account was created using Google. Please log in using Google OAuth.",
-            "redirect_to": url_for("oauth.login"),
-        }), HTTPStatus.FOUND
+        return (
+            jsonify(
+                {
+                    "error": (
+                        "This account was created using Google. "
+                        "Please log in using Google OAuth."
+                    ),
+                    "redirect_to": url_for("oauth.login"),
+                }
+            ),
+            HTTPStatus.FOUND,
+        )
 
     # Check if the given password is correct
     if not curr_user.check_password(args["password"]):
@@ -179,6 +190,7 @@ def login(args: dict) -> ResponseReturnValue:
         make_login_response(curr_user, args.get("remember", False)),
         HTTPStatus.OK,
     )
+
 
 # Endpoint: /backend/user/new
 @user.route("/new", methods=["POST"])

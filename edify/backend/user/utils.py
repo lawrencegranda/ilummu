@@ -76,35 +76,35 @@ def check_author(id_user: int, id_question: int) -> bool:
 
 def validate_signup_data(args: dict) -> Optional[ResponseReturnValue]:
     """Validate signup form data."""
+    error_msg = None
+
     # Validate phone
     if not validate_phone(args["phone"]):
-        return error_response(
-            f"Invalid phone format {args['phone']}", ErrorType.BAD_REQUEST
-        )
-
+        error_msg = f"Invalid phone format {args['phone']}"
     # Validate email
-    if not validate_email(args["email"]):
-        return error_response("Invalid email format.", ErrorType.BAD_REQUEST)
+    elif not validate_email(args["email"]):
+        error_msg = "Invalid email format."
+    else:
+        # Check if email is a Google OAuth account
+        user = db.session.query(User).filter_by(email=args["email"]).first()
+        if user and user.is_google_account:
+            error_msg = (
+                "This email is associated with a Google account. "
+                "Please log in using Google OAuth."
+            )
+        # Check existing email
+        elif user:
+            error_msg = "Email is already taken"
+        # Check existing phone
+        elif db.session.query(User).filter_by(phone=args["phone"]).first():
+            error_msg = "Phone is already taken"
+        else:
+            # Validate password
+            valid, msg = validate_password(args["password"])
+            if not valid:
+                error_msg = msg
 
-    # Check if email is a Google OAuth account
-    user = db.session.query(User).filter_by(email=args["email"]).first()
-    if user and user.is_google_account:
-        return error_response("This email is associated with a Google account. Please log in using Google OAuth.", ErrorType.BAD_REQUEST)
-    
-    # Check existing email
-    if user:
-        return error_response("Email is already taken", ErrorType.BAD_REQUEST)
-
-    # Check existing phone
-    if db.session.query(User).filter_by(phone=args["phone"]).first():
-        return error_response("Phone is already taken", ErrorType.BAD_REQUEST)
-
-    # Validate password
-    valid, msg = validate_password(args["password"])
-    if not valid:
-        return error_response(msg, ErrorType.BAD_REQUEST)
-
-    return None
+    return error_response(error_msg, ErrorType.BAD_REQUEST) if error_msg else None
 
 
 def get_user_school(

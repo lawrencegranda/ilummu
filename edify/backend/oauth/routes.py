@@ -3,7 +3,6 @@
 # Standard Library imports
 from http import HTTPStatus
 import os
-from typing import List, Any
 
 # Third-Party Framework imports
 from flask import (
@@ -34,7 +33,7 @@ from edify.utils.utils import (
     validate_phone,
     format_phone,
     generate_funny_username,
-    internal_request,
+    fetch_data,
 )
 from edify.backend.user.utils import generate_refresh_token
 
@@ -109,73 +108,68 @@ def login() -> flask_typing.ResponseReturnValue:
 def callback() -> flask_typing.ResponseReturnValue:
     """Handle Google OAuth callback."""
     oauth_session = get_oauth_session()
+    redirect_url = url_for("frontend.signup")
     try:
         if request.args.get("state") != session.get("oauth_state"):
             current_app.logger.error("State mismatch detected.")
-            return redirect(url_for("frontend.signup"))
+        else:
+            oauth_session.fetch_token(
+                "https://oauth2.googleapis.com/token",
+                authorization_response=request.url,
+                client_secret=current_app.config["GOOGLE_CLIENT_SECRET"],
+            )
+            user_info = oauth_session.get(
+                "https://www.googleapis.com/oauth2/v1/userinfo"
+            ).json()
 
-        oauth_session.fetch_token(
-            "https://oauth2.googleapis.com/token",
-            authorization_response=request.url,
-            client_secret=current_app.config["GOOGLE_CLIENT_SECRET"],
-        )
-        user_info = oauth_session.get(
-            "https://www.googleapis.com/oauth2/v1/userinfo"
-        ).json()
+            user = db.session.query(User).filter_by(email=user_info["email"]).first()
 
-        user = db.session.query(User).filter_by(email=user_info["email"]).first()
+            if user:
+                if not user.is_google_account:
+                    return (
+                        jsonify(
+                            {
+                                "error": (
+                                    "This account was created with a password. "
+                                    "Please log in manually."
+                                ),
+                                "redirect_to": url_for("frontend.login"),
+                            }
+                        ),
+                        HTTPStatus.FOUND,
+                    )
 
-        if user:
-            if not user.is_google_account:
-                return (
-                    jsonify(
-                        {
-                            "error": "This account was created with a password. Please log in manually.",
-                            "redirect_to": url_for("frontend.login"),
-                        }
-                    ),
-                    HTTPStatus.FOUND,
-                )
+                # Generate tokens and set cookies
+                access_token = user.get_access_token()
+                refresh_token = generate_refresh_token(user)
 
-            # Generate tokens for Google users
-            access_token = user.get_access_token()
-            refresh_token = generate_refresh_token(user)
+                response = redirect(url_for("frontend.dashboard"))
+                set_access_cookies(response, access_token)
+                set_refresh_cookies(response, refresh_token)
 
-            response = redirect(url_for("frontend.dashboard"))
-            set_access_cookies(response, access_token)
-            set_refresh_cookies(response, refresh_token)
-            return response
+                return response
 
-        # Store user info in session for new signups
-        session["user"] = user_info
-        return redirect(url_for("oauth.google_signup_form"))
+            # Store user info in session for new signups
+            session["user"] = user_info
+            redirect_url = url_for("oauth.google_signup_form")
 
-    except Exception as e:
+    except (KeyError, ConnectionError, ValueError, RuntimeError) as e:
         current_app.logger.error(f"Error during OAuth callback: {e}")
-        return redirect(url_for("frontend.signup"))
+
+    return redirect(redirect_url)
 
 
-def fetch_data(url: str, method: str = "GET") -> List[Any]:
-    """
-    Fetch data from the backend API.
+def prepare_signup_form_data() -> dict:
+    """Prepare data for rendering the signup form."""
+    majors = fetch_data(url_for("backend.data.fetch_user_majors"), "GET")
+    majors.sort(key=lambda d: d["name"])
 
-    Parameters:
-        url (str): Endpoint to fetch data from.
-        method (str): HTTP method to use (default is "GET").
-
-    Returns:
-        List: Parsed data returned from the backend or an empty list on error.
-    """
-    response = internal_request(url, method)
-
-    # Parse the response
-    data, status = response.get_json(), response.status_code
-
-    if status != HTTPStatus.OK:
-        print(f"fetch_data: {status}")
-        return []
-
-    return data.get("data", [])
+    return {
+        "majors": majors,
+        "oauth_url": url_for("backend.oauth.login", _external=True),
+        "next_url": request.args.get("next_url", url_for("frontend.index")),
+        "http_method": request.args.get("http_method", "GET"),
+    }
 
 
 @oauth.route("/signup/form", methods=["GET"])
@@ -193,25 +187,18 @@ def google_signup_form() -> flask_typing.ResponseReturnValue:
         )
         return redirect(url_for("frontend.login"))
 
-    majors = fetch_data(url_for("backend.data.fetch_user_majors"), "GET")
-    majors.sort(key=lambda d: d["name"])
-
-    # Google OAuth URL
-    oauth_url = url_for("backend.oauth.login", _external=True)
-
-    next_url = request.args.get("next_url", url_for("frontend.index"))
-    http_method = request.args.get("http_method", "GET")
+    form_data = prepare_signup_form_data()
 
     return render_template(
         "continue_google_signup.jinja",
         email=user_info.get("email"),
         firstname=user_info.get("given_name"),
         lastname=user_info.get("family_name"),
-        majors=majors,
+        majors=form_data["majors"],
         login=False,
-        next_url=next_url,
-        http_method=http_method,
-        oauth_url=oauth_url,
+        next_url=form_data["next_url"],
+        http_method=form_data["http_method"],
+        oauth_url=form_data["oauth_url"],
     )
 
 

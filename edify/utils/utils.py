@@ -7,7 +7,7 @@ import json
 import random
 import re
 from datetime import datetime, timedelta
-from typing import Any, Optional, Tuple
+from typing import Any, Optional, Tuple, List
 
 # Third-Party Framework Imports
 import flask
@@ -20,6 +20,30 @@ from werkzeug.test import EnvironBuilder
 
 # Local Application imports
 from edify.utils.constants import ErrorType, AuthSchema
+
+
+# Fetch data from a given backend API endpoint
+def fetch_data(url: str, method: str = "GET") -> List[Any]:
+    """
+    Fetch data from a given backend API endpoint.
+
+    Parameters:
+        url (str): Endpoint URL to fetch data from.
+        method (str): HTTP method to use (default is "GET").
+
+    Returns:
+        List[Any]: Data retrieved from the backend or an empty list if an error occurs.
+    """
+    response = internal_request(url, method)
+
+    # Parse the response
+    data, status = response.get_json(), response.status_code
+
+    if status != HTTPStatus.OK:
+        print(f"fetch_data error: {status}")
+        return []
+
+    return data.get("data", [])
 
 
 # Extracts the access token from the request headers
