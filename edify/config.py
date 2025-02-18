@@ -95,8 +95,6 @@ class Config:
     GOOGLE_CLIENT_ID = os.environ["GOOGLE_CLIENT_ID"]
     GOOGLE_CLIENT_SECRET = os.environ["GOOGLE_CLIENT_SECRET"]
 
-    GOOGLE_REDIRECT_URI = os.environ["GOOGLE_REDIRECT_URI"]
-
     # CSP Policy (imported from security config)
     CSP_POLICY = get_csp_policy(FILEBASE_URL)
     CSP_HEADER = generate_csp_header(CSP_POLICY)
