@@ -8,7 +8,6 @@ import os
 from edify.utils.constants import EdifyEnvironments
 from edify.core.security.csp_config import get_csp_policy, generate_csp_header
 
-
 # pylint: disable=too-few-public-methods
 class Config:
     """Configuration for the Edify application."""
@@ -34,11 +33,15 @@ class Config:
         HOST = os.environ["HOST"]
         PORT = os.environ["PORT"]
 
+        GOOGLE_REDIRECT_URI = "https://"+HOST+":"+PORT+os.environ["GOOGLE_REDIRECT_URI"]
+
     elif LOCAL:
         SQLALCHEMY_DATABASE_URI = os.environ["DB_URL"]
+        GOOGLE_REDIRECT_URI = "http://127.0.0.1:5000"+os.environ["GOOGLE_REDIRECT_URI"]
 
     elif TESTING:
         SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+        GOOGLE_REDIRECT_URI = "http://127.0.0.1:5000"+os.environ["GOOGLE_REDIRECT_URI"]
 
     # Configure all the ways you want to allow JWTs to be sent.
     JWT_TOKEN_LOCATION = ["headers", "cookies"]
@@ -91,6 +94,7 @@ class Config:
 
     GOOGLE_CLIENT_ID = os.environ["GOOGLE_CLIENT_ID"]
     GOOGLE_CLIENT_SECRET = os.environ["GOOGLE_CLIENT_SECRET"]
+
     GOOGLE_REDIRECT_URI = os.environ["GOOGLE_REDIRECT_URI"]
 
     # CSP Policy (imported from security config)
