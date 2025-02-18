@@ -44,6 +44,10 @@ def create_app(config_class):
 
     # pylint: enable=all
 
+    # -----------------------------------------------------------------------------
+    # Security
+    # -----------------------------------------------------------------------------
+
     @frontend.before_request
     def enforce_https():
         """Redirect to HTTPS if not already using it."""
@@ -65,6 +69,10 @@ def create_app(config_class):
             response.headers["Content-Security-Policy"] = config_class.CSP_HEADER
 
         return response
+
+    # -----------------------------------------------------------------------------
+    # Cookies
+    # -----------------------------------------------------------------------------
 
     @frontend.before_request
     @jwt_required(optional=True, refresh=True)
@@ -99,8 +107,9 @@ def create_app(config_class):
         return response
 
     # -----------------------------------------------------------------------------
-    # Error Handlers
+    # Frontend JWT Error Handlers
     # -----------------------------------------------------------------------------
+
     @frontend.errorhandler(UserLookupError)
     def invalid_user(e):
         print(f"ERROR: User not found: {e}")
@@ -138,6 +147,10 @@ def create_app(config_class):
             jsonify({"error": "An unexpected error occurred during OAuth processing."}),
             HTTPStatus.INTERNAL_SERVER_ERROR,
         )
+
+    # -----------------------------------------------------------------------------
+    # Blueprints
+    # -----------------------------------------------------------------------------
 
     app.register_blueprint(frontend)
     app.register_blueprint(backend)
