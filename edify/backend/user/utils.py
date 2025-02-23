@@ -18,6 +18,7 @@ from edify.utils.constants import (
     NotificationTypeEnum,
 )
 from edify.utils.utils import (
+    format_phone,
     error_response,
     validate_phone,
     validate_email,
@@ -79,7 +80,9 @@ def check_author(id_user: int, id_question: int) -> bool:
 
 
 # pylint: disable=too-many-return-statements
-def validate_signup_data(args: dict) -> Optional[ResponseReturnValue]:
+def validate_signup_data(
+    args: dict, is_google_account: bool = False
+) -> Optional[ResponseReturnValue]:
     """Validate signup form data."""
 
     # Validate phone
@@ -108,8 +111,14 @@ def validate_signup_data(args: dict) -> Optional[ResponseReturnValue]:
         )
 
     # Check existing phone
-    if db.session.query(User).filter_by(phone=args["phone"]).first():
+    # Format phone number
+    formatted_phone = format_phone(args["phone"])
+    if db.session.query(User).filter_by(phone=formatted_phone).first():
         return error_response("Phone is already taken", ErrorType.BAD_REQUEST)
+
+    # If google, no need to check password
+    if is_google_account:
+        return None
 
     # Validate password
     valid, msg = validate_password(args["password"])
@@ -299,7 +308,7 @@ def create_new_user(
         firstname=firstname or username,  # Use username if firstname is empty
         lastname=lastname or username,  # Use username if lastname is empty
         email=email,
-        phone=phone,
+        phone=format_phone(phone),
         password=User.hash_password(password) if password else None,
         school_id=school.id,
         major_id=major.id,

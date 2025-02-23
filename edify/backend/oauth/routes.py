@@ -271,7 +271,7 @@ def google_signup(args) -> flask_typing.ResponseReturnValue:
         return redirect(url_for("frontend.login", error="manual_account"))
 
     # Validate input data
-    if error := validate_signup_data(args):
+    if error := validate_signup_data(args, is_google_account=True):
         return error
 
     # Prepare and create user
