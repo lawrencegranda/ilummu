@@ -255,7 +255,7 @@ def login() -> ResponseReturnValue:
         "signup.jinja", login=True, next_url=next_url, http_method=http_method
     )
 
-
+# Endpoint: /signup
 @frontend.route("/signup")
 @no_token_allowed
 def signup() -> ResponseReturnValue:
