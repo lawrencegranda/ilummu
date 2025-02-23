@@ -12,7 +12,6 @@ from flask_login import UserMixin
 from itsdangerous.url_safe import URLSafeTimedSerializer
 from itsdangerous.exc import BadSignature, SignatureExpired
 from sqlalchemy import Index, event
-from sqlalchemy.orm import validates
 
 # Local Application imports
 from edify.core import db, bcrypt
@@ -77,32 +76,6 @@ class User(BaseModel, UserMixin):
     # Account password
     # Must be hashed
     password = db.Column(db.String(90), nullable=True)
-
-    # Validate password or google account
-    @validates("password", "is_google_account")
-    def validate_password_or_google_account(self, key, value):
-        """
-        Validate that either a password or Google account flag is provided.
-
-        Args:
-            key (str): The key being validated, either 'password' or 'is_google_account'.
-            value (str or bool): The value associated with the key.
-
-        Raises:
-            ValueError: If neither password nor Google account flag is provided.
-
-        Returns:
-            str or bool: The validated value.
-        """
-        if key == "password" and not value and not self.is_google_account:
-            raise ValueError(
-                "Password cannot be empty if the account is not a Google account."
-            )
-        if key == "is_google_account" and not value and not self.password:
-            raise ValueError(
-                "Password cannot be empty if the account is not a Google account."
-            )
-        return value
 
     # User's school/university
     # Many-to-One relationship with School model
@@ -176,8 +149,9 @@ class User(BaseModel, UserMixin):
             bool: True if the password is correct, False otherwise.
         """
         # If user has no password, they are a Google account and we should not check the password
-        if self.password is None:
+        if self.password is None or self.is_google_account is True:
             return False
+
         return bcrypt.check_password_hash(self.password, password)
 
     @staticmethod
@@ -352,18 +326,33 @@ class User(BaseModel, UserMixin):
     @staticmethod
     def validator(_mapper, _connection, target):
         """Validate user data before insert/update."""
+        # Validate phone number format
         if not validate_phone(target.phone):
             raise ValueError(
                 f'USER MODEL: Invalid phone number format ("{target.phone}").'
             )
 
+        # Validate email format
         if not validate_email(target.email):
             raise ValueError(f'USER MODEL: Invalid email format ("{target.email}").')
 
+        # Ensure update timestamp is after creation
         if target.updated_at and target.updated_at < target.created_at:
             raise ValueError(
                 f'USER MODEL: Creation ("{target.created_at}") must be before '
                 f'update ("{target.updated_at}").'
+            )
+
+        # Google accounts cannot have password
+        if target.is_google_account and target.password:
+            raise ValueError(
+                "USER MODEL: Password should not be set for Google accounts."
+            )
+
+        # Non-Google accounts must have password
+        if (not target.is_google_account) and not target.password:
+            raise ValueError(
+                "USER MODEL: Password is required for non-Google accounts."
             )
 
     @staticmethod
