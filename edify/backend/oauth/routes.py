@@ -53,7 +53,7 @@ oauth = Blueprint("oauth", __name__)
 def init_oauth(app):
     """
     Initialize the OAuth2 session.
-    
+
     Args:
         app: The Flask application instance.
     """
@@ -74,7 +74,7 @@ def init_oauth(app):
 def get_oauth_session():
     """
     Retrieve the OAuth session from Flask's app context.
-    
+
     Returns:
         OAuth2Session: The OAuth2 session instance or None if in testing mode.
     """
@@ -92,12 +92,13 @@ oauth.record(lambda state: init_oauth(state.app))
 # OAuth Routes
 # -----------------------------------------------------------------------------
 
+
 # Endpoint: /backend/oauth/login/google
 @oauth.route("/login/google")
 def login() -> flask_typing.ResponseReturnValue:
     """
     Redirect the user to Google's OAuth 2.0 authorization page.
-    
+
     Returns:
         Response: A redirection to the Google authorization URL or an error response.
     """
@@ -135,7 +136,7 @@ def login() -> flask_typing.ResponseReturnValue:
 def callback() -> flask_typing.ResponseReturnValue:
     """
     Handle Google OAuth callback.
-    
+
     Returns:
         Response: A redirection to the appropriate URL based on the OAuth callback result.
     """
@@ -188,7 +189,7 @@ def callback() -> flask_typing.ResponseReturnValue:
 def prepare_signup_form_data() -> dict:
     """
     Prepare data for rendering the signup form.
-    
+
     Returns:
         dict: A dictionary containing majors, OAuth URL, next URL, and HTTP method.
     """
@@ -208,7 +209,7 @@ def prepare_signup_form_data() -> dict:
 def google_signup_form() -> flask_typing.ResponseReturnValue:
     """
     Render signup form for users authenticated with Google but do not have an account yet.
-    
+
     Returns:
         Response: A redirection to the signup form or login page based on user info.
     """
@@ -256,10 +257,11 @@ def google_signup_form() -> flask_typing.ResponseReturnValue:
 def google_signup(args) -> flask_typing.ResponseReturnValue:
     """
     Prevent signing up with Google if email already exists for a manual login account.
-    
+
     Args:
-        args: The signup arguments containing email, firstname, lastname, phone, major, graduation, and language.
-    
+        args: The signup arguments containing email, firstname, lastname,
+              phone, major, graduation, and language.
+
     Returns:
         Response: A redirection to the appropriate URL based on the signup result.
     """

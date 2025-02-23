@@ -161,7 +161,7 @@ def login(args: dict) -> ResponseReturnValue:
         return (
             jsonify(
                 {
-                    "error": "This account was created using Google. Please log in using Google OAuth.",
+                    "error": "This account was created using Google. Please log in using Google.",
                     "redirect_to": url_for("oauth.login"),
                 }
             ),

@@ -11,7 +11,8 @@ from flask_jwt_extended import create_access_token, create_refresh_token
 from flask_login import UserMixin
 from itsdangerous.url_safe import URLSafeTimedSerializer
 from itsdangerous.exc import BadSignature, SignatureExpired
-from sqlalchemy import Index, event, validates
+from sqlalchemy import Index, event
+from sqlalchemy.orm import validates
 
 # Local Application imports
 from edify.core import db, bcrypt
@@ -78,12 +79,29 @@ class User(BaseModel, UserMixin):
     password = db.Column(db.String(90), nullable=True)
 
     # Validate password or google account
-    @validates('password', 'is_google_account')
+    @validates("password", "is_google_account")
     def validate_password_or_google_account(self, key, value):
-        if key == 'password' and not value and not self.is_google_account:
-            raise ValueError("Password cannot be empty if the account is not a Google account.")
-        if key == 'is_google_account' and not value and not self.password:
-            raise ValueError("Password cannot be empty if the account is not a Google account.")
+        """
+        Validate that either a password or Google account flag is provided.
+
+        Args:
+            key (str): The key being validated, either 'password' or 'is_google_account'.
+            value (str or bool): The value associated with the key.
+
+        Raises:
+            ValueError: If neither password nor Google account flag is provided.
+
+        Returns:
+            str or bool: The validated value.
+        """
+        if key == "password" and not value and not self.is_google_account:
+            raise ValueError(
+                "Password cannot be empty if the account is not a Google account."
+            )
+        if key == "is_google_account" and not value and not self.password:
+            raise ValueError(
+                "Password cannot be empty if the account is not a Google account."
+            )
         return value
 
     # User's school/university
@@ -148,7 +166,18 @@ class User(BaseModel, UserMixin):
     image_file = db.Column(db.String(40), nullable=False, default="default.jpg")
 
     def check_password(self, password: str) -> bool:
-        """Verify if provided password matches the hashed password."""
+        """
+        Check if the provided password matches the stored password for the user.
+
+        Args:
+            password (str): The password to check.
+
+        Returns:
+            bool: True if the password is correct, False otherwise.
+        """
+        # If user has no password, they are a Google account and we should not check the password
+        if self.password is None:
+            return False
         return bcrypt.check_password_hash(self.password, password)
 
     @staticmethod
