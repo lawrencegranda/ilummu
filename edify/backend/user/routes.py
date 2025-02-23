@@ -151,35 +151,32 @@ def login(args: dict) -> ResponseReturnValue:
 
     # If user not found, return error
     if not curr_user:
-        return (
-            error_response("Invalid email or password", ErrorType.BAD_REQUEST),
-            HTTPStatus.UNAUTHORIZED,
-        )
+        return error_response("Invalid email or password", ErrorType.UNAUTHORIZED)
 
     # Prevent Google accounts from logging in with a password
     if curr_user.is_google_account:
         return (
             jsonify(
                 {
-                    "error": "This account was created using Google. Please log in using Google.",
+                    "msg": "This account was created using Google. Please log in using Google.",
+                    "type": "UNAUTHORIZED",
                     "redirect_to": url_for("oauth.login"),
                 }
             ),
-            HTTPStatus.FOUND,
+            HTTPStatus.UNAUTHORIZED,
         )
 
     # Check if the provided password matches the stored password for the user.
     if not curr_user.check_password(args["password"]):
-        return (
-            error_response("Invalid email or password", ErrorType.BAD_REQUEST),
-            HTTPStatus.UNAUTHORIZED,
-        )
+        return error_response("Invalid email or password", ErrorType.UNAUTHORIZED)
 
     # # Uncomment these lines to enable email and phone verification checks
-    # if curr_user.mail_is_verified is False:
-    #     return error_response("Email not verified", ErrorType.USER_NOT_VERIFIED)
-    # if curr_user.phone_is_verified is False:
-    #     return error_response("Phone not verified", ErrorType.USER_NOT_VERIFIED)
+    if curr_user.mail_is_verified is False:
+        # return error_response("Email not verified", ErrorType.USER_NOT_VERIFIED)
+        pass
+    if curr_user.phone_is_verified is False:
+        # return error_response("Phone not verified", ErrorType.USER_NOT_VERIFIED)
+        pass
 
     if curr_user.auth_level in [AuthLevelEnum.SCHOOL_ADMIN, AuthLevelEnum.SUPER_ADMIN]:
         # Additional logic for admin users (if needed)
