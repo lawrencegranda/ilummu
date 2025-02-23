@@ -74,37 +74,45 @@ def check_author(id_user: int, id_question: int) -> bool:
     return id_user == question.user_id
 
 
+# pylint: disable=too-many-return-statements
 def validate_signup_data(args: dict) -> Optional[ResponseReturnValue]:
     """Validate signup form data."""
-    error_msg = None
 
     # Validate phone
     if not validate_phone(args["phone"]):
-        error_msg = f"Invalid phone format {args['phone']}"
+        return error_response(
+            f"Invalid phone format {args['phone']}", ErrorType.BAD_REQUEST
+        )
+
     # Validate email
-    elif not validate_email(args["email"]):
-        error_msg = "Invalid email format."
-    else:
-        # Check if email is a Google OAuth account
-        user = db.session.query(User).filter_by(email=args["email"]).first()
-        if user and user.is_google_account:
-            error_msg = (
+    if not validate_email(args["email"]):
+        return error_response("Invalid email format.", ErrorType.BAD_REQUEST)
+
+    # Check if email is a Google OAuth account
+    user = db.session.query(User).filter_by(email=args["email"]).first()
+    if user:
+        if user.is_google_account:
+            return error_response(
                 "This email is associated with a Google account. "
-                "Please log in using Google OAuth."
+                "Please log in using Google OAuth.",
+                ErrorType.BAD_REQUEST,
             )
         # Check existing email
-        elif user:
-            error_msg = "Email is already taken"
-        # Check existing phone
-        elif db.session.query(User).filter_by(phone=args["phone"]).first():
-            error_msg = "Phone is already taken"
-        else:
-            # Validate password
-            valid, msg = validate_password(args["password"])
-            if not valid:
-                error_msg = msg
+        return error_response("Email is already taken", ErrorType.BAD_REQUEST)
 
-    return error_response(error_msg, ErrorType.BAD_REQUEST) if error_msg else None
+    # Check existing phone
+    if db.session.query(User).filter_by(phone=args["phone"]).first():
+        return error_response("Phone is already taken", ErrorType.BAD_REQUEST)
+
+    # Validate password
+    valid, msg = validate_password(args["password"])
+    if not valid:
+        return error_response(msg, ErrorType.BAD_REQUEST)
+
+    return None
+
+
+# pylint: enable=too-many-return-statements
 
 
 def get_user_school(
