@@ -19,8 +19,6 @@ app = create_app(Config)
 
 # Run the Flask app
 if __name__ == "__main__":
-    print("Running on production...\n")
-
     if app.config["ENV"] == EdifyEnvironments.LOCAL.value:
         print("Running locally...\n")
         socketio.run(
