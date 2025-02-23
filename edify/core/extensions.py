@@ -36,9 +36,9 @@ def on_join(data):
     if user_id:
         room_name = f"user_{user_id}"  # unique user id
         join_room(room_name)
-        print(f"User {user_id} joined room: {room_name}")
+        print(f"SOCKETIO: User {user_id} joined room: {room_name}")
     else:
-        print("ERROR: SocketIO. Missing user_id in 'join' event data.")
+        print("ERROR: SOCKETIO: Missing user_id in 'join' event data.")
 
 
 def init_extensions(app):

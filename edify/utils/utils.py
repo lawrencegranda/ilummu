@@ -202,7 +202,7 @@ def error_response(message: str, error_type: ErrorType) -> tuple:
     Returns:
         tuple: A tuple containing the JSON response and the HTTP status code.
     """
-    print(f"{error_type.value} {error_type.name}: {message}")
+    print(f"ERROR: {error_type.value} {error_type.name}: {message}")
     return (
         jsonify({"msg": message, "type": error_type.name}),
         error_type.value,

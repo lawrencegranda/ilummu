@@ -90,7 +90,6 @@ def upload_image(file) -> Optional[str]:
 
         # Determine the MIME type of the file
         content_type, _ = mimetypes.guess_type(key_name)
-        print(content_type)
         if not content_type:
             # Fallback if MIME type can't be determined
             content_type = "binary/octet-stream"

@@ -71,7 +71,7 @@ def get_user() -> ResponseReturnValue:
                 HTTPStatus.OK,
             )
     except (ValueError, KeyError, RuntimeError) as e:
-        print(f"Error getting current user: {e}")
+        print(f"ERROR: Cannot get current user: {e}")
 
     return jsonify(None), HTTPStatus.NOT_FOUND
 
@@ -121,7 +121,7 @@ def refresh() -> ResponseReturnValue:
         Response: JSON response with the new access token.
     """
     curr_user = get_current_user()
-    print(f"Refreshing token... User {curr_user.id}")
+    print(f"JWT: Refreshing token... User {curr_user.id}")
     return make_login_response(curr_user, False), HTTPStatus.OK
 
 

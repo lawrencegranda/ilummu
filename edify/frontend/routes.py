@@ -208,7 +208,7 @@ def logout() -> ResponseReturnValue:
 
     # If the backend logout was successful, clear the cookies and redirect
     if response.status_code != HTTPStatus.OK:
-        print("Unsuccessful logout.")
+        print("ERROR: Unsuccessful logout.")
 
     response = redirect(url_for("frontend.home"))
     unset_jwt_cookies(response)
@@ -348,7 +348,7 @@ def submit_question_after_login() -> ResponseReturnValue:
             with open(file_path, "rb") as f:
                 file = (io.BytesIO(f.read()), os.path.basename(file_path))
         except (IOError, OSError) as e:
-            print(f"Failed to read file from path: {e}")
+            print(f"ERROR: Failed to read file from path: {e}")
 
     # Submit the question using the existing endpoint
     # Create a request to submit the question to /backend/question/new
@@ -645,7 +645,7 @@ def fetch_question(id_question: int) -> ResponseReturnValue:
                     "Content-Type", ""
                 ).startswith("image")
         except urllib.error.URLError as e:
-            print(f"Error fetching MIME type: {e}")
+            print(f"ERROR: Error fetching MIME type: {e}")
 
     return render_template(
         "question.jinja",
