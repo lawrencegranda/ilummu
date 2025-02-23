@@ -43,6 +43,7 @@ def get_csp_policy(filebase_url: str) -> dict:
             "https://cdnjs.cloudflare.com",
             "https://robohash.org",
             filebase_url,
+            "https://*.googleusercontent.com",  # Allow Google user profile images
         ],
         "connect-src": [
             "'self'",
@@ -50,6 +51,17 @@ def get_csp_policy(filebase_url: str) -> dict:
             "https://*.ilummu.com",  # Allow HTTP/HTTPS connections
             "https://www.google-analytics.com",
             "https://www.googletagmanager.com",  # Required for Google Analytics
+            "https://accounts.google.com",  # Google OAuth
+            "https://oauth2.googleapis.com",  # Google OAuth token endpoint
+            "https://www.googleapis.com",  # Google APIs
+        ],
+        "form-action": [
+            "'self'",
+            "https://accounts.google.com",  # Allow form submissions to Google OAuth
+        ],
+        "frame-src": [
+            "'self'",
+            "https://accounts.google.com",  # Allow Google OAuth popup/iframe
         ],
         "worker-src": ["'self'", "blob:"],  # Allow Web Workers if needed
         "child-src": ["'self'", "blob:"],  # Allow blob: for dynamic scripts
