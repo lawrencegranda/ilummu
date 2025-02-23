@@ -151,7 +151,9 @@ def login(args: dict) -> ResponseReturnValue:
 
     # If user not found, return error
     if not curr_user:
-        return error_response("Invalid email or password", ErrorType.UNAUTHORIZED)
+        return error_response(
+            "Invalid email or password", ErrorType.INCORRECT_CREDENTIALS
+        )
 
     # Prevent Google accounts from logging in with a password
     if curr_user.is_google_account:
@@ -163,12 +165,14 @@ def login(args: dict) -> ResponseReturnValue:
                     "redirect_to": url_for("oauth.login"),
                 }
             ),
-            HTTPStatus.UNAUTHORIZED,
+            ErrorType.INCORRECT_CREDENTIALS,
         )
 
     # Check if the provided password matches the stored password for the user.
     if not curr_user.check_password(args["password"]):
-        return error_response("Invalid email or password", ErrorType.UNAUTHORIZED)
+        return error_response(
+            "Invalid email or password", ErrorType.INCORRECT_CREDENTIALS
+        )
 
     # # Uncomment these lines to enable email and phone verification checks
     if curr_user.mail_is_verified is False:
