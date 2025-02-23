@@ -40,7 +40,7 @@ def fetch_data(url: str, method: str = "GET") -> List[Any]:
     data, status = response.get_json(), response.status_code
 
     if status != HTTPStatus.OK:
-        print(f"fetch_data error: {status}")
+        print(f"ERROR: fetch_data: {status}")
         return []
 
     return data.get("data", [])

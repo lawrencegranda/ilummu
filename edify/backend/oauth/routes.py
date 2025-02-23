@@ -31,10 +31,10 @@ from edify.core import db
 from edify.models import User, School, Major
 from edify.utils.constants import SupportedLanguagesEnum
 from edify.utils.utils import (
+    fetch_data,
     validate_phone,
     format_phone,
     generate_funny_username,
-    fetch_data,
 )
 from edify.backend.user.utils import generate_refresh_token
 

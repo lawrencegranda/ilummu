@@ -29,35 +29,12 @@ from werkzeug.utils import secure_filename
 # Local Application imports
 from edify.utils.constants import ErrorType, QuestionSchema
 from edify.utils.decorators import no_token_allowed
-from edify.utils.utils import error_response, internal_request
+from edify.utils.utils import fetch_data, error_response, internal_request
 
 
 # -----------------------------------------------------------------------------
 # Helper Functions
 # -----------------------------------------------------------------------------
-
-
-def fetch_data(url: str, method: str = "GET") -> List[Any]:
-    """
-    Fetch data from the backend API.
-
-    Parameters:
-        url (str): Endpoint to fetch data from.
-        method (str): HTTP method to use (default is "GET").
-
-    Returns:
-        List: Parsed data returned from the backend or an empty list on error.
-    """
-    response = internal_request(url, method)
-
-    # Parse the response
-    data, status = response.get_json(), response.status_code
-
-    if status != HTTPStatus.OK:
-        print(f"fetch_data: {status}")
-        return []
-
-    return data.get("data", [])
 
 
 def get_user() -> Optional[Dict[str, Any]]:
@@ -254,6 +231,7 @@ def login() -> ResponseReturnValue:
     return render_template(
         "signup.jinja", login=True, next_url=next_url, http_method=http_method
     )
+
 
 # Endpoint: /signup
 @frontend.route("/signup")
