@@ -11,7 +11,7 @@ from flask_jwt_extended import create_access_token, create_refresh_token
 from flask_login import UserMixin
 from itsdangerous.url_safe import URLSafeTimedSerializer
 from itsdangerous.exc import BadSignature, SignatureExpired
-from sqlalchemy import Index, event
+from sqlalchemy import Index, event, validates
 
 # Local Application imports
 from edify.core import db, bcrypt
@@ -76,6 +76,15 @@ class User(BaseModel, UserMixin):
     # Account password
     # Must be hashed
     password = db.Column(db.String(90), nullable=True)
+
+    # Validate password or google account
+    @validates('password', 'is_google_account')
+    def validate_password_or_google_account(self, key, value):
+        if key == 'password' and not value and not self.is_google_account:
+            raise ValueError("Password cannot be empty if the account is not a Google account.")
+        if key == 'is_google_account' and not value and not self.password:
+            raise ValueError("Password cannot be empty if the account is not a Google account.")
+        return value
 
     # User's school/university
     # Many-to-One relationship with School model

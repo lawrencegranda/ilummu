@@ -51,7 +51,12 @@ oauth = Blueprint("oauth", __name__)
 # OAuth Setup
 # -----------------------------------------------------------------------------
 def init_oauth(app):
-    """Initialize the OAuth2 session."""
+    """
+    Initialize the OAuth2 session.
+    
+    Args:
+        app: The Flask application instance.
+    """
     # Only set up OAuth if we're not in testing mode and not already configured
     if not app.config.get("TESTING") and "OAUTH_SESSION" not in app.config:
         app.config["OAUTH_SESSION"] = OAuth2Session(
@@ -67,7 +72,12 @@ def init_oauth(app):
 
 
 def get_oauth_session():
-    """Retrieve the OAuth session from Flask's app context."""
+    """
+    Retrieve the OAuth session from Flask's app context.
+    
+    Returns:
+        OAuth2Session: The OAuth2 session instance or None if in testing mode.
+    """
     # Return None if we're in testing mode
     if current_app.config.get("TESTING"):
         return None
@@ -81,9 +91,16 @@ oauth.record(lambda state: init_oauth(state.app))
 # -----------------------------------------------------------------------------
 # OAuth Routes
 # -----------------------------------------------------------------------------
+
+# Endpoint: /backend/oauth/login/google
 @oauth.route("/login/google")
 def login() -> flask_typing.ResponseReturnValue:
-    """Redirect the user to Google's OAuth 2.0 authorization page."""
+    """
+    Redirect the user to Google's OAuth 2.0 authorization page.
+    
+    Returns:
+        Response: A redirection to the Google authorization URL or an error response.
+    """
     oauth_session = get_oauth_session()
     try:
         authorization_url, state = oauth_session.authorization_url(
@@ -113,9 +130,15 @@ def login() -> flask_typing.ResponseReturnValue:
         )
 
 
+# Endpoint: /backend/oauth/login/google/callback
 @oauth.route("/login/google/callback")
 def callback() -> flask_typing.ResponseReturnValue:
-    """Handle Google OAuth callback."""
+    """
+    Handle Google OAuth callback.
+    
+    Returns:
+        Response: A redirection to the appropriate URL based on the OAuth callback result.
+    """
     oauth_session = get_oauth_session()
     redirect_url = url_for("frontend.signup")
     try:
@@ -163,7 +186,12 @@ def callback() -> flask_typing.ResponseReturnValue:
 
 
 def prepare_signup_form_data() -> dict:
-    """Prepare data for rendering the signup form."""
+    """
+    Prepare data for rendering the signup form.
+    
+    Returns:
+        dict: A dictionary containing majors, OAuth URL, next URL, and HTTP method.
+    """
     majors = fetch_data(url_for("backend.data.fetch_user_majors"), "GET")
     majors.sort(key=lambda d: d["name"])
 
@@ -175,9 +203,15 @@ def prepare_signup_form_data() -> dict:
     }
 
 
+# Endpoint: /backend/oauth/signup/form
 @oauth.route("/signup/form", methods=["GET"])
 def google_signup_form() -> flask_typing.ResponseReturnValue:
-    """Render signup form for users authenticated with Google but do not have an account yet."""
+    """
+    Render signup form for users authenticated with Google but do not have an account yet.
+    
+    Returns:
+        Response: A redirection to the signup form or login page based on user info.
+    """
     user_info = session.get("user")
     if not user_info:
         return redirect(url_for("frontend.signup"))
@@ -205,6 +239,7 @@ def google_signup_form() -> flask_typing.ResponseReturnValue:
     )
 
 
+# Endpoint: /backend/oauth/signup
 @oauth.route("/signup", methods=["POST"])
 @use_args(
     {
@@ -219,7 +254,15 @@ def google_signup_form() -> flask_typing.ResponseReturnValue:
     location="json",
 )
 def google_signup(args) -> flask_typing.ResponseReturnValue:
-    """Prevent signing up with Google if email already exists for a manual login account."""
+    """
+    Prevent signing up with Google if email already exists for a manual login account.
+    
+    Args:
+        args: The signup arguments containing email, firstname, lastname, phone, major, graduation, and language.
+    
+    Returns:
+        Response: A redirection to the appropriate URL based on the signup result.
+    """
     existing_user = db.session.query(User).filter_by(email=args["email"]).first()
 
     if existing_user and not existing_user.is_google_account:

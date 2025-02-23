@@ -132,7 +132,8 @@ def refresh() -> ResponseReturnValue:
         "email": fields.Email(required=True),
         "password": fields.Str(required=True),
         "remember": fields.Boolean(required=False),
-    }
+    },
+    location="json",
 )
 def login(args: dict) -> ResponseReturnValue:
     """
@@ -144,15 +145,15 @@ def login(args: dict) -> ResponseReturnValue:
     Returns:
         Response: JSON response with the access token and user information or redirection error.
     """
-    # Get the user corresponding to the email that is logging in
     curr_user = (
         db.session.query(User).filter_by(email=args["email"], is_mock=False).first()
     )
 
-    # If user does not exist
+    # If user not found, return error
     if not curr_user:
-        return error_response(
-            "Incorrect email or password", ErrorType.INCORRECT_CREDENTIALS
+        return (
+            error_response("Invalid email or password", ErrorType.BAD_REQUEST),
+            HTTPStatus.UNAUTHORIZED,
         )
 
     # Prevent Google accounts from logging in with a password
@@ -160,20 +161,18 @@ def login(args: dict) -> ResponseReturnValue:
         return (
             jsonify(
                 {
-                    "error": (
-                        "This account was created using Google. "
-                        "Please log in using Google OAuth."
-                    ),
+                    "error": "This account was created using Google. Please log in using Google OAuth.",
                     "redirect_to": url_for("oauth.login"),
                 }
             ),
             HTTPStatus.FOUND,
         )
 
-    # Check if the given password is correct
+    # Check if the provided password matches the stored password for the user.
     if not curr_user.check_password(args["password"]):
-        return error_response(
-            "Incorrect email or password", ErrorType.INCORRECT_CREDENTIALS
+        return (
+            error_response("Invalid email or password", ErrorType.BAD_REQUEST),
+            HTTPStatus.UNAUTHORIZED,
         )
 
     # # Uncomment these lines to enable email and phone verification checks
@@ -186,10 +185,7 @@ def login(args: dict) -> ResponseReturnValue:
         # Additional logic for admin users (if needed)
         pass
 
-    return (
-        make_login_response(curr_user, args.get("remember", False)),
-        HTTPStatus.OK,
-    )
+    return make_login_response(curr_user, args.get("remember", False)), HTTPStatus.OK
 
 
 # Endpoint: /backend/user/new
