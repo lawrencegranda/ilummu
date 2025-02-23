@@ -31,12 +31,10 @@ from edify.utils.utils import (
 from edify.backend.user.utils import (
     get_current_user,
     generate_refresh_token,
-    get_user_language,
     validate_signup_data,
-    get_user_school,
-    get_user_major,
-    generate_unique_username,
     make_login_response,
+    create_new_user,
+    prepare_user_args,
 )
 from edify.backend.mail.utils import send
 from edify.backend.utils import commit_changes, create_notification
@@ -209,63 +207,19 @@ def login(args: dict) -> ResponseReturnValue:
 )
 def signup(args: dict) -> ResponseReturnValue:
     """Create a new user account."""
-    # Clean input data
-    for key, value in args.items():
-        if isinstance(value, str):
-            args[key] = value.strip()
-
     # Validate input data
     if error := validate_signup_data(args):
         return error
 
-    # Get school
-    school, error = get_user_school(args.get("school"))
+    # Prepare and create user
+    user_args = prepare_user_args(args)
+    user_obj, error = create_new_user(**user_args)
+
     if error:
         return error
-
-    # Get major
-    major, error = get_user_major(args["major"], school.id)
-    if error:
-        return error
-
-    # Get language
-    language, error = get_user_language(args.get("language"))
-    if error:
-        return error
-
-    # Generate username
-    username = generate_unique_username()
-    if not username:
-        return error_response("Ran out of usernames", ErrorType.INTERNAL_ERROR)
-
-    # Create user
-    curr_user = User(
-        username=username,
-        firstname=args.get("firstname", username),
-        lastname=args.get("lastname", username),
-        email=args["email"],
-        phone=args["phone"],
-        password=User.hash_password(args["password"]),
-        school_id=school.id,
-        major_id=major.id,
-        graduation=args["graduation"],
-        language=language,
-    )
-
-    # Save user
-    db.session.add(curr_user)
-    commit_changes("Failed to create user")
-
-    # Create welcome notification
-    create_notification(
-        NotificationTypeEnum.ACCOUNT_CREATED,
-        f"Welcome {username}!",
-        curr_user.id,
-        None,
-    )
 
     return (
-        make_login_response(curr_user, args.get("remember", False)),
+        make_login_response(user_obj, args.get("remember", False)),
         HTTPStatus.CREATED,
     )
 

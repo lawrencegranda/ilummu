@@ -1,7 +1,7 @@
 """User-related utility functions for authentication and user management."""
 
 # Standard Library imports
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict, Any
 
 # Third-Party Framework imports
 from flask import current_app, jsonify
@@ -12,7 +12,11 @@ from flask_login import UserMixin
 # Local Application imports
 from edify.core import db
 from edify.models import User, Question, School, Major
-from edify.utils.constants import SupportedLanguagesEnum, ErrorType
+from edify.utils.constants import (
+    SupportedLanguagesEnum,
+    ErrorType,
+    NotificationTypeEnum,
+)
 from edify.utils.utils import (
     error_response,
     validate_phone,
@@ -21,7 +25,7 @@ from edify.utils.utils import (
     generate_funny_username,
 )
 
-from edify.backend.utils import commit_changes
+from edify.backend.utils import commit_changes, create_notification
 
 
 def get_current_user() -> Optional[User]:
@@ -198,3 +202,128 @@ def make_login_response(user: User, remember: bool) -> ResponseReturnValue:
         )
 
     return response
+
+
+def prepare_user_args(args: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Prepare and clean user creation arguments.
+
+    Args:
+        args: Dictionary of user arguments
+
+    Returns:
+        Dictionary of cleaned and prepared arguments
+    """
+    # Clean string inputs
+    cleaned_args = {}
+    for key, value in args.items():
+        if isinstance(value, str):
+            cleaned_args[key] = value.strip()
+        else:
+            cleaned_args[key] = value
+
+    return {
+        "firstname": cleaned_args.get(
+            "firstname", ""
+        ),  # Will be replaced with username if empty
+        "lastname": cleaned_args.get(
+            "lastname", ""
+        ),  # Will be replaced with username if empty
+        "email": cleaned_args.get("email"),
+        "phone": cleaned_args.get("phone"),
+        "school": cleaned_args.get("school", ""),
+        "major": cleaned_args.get("major", ""),
+        "graduation": cleaned_args.get("graduation"),
+        "language": cleaned_args.get("language", ""),
+        "password": cleaned_args.get("password"),
+    }
+
+
+# pylint: disable=too-many-arguments
+# pylint: disable=too-many-positional-arguments
+def create_new_user(
+    firstname: str,
+    lastname: str,
+    email: str,
+    phone: str,
+    school: str,
+    major: str,
+    graduation: str,
+    language: str,
+    password: Optional[str] = None,
+    is_google_account: bool = False,
+) -> Tuple[Optional[User], Optional[ResponseReturnValue]]:
+    """
+    Create a new user with the given parameters.
+
+    Args:
+        firstname: User's first name
+        lastname: User's last name
+        email: User's email
+        phone: User's phone number
+        school: Name of user's school
+        major: Name of user's major
+        graduation: User's graduation date
+        language: User's preferred language
+        password: User's password (None for Google accounts)
+        is_google_account: Whether this is a Google OAuth account
+
+    Returns:
+        Tuple containing:
+        - User object if creation successful, None otherwise
+        - Error response if creation failed, None otherwise
+    """
+    # Get school
+    school, error = get_user_school(school)
+    if error:
+        return None, error
+
+    # Get major
+    major, error = get_user_major(major, school.id)
+    if error:
+        return None, error
+
+    # Get language
+    language, error = get_user_language(language)
+    if error:
+        return None, error
+
+    # Generate unique username
+    username = generate_unique_username()
+    if not username:
+        return None, error_response("Ran out of usernames", ErrorType.INTERNAL_ERROR)
+
+    # Create user
+    user = User(
+        username=username,
+        firstname=firstname or username,  # Use username if firstname is empty
+        lastname=lastname or username,  # Use username if lastname is empty
+        email=email,
+        phone=phone,
+        password=User.hash_password(password) if password else None,
+        school_id=school.id,
+        major_id=major.id,
+        graduation=graduation,
+        language=language,
+        is_google_account=is_google_account,
+        mail_is_verified=is_google_account,  # Google accounts are pre-verified
+    )
+
+    # Save user
+    db.session.add(user)
+    commit_error = commit_changes("Failed to create user")
+    if commit_error:
+        return None, commit_error
+
+    # Create welcome notification
+    create_notification(
+        NotificationTypeEnum.ACCOUNT_CREATED,
+        f"Welcome {username}!",
+        user.id,
+        None,
+    )
+
+    return user, None
+
+
+# pylint: enable=all

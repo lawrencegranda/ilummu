@@ -28,15 +28,15 @@ from requests_oauthlib import OAuth2Session
 
 # Local Application imports
 from edify.core import db
-from edify.models import User, School, Major
+from edify.models import User
 from edify.utils.constants import SupportedLanguagesEnum
-from edify.utils.utils import (
-    fetch_data,
-    validate_phone,
-    format_phone,
-    generate_funny_username,
+from edify.utils.utils import fetch_data
+from edify.backend.user.utils import (
+    generate_refresh_token,
+    create_new_user,
+    validate_signup_data,
+    prepare_user_args,
 )
-from edify.backend.user.utils import generate_refresh_token
 
 # Allow HTTP for local development (testing only)
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
@@ -265,59 +265,32 @@ def google_signup(args) -> flask_typing.ResponseReturnValue:
     Returns:
         Response: A redirection to the appropriate URL based on the signup result.
     """
+    # Check for existing user
     existing_user = db.session.query(User).filter_by(email=args["email"]).first()
-
     if existing_user and not existing_user.is_google_account:
         return redirect(url_for("frontend.login", error="manual_account"))
 
-    # Validate and format phone number
-    phone = args["phone"]
-    if not validate_phone(phone):
-        return jsonify({"error": "Invalid phone format."}), HTTPStatus.BAD_REQUEST
-    phone = format_phone(phone)
+    # Validate input data
+    if error := validate_signup_data(args):
+        return error
 
-    # Get school and major information
-    school = db.session.query(School).filter_by(name="Cornell University").first()
-    major = (
-        db.session.query(Major)
-        .filter_by(name=args["major"], school_id=school.id)
-        .first()
-    )
-    if not school or not major:
-        return jsonify({"error": "Invalid school or major."}), HTTPStatus.BAD_REQUEST
+    # Prepare and create user
+    user_args = prepare_user_args(args)
+    user_args["is_google_account"] = True
+    user_obj, error = create_new_user(**user_args)
 
-    # Generate unique username
-    username = generate_funny_username(3)
-    while db.session.query(User).filter_by(username=username).first():
-        username = generate_funny_username(4)
-
-    # Create user with Google account flag
-    user = User(
-        username=username,
-        firstname=args["firstname"],
-        lastname=args["lastname"],
-        email=args["email"],
-        phone=phone,
-        password=None,  # Google accounts have no manual password
-        school_id=school.id,
-        major_id=major.id,
-        graduation=args["graduation"],
-        language=args["language"],
-        is_google_account=True,  # Mark as a Google account
-        mail_is_verified=True,
-    )
-
-    db.session.add(user)
-    db.session.commit()
+    if error:
+        return error
 
     # Generate tokens and set cookies
-    access_token = user.get_access_token()
-    refresh_token = generate_refresh_token(user)
+    access_token = user_obj.get_access_token()
+    refresh_token = generate_refresh_token(user_obj)
 
-    # Instead of redirecting directly to dashboard
+    # Instead of redirecting directly, render a template that will handle the auth state
     response = make_response(
         render_template(
-            "auth_redirect.jinja", redirect_url=url_for("frontend.dashboard")
+            "auth_redirect.jinja",
+            redirect_url=url_for("frontend.dashboard"),
         )
     )
     set_access_cookies(response, access_token)
