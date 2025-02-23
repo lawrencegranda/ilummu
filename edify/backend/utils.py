@@ -59,7 +59,7 @@ def commit_changes(error_msg: str) -> Optional[ResponseReturnValue]:
         db.session.commit()
     except IntegrityError as e:
         db.session.rollback()
-        print(f"IntegrityError: {e}")
+        print(f"ERROR: IntegrityError: {e}")
         return error_response(error_msg, ErrorType.INTERNAL_ERROR)
     return None
 
