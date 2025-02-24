@@ -22,6 +22,19 @@
         errorMsg.show();
     };
 
+    function handleError(str) {
+        return function (error) {
+            let error_msg = getErrorResponse(error);
+
+            if (!error_msg) {
+                error_msg = "An error occurred during " + str + ". Please try again.";
+            }
+
+            showError(error_msg);
+        }
+    }
+
+
     $(document).ready(() => {
         errorMsg = $("#error-msg");
         reset();
@@ -78,10 +91,7 @@
                 success: function (response) {
                     window.location.href = "{{ url_for('frontend.dashboard') }}";
                 },
-                error: function (error) {
-                    const error_msg = error.responseJSON?.error || "An error occurred. Please try again.";
-                    showError(error_msg);
-                },
+                error: handleError("google_signup"),
             });
         });
     });
