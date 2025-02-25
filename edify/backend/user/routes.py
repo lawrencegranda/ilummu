@@ -163,7 +163,7 @@ def login(args: dict) -> ResponseReturnValue:
                     "redirect_to": url_for("oauth.login"),
                 }
             ),
-            ErrorType.INCORRECT_CREDENTIALS,
+            ErrorType.INCORRECT_CREDENTIALS.value,
         )
 
     # Check if the provided password matches the stored password for the user.
