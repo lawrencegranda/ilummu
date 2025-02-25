@@ -6,6 +6,13 @@
 </style>
 <script>
   $(document).ready(function () {
+    $("#create-question-form").on("keydown", function (event) {
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.stopPropagation(); // Prevents scripts from blocking
+        }
+    });
+
+
     $("#create-question-price").on("change", function () {
       let value = parseFloat($(this).val()).toFixed(2);
       if (isNaN(value)) {
