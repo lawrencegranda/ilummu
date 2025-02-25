@@ -34,6 +34,12 @@
   white-space: normal;
 }
 
+* {
+  overflow-wrap: normal !important;
+  word-break: normal !important; 
+  white-space: normal !important; 
+}
+
 select {
   padding: 1px;
   -webkit-appearance: none;
@@ -290,9 +296,9 @@ strong:hover {
   align-self: flex-start;
 }
 
-.heading:hover {
+/* .heading:hover {
   color: var(--blue--base);
-}
+} */
 
 .blue {
   color: var(--blue--base);
@@ -520,7 +526,15 @@ strong:hover {
 }
 
 .header-content {
-  margin-bottom: 40px;
+  margin-bottom: 30px;
+}
+
+.hover-word {
+  transition: color 0.3s ease-in-out;
+}
+
+.hover-word:hover {
+  color: var(--blue--base) !important;
 }
 
 .headline {
@@ -573,6 +587,7 @@ strong:hover {
 
 .paragraph {
   line-height: 2;
+  margin-right: 20px;
 }
 
 .left {
@@ -2975,7 +2990,7 @@ p.made-students {
 }
 
 .home-image {
-  margin-left: auto;
+  margin-left: 5vw;
   width: 100%;
   height: fit-content;
   max-width: 500px;
