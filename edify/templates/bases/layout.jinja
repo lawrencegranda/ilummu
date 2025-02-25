@@ -40,7 +40,7 @@
                 }
 
                 .notification-box {
-                    background: #fff;
+                    background: #ffc105;
                     border-radius: 8px;
                     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
                     padding: 30px;
@@ -60,21 +60,31 @@
 
                 .notif-header {
                     display: flex;
-                    justify-content: space-between;
+                    align-items: center;
+                    justify-content: start;
                     font-weight: bold;
                     margin-bottom: 5px;
                     font-size: 15px;
-                    gap: 8px;
+                    position: relative; 
+                    width: 100%;
                 }
 
                 .notif-icon {
                     margin-right: 8px;
                     font-size: 16px;
+                    display : flex;
+                    align-items : center;
                 }
 
                 .notif-close {
+                    position: absolute;
+                    right: 10px; 
+                    top: 50%; 
+                    transform: translateY(-50%); 
                     cursor: pointer;
                     color: #aaa;
+                    font-size: 18px;
+                    font-weight: bold;
                 }
 
                 .notif-close:hover {
@@ -89,7 +99,7 @@
                 }
 
                 .notif-btn {
-                    background-color: #007bff;
+                    background-color: #3DACF3;
                     color: white;
                     border: none;
                     padding: 6px 12px;
