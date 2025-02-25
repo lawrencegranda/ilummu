@@ -96,6 +96,7 @@ class Question(BaseModel):
             "user_id": self.user_id,
             "course_id": self.course_id,
             "request": self.request,
+            "request_html": self.request_html,
             "solve_time_min": self.solve_time,
             "price": self.price,
             "method_id": self.method_id,
