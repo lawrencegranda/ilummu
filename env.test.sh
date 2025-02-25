@@ -49,3 +49,11 @@ export FILEBASE_SECRET_KEY=''
 export FILEBASE_BUCKET=''
 export FILEBASE_ENDPOINT=''
 export FILEBASE_URL=''
+
+
+#-------------------------------------------------------------------------------
+# Google Cloud API
+#-------------------------------------------------------------------------------
+export GOOGLE_CLIENT_ID=''
+export GOOGLE_CLIENT_SECRET=''
+export GOOGLE_REDIRECT_URI=''

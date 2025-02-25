@@ -31,12 +31,10 @@ from edify.utils.utils import (
 from edify.backend.user.utils import (
     get_current_user,
     generate_refresh_token,
-    get_user_language,
     validate_signup_data,
-    get_user_school,
-    get_user_major,
-    generate_unique_username,
     make_login_response,
+    create_new_user,
+    prepare_user_args,
 )
 from edify.backend.mail.utils import send
 from edify.backend.utils import commit_changes, create_notification
@@ -132,43 +130,55 @@ def refresh() -> ResponseReturnValue:
         "email": fields.Email(required=True),
         "password": fields.Str(required=True),
         "remember": fields.Boolean(required=False),
-    }
+    },
+    location="json",
 )
 def login(args: dict) -> ResponseReturnValue:
     """
-    Endpoint to log in a curr_user.
+    Endpoint to log in a user. Redirect Google users to Google OAuth if they attempt manual login.
 
     Args:
         args (dict): The login arguments containing email, password, and remember flag.
 
     Returns:
-        Response: JSON response with the access token and user information.
+        Response: JSON response with the access token and user information or redirection error.
     """
-    # Get the user corresponding to the email that is logging in
     curr_user = (
         db.session.query(User).filter_by(email=args["email"], is_mock=False).first()
     )
 
-    # Check if user exists and if the given password is correct
-    if not curr_user or not curr_user.check_password(args["password"]):
+    # If user not found, return error
+    if not curr_user:
         return error_response(
-            "Incorrect email or password", ErrorType.INCORRECT_CREDENTIALS
+            "Invalid email or password", ErrorType.INCORRECT_CREDENTIALS
+        )
+
+    # Prevent Google accounts from logging in with a password
+    if curr_user.is_google_account:
+        return error_response(
+            "This account was created using Google. Please log in using Google",
+            ErrorType.INCORRECT_CREDENTIALS,
+        )
+
+    # Check if the provided password matches the stored password for the user.
+    if not curr_user.check_password(args["password"]):
+        return error_response(
+            "Invalid email or password", ErrorType.INCORRECT_CREDENTIALS
         )
 
     # # Uncomment these lines to enable email and phone verification checks
-    # if curr_user.mail_is_verified is False:
-    #     return error_response("Email not verified", ErrorType.USER_NOT_VERIFIED)
-    # if curr_user.phone_is_verified is False:
-    #     return error_response("Phone not verified", ErrorType.USER_NOT_VERIFIED)
+    if curr_user.mail_is_verified is False:
+        # return error_response("Email not verified", ErrorType.USER_NOT_VERIFIED)
+        pass
+    if curr_user.phone_is_verified is False:
+        # return error_response("Phone not verified", ErrorType.USER_NOT_VERIFIED)
+        pass
 
     if curr_user.auth_level in [AuthLevelEnum.SCHOOL_ADMIN, AuthLevelEnum.SUPER_ADMIN]:
         # Additional logic for admin users (if needed)
         pass
 
-    return (
-        make_login_response(curr_user, args.get("remember", False)),
-        HTTPStatus.OK,
-    )
+    return make_login_response(curr_user, args.get("remember", False)), HTTPStatus.OK
 
 
 # Endpoint: /backend/user/new
@@ -191,63 +201,19 @@ def login(args: dict) -> ResponseReturnValue:
 )
 def signup(args: dict) -> ResponseReturnValue:
     """Create a new user account."""
-    # Clean input data
-    for key, value in args.items():
-        if isinstance(value, str):
-            args[key] = value.strip()
-
     # Validate input data
     if error := validate_signup_data(args):
         return error
 
-    # Get school
-    school, error = get_user_school(args.get("school"))
+    # Prepare and create user
+    user_args = prepare_user_args(args)
+    user_obj, error = create_new_user(**user_args)
+
     if error:
         return error
-
-    # Get major
-    major, error = get_user_major(args["major"], school.id)
-    if error:
-        return error
-
-    # Get language
-    language, error = get_user_language(args.get("language"))
-    if error:
-        return error
-
-    # Generate username
-    username = generate_unique_username()
-    if not username:
-        return error_response("Ran out of usernames", ErrorType.INTERNAL_ERROR)
-
-    # Create user
-    curr_user = User(
-        username=username,
-        firstname=args.get("firstname", username),
-        lastname=args.get("lastname", username),
-        email=args["email"],
-        phone=args["phone"],
-        password=User.hash_password(args["password"]),
-        school_id=school.id,
-        major_id=major.id,
-        graduation=args["graduation"],
-        language=language,
-    )
-
-    # Save user
-    db.session.add(curr_user)
-    commit_changes("Failed to create user")
-
-    # Create welcome notification
-    create_notification(
-        NotificationTypeEnum.ACCOUNT_CREATED,
-        f"Welcome {username}!",
-        curr_user.id,
-        None,
-    )
 
     return (
-        make_login_response(curr_user, args.get("remember", False)),
+        make_login_response(user_obj, args.get("remember", False)),
         HTTPStatus.CREATED,
     )
 

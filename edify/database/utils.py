@@ -42,7 +42,7 @@ def create_user(
     """Create a test user with random valid data."""
 
     # Generate a valid username
-    username = f"testUser{i}" if is_test else _generate_username()
+    username = f"user{i}" if is_test else _generate_username()
 
     # Check if username already exists
     if db.session.query(User).filter_by(username=username).first():
@@ -77,6 +77,7 @@ def create_user(
             phone_is_verified=True,
             is_mock=not is_test,
             is_test=is_test,
+            is_google_account=False,
         ),
         username,
         password,

@@ -43,21 +43,21 @@
   });
 
   function handleSuccess(response) {
-      // Handle success
-      document.title = "Redirecting...";
-      window.location.href = '{{ url_for("frontend.redirect_handler", next_url=next_url, http_method=http_method) }}';
+    // Handle success
+    document.title = "Redirecting...";
+    window.location.href = '{{ url_for("frontend.redirect_handler", next_url=next_url, http_method=http_method) }}';
   }
 
   function handleError(str) {
-      return function (error) {
-          let error_msg = getErrorResponse(error);
+    return function (error) {
+      let error_msg = getErrorResponse(error);
 
-          if (!error_msg) {
-            error_msg = "An error occurred during " + str + ". Please try again.";
-          }
-
-          showError(error_msg);
+      if (!error_msg) {
+        error_msg = "An error occurred during " + str + ". Please try again.";
       }
+
+      showError(error_msg);
+    }
   }
 
   {% if login == false %}
@@ -153,7 +153,7 @@
         contentType: 'application/json',
         data: JSON.stringify(data),
         success: function(data) {
-            return handleSuccess(data);
+          return handleSuccess(data);
         },
         error: handleError("signup"),
       });
@@ -354,6 +354,26 @@
                                 type="button">
                             Log In
                         </button>
+                    {% endif %}
+
+                    {% if login == false %}
+                        <div class="signup-google">
+                            <a class="btn btn-primary" href="{{ url_for('backend.oauth.login') }}">
+                                {# djlint:off H006 #}
+                                <img src="{{ url_for('static', filename='google.svg') }}" alt="Google Logo" />
+                                {# djlint:on H006 #}
+                                Sign Up with Google
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="signup-google">
+                            <a class="btn btn-primary" href="{{ url_for('backend.oauth.login') }}">
+                                {# djlint:off H006 #}
+                                <img src="{{ url_for('static', filename='google.svg') }}" alt="Google Logo" />
+                                {# djlint:on H006 #}
+                                Sign In with Google
+                            </a>
+                        </div>
                     {% endif %}
 
                     <div class="signup-login">

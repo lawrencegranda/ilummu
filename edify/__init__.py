@@ -2,30 +2,20 @@
 
 # Standard Library imports
 from http import HTTPStatus
-import traceback
 
 # Third-Party Framework imports
-from flask import Flask, request, jsonify, url_for, redirect
+from flask import Flask, request, url_for, redirect
 from flask_jwt_extended import (
     jwt_required,
     get_jwt_identity,
     verify_jwt_in_request,
     set_access_cookies,
 )
-from flask_jwt_extended.exceptions import (
-    UserLookupError,
-    NoAuthorizationError,
-    JWTExtendedException,
-)
-from jwt.exceptions import ExpiredSignatureError, PyJWTError
 
 # Local Application imports
 from edify.core import init_db, init_extensions
-from edify.utils.utils import (
-    internal_request,
-    get_access_header,
-    handle_invalid_token,
-)
+from edify.core.error_handlers import register_error_handlers
+from edify.utils.utils import internal_request, get_access_header
 
 
 def create_app(config_class):
@@ -40,8 +30,13 @@ def create_app(config_class):
     # pylint: disable=import-outside-toplevel
     from edify.frontend.routes import frontend
     from edify.backend.routes import backend
+    from edify.backend.oauth.routes import oauth
 
     # pylint: enable=all
+
+    # -----------------------------------------------------------------------------
+    # Security
+    # -----------------------------------------------------------------------------
 
     @frontend.before_request
     def enforce_https():
@@ -64,6 +59,10 @@ def create_app(config_class):
             response.headers["Content-Security-Policy"] = config_class.CSP_HEADER
 
         return response
+
+    # -----------------------------------------------------------------------------
+    # Cookies
+    # -----------------------------------------------------------------------------
 
     @frontend.before_request
     @jwt_required(optional=True, refresh=True)
@@ -98,36 +97,17 @@ def create_app(config_class):
         return response
 
     # -----------------------------------------------------------------------------
-    # Error Handlers
+    # Register Error Handlers
     # -----------------------------------------------------------------------------
-    @frontend.errorhandler(UserLookupError)
-    def invalid_user(e):
-        print(f"ERROR: User not found: {e}")
-        return handle_invalid_token()
+    register_error_handlers(frontend, oauth)
 
-    @frontend.errorhandler(ExpiredSignatureError)
-    @frontend.errorhandler(NoAuthorizationError)
-    def expired_jwt(_):
-        return handle_invalid_token()
-
-    @frontend.errorhandler(JWTExtendedException)
-    @frontend.errorhandler(PyJWTError)
-    def general_jwt(e):
-        print(f"ERROR: General JWT exception: {e}")
-        return handle_invalid_token()
-
-    @frontend.errorhandler(Exception)
-    def handle_error(e):
-        print(f"ERROR: Uncaught error ({type(e)}): {e}")
-        print(traceback.format_exc())
-
-        return (
-            jsonify("An unexpected error occurred."),
-            HTTPStatus.INTERNAL_SERVER_ERROR,
-        )
+    # -----------------------------------------------------------------------------
+    # Blueprints
+    # -----------------------------------------------------------------------------
 
     app.register_blueprint(frontend)
     app.register_blueprint(backend)
+    app.register_blueprint(oauth)
 
     print("\n------ URL MAP: ------\n", app.url_map, "\n----------------------\n")
 
