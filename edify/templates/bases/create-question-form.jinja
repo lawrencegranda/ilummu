@@ -96,13 +96,13 @@
             // Validate request message
             var request_message = $("#create-question-textbox").val().replace(/[ \t]+/g, ' ').trim();
             if (!request_message) {
-                showError("Fill out the textarea.");
+                showError("Please, fill out the question text.");
                 return;
             } else if (request_message.length < 20) {
-                showError("Request is too short (minimum of 20 characters).");
+                showError("The question is too short (minimum of 20 characters).");
                 return;
             } else if (request_message.length > 5000) {
-                showError("Request is too long (maximum of 5000 characters).");
+                showError("The question is too long (maximum of 5000 characters).");
                 return;
             }
 
