@@ -3423,3 +3423,59 @@ button#home-start-now.btn.btn-primary:focus {
     opacity: 1;
   }
 }
+
+/* Feedback Section Styling */
+.feedback-wrapper {
+  margin-top: 30px;
+  padding: 25px;
+  background-color: var(--neutral--100);
+  border-radius: 20px;
+  border: 2px solid var(--neutral--300);
+}
+
+.feedback-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 15px;
+}
+
+.feedback-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--neutral--800);
+  margin: 0;
+}
+
+.feedback-description {
+  font-size: 16px;
+  color: var(--neutral--500);
+  margin: 0;
+}
+
+.feedback-button {
+  min-width: 150px;
+  font-size: 16px;
+  font-weight: 500;
+  margin-top: 10px;
+}
+
+@media only screen and (max-width: 550px) {
+  .feedback-wrapper {
+    padding: 20px;
+  }
+
+  .feedback-title {
+    font-size: 20px;
+  }
+
+  .feedback-description {
+    font-size: 14px;
+  }
+
+  .feedback-button {
+    min-width: 130px;
+    font-size: 14px;
+  }
+}
