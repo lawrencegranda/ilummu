@@ -299,7 +299,7 @@
                         {{ question.solve_time }} solve time • {{ question.method }}
                     </p>
                     <p class="question-text">
-                        {{ question.request }}
+                        {{ question.request_html | safe }}
                     </p>
 
                     {% if question.image_url %}

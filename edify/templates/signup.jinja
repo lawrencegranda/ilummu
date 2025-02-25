@@ -464,25 +464,14 @@
                         </button>
                     {% endif %}
 
-                    {% if login == false %}
-                        <div class="signup-google">
-                            <a class="btn btn-primary" href="{{ url_for('backend.oauth.login') }}">
-                                {# djlint:off H006 #}
-                                <img src="{{ url_for('static', filename='google.svg') }}" alt="Google Logo" />
-                                {# djlint:on H006 #}
-                                Sign Up with Google
-                            </a>
-                        </div>
-                    {% else %}
-                        <div class="signup-google">
-                            <a class="btn btn-primary" href="{{ url_for('backend.oauth.login') }}">
-                                {# djlint:off H006 #}
-                                <img src="{{ url_for('static', filename='google.svg') }}" alt="Google Logo" />
-                                {# djlint:on H006 #}
-                                Sign In with Google
-                            </a>
-                        </div>
-                    {% endif %}
+                    <div class="signup-google">
+                        <a class="btn btn-primary" href="{{ url_for('backend.oauth.login') }}">
+                            {# djlint:off H006 #}
+                            <img src="{{ url_for('static', filename='google.svg') }}" alt="Google Logo" />
+                            {# djlint:on H006 #}
+                            {{ 'Sign Up' if not login else 'Log In' }} with Google
+                        </a>
+                    </div>
 
                     <div class="signup-login">
 

@@ -11,7 +11,13 @@ from sqlalchemy import Index, event
 from edify.core import db
 from edify.models.base import BaseModel
 from edify.utils.constants import PREVIEW_LENGTH
-from edify.utils.utils import date_to_int, get_time_ago, get_seconds_ago, trim_text
+from edify.utils.utils import (
+    date_to_int,
+    get_time_ago,
+    get_seconds_ago,
+    trim_text,
+    format_text_to_html,
+)
 
 
 class Question(BaseModel):
@@ -76,6 +82,11 @@ class Question(BaseModel):
     # Image url for the file
     image_url = db.Column(db.String(255), nullable=True)
 
+    @property
+    def request_html(self):
+        """Get HTML formatted version of the request text."""
+        return format_text_to_html(self.request)
+
     def __repr__(self):
         return f"Question({self.id}, {self.user_id}, {self.course_id}, {self.solved})"
 
@@ -85,6 +96,7 @@ class Question(BaseModel):
             "user_id": self.user_id,
             "course_id": self.course_id,
             "request": self.request,
+            "request_html": self.request_html,
             "solve_time_min": self.solve_time,
             "price": self.price,
             "method_id": self.method_id,
