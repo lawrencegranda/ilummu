@@ -37,7 +37,7 @@
 * {
   overflow-wrap: normal !important;
   word-break: normal !important; 
-  white-space: normal !important; 
+  white-space: normal ; 
 }
 
 select {
@@ -2239,6 +2239,11 @@ button.btn-view:hover {
   font-size: 13px;
   height: 8rem;
   min-height: 6rem;
+  height: auto; /* Ensures it expands */
+  max-height: 200px; /* Limits excessive growth */
+  overflow-y: auto; /* Adds scrollbar when needed */
+  resize: none; /* Prevents manual resizing */
+  white-space: pre-wrap; /* Keeps new lines intact */
 }
 
 .create-question-file-label {
@@ -3437,4 +3442,13 @@ button#home-start-now.btn.btn-primary:focus {
   to {
     opacity: 1;
   }
+}
+
+
+#create-question-textbox {
+  
+  overflow-y: auto; /* Allows vertical scrolling */
+  white-space: pre-wrap !important;
+  word-wrap: break-word; /* Ensures long words do not break the design */
+  resize: vertical; /* Allows the user to resize the textarea vertically */
 }
