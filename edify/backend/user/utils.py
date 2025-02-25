@@ -99,8 +99,7 @@ def validate_signup_data(
     user = db.session.query(User).filter_by(email=args["email"]).first()
     if user and user.is_google_account:
         return error_response(
-            "This email is associated with a Google account. "
-            "Please log in using Google OAuth.",
+            "This email is associated with a Google account. Please log in using Google",
             ErrorType.BAD_REQUEST,
         )
 
