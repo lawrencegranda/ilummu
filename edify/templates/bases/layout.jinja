@@ -34,47 +34,53 @@
                 #notification-container {
                     position: fixed;
                     top: 120px;
-                    left: 120px;
+                    right: 10vw;
                     width: 600px;
                     z-index: 1000;
                 }
 
                 .notification-box {
-                    background: #fff;
+                    background: #ffc105;
                     border-radius: 8px;
                     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-                    padding: 30px;
-                    margin-bottom: 10px;
+                    padding: 20px;
                     animation: fadeInUp 0.3s ease-out;
                     border: 1px solid #ccc;
-                    /* Gray border added */
-                    border-left: 5px solid #3DACF3;
                 }
 
                 .notif-subtitle {
                     font-size: 16px;
-                    color: #555;
+                    color: black;
                     /* Slightly dim to give hierarchy */
                     margin: 8px;
                 }
 
                 .notif-header {
                     display: flex;
-                    justify-content: space-between;
+                    align-items: center;
+                    justify-content: start;
                     font-weight: bold;
-                    margin-bottom: 5px;
-                    font-size: 15px;
-                    gap: 8px;
+                    margin: 10px;
+                    position: relative;
+                    width: 100%;
                 }
 
                 .notif-icon {
                     margin-right: 8px;
-                    font-size: 16px;
+                    font-size: 20px;
+                    display: flex;
+                    align-items: center;
                 }
 
                 .notif-close {
+                    position: absolute;
+                    right: 25px;
+                    top: 50%;
+                    transform: translateY(-50%);
                     cursor: pointer;
-                    color: #aaa;
+                    color: white;
+                    font-size: 18px;
+                    font-weight: bold;
                 }
 
                 .notif-close:hover {
@@ -83,38 +89,99 @@
 
                 .notif-actions {
                     display: flex;
+                    justify-content: start;
                     align-items: center;
-                    gap: 5px;
+                    gap: 20px;
                     margin-top: 10px;
                 }
 
                 .notif-btn {
-                    background-color: #007bff;
-                    color: white;
+                    background-color: white;
+                    color: black;
                     border: none;
                     padding: 6px 12px;
                     border-radius: 5px;
                     cursor: pointer;
-                    font-size: 12px;
+                    font-size: 14px;
+                    font-weight: bold;
                 }
 
                 .notif-message {
                     margin-left: 0;
+                    font-size: 20px;
                 }
 
                 .notif-btn:hover {
-                    background-color: #0056b3;
+                    background-color: #3eacf3;
                 }
 
                 .notif-dismiss {
-                    color: #007bff;
-                    font-size: 12px;
+                    color: black;
+                    font-size: 14px;
                     text-decoration: none;
                     cursor: pointer;
                 }
 
                 .notif-dismiss:hover {
                     text-decoration: underline;
+                }
+
+                @media only screen and (min-width: 0px) and (max-width: 900px) {
+                    #notification-container {
+                        left: 50%;
+                        transform: translateX(-50%);
+                        width: 90vw;
+                        max-width: 400px;
+                    }
+
+                    .notification-box {
+                        padding: 15px;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        text-align: center;
+                    }
+
+                    .notif-header {
+                        font-size: 14px;
+                        width: 100%;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        text-align: center;
+                    }
+
+                    .notif-icon {
+                        margin-bottom: 15px;
+                    }
+
+                    .notif-subtitle {
+                        display: none;
+                    }
+
+                    .notif-actions {
+                        flex-direction: column;
+                        width: 100%;
+                        margin-top: 10px;
+                    }
+
+                    .notif-btn {
+                        width: 50%;
+                        padding: 8px 0;
+                    }
+
+                    .notif-dismiss {
+                        text-align: center;
+                        display: block;
+                        width: 100%;
+                    }
+
+                    .notif-close {
+                        position: absolute;
+                        top: 10px;
+                        right: 10px;
+                        font-size: 18px;
+                    }
                 }
 
                 @keyframes fadeInUp {
@@ -218,7 +285,7 @@
                     <div class="notif-header">
                         <span class="notif-icon">
                             <svg width="16" height="16" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M11 7V8M11 10.5V15M11 21C16.5228 21 21 16.5228 21 11C21 5.47715 16.5228 1 11 1C5.47715 1 1 5.47715 1 11C1 16.5228 5.47715 21 11 21Z" stroke="#3DACF3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M11 7V8M11 10.5V15M11 21C16.5228 21 21 16.5228 21 11C21 5.47715 16.5228 1 11 1C5.47715 1 1 5.47715 1 11C1 16.5228 5.47715 21 11 21Z" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </span>
                         <div class="notif-message">

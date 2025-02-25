@@ -34,6 +34,12 @@
   white-space: normal;
 }
 
+* {
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  white-space: normal;
+}
+
 select {
   padding: 1px;
   -webkit-appearance: none;
@@ -290,9 +296,9 @@ strong:hover {
   align-self: flex-start;
 }
 
-.heading:hover {
+/* .heading:hover {
   color: var(--blue--base);
-}
+} */
 
 .blue {
   color: var(--blue--base);
@@ -520,7 +526,15 @@ strong:hover {
 }
 
 .header-content {
-  margin-bottom: 40px;
+  margin-bottom: 30px;
+}
+
+.hover-word {
+  transition: color 0.3s ease-in-out;
+}
+
+.hover-word:hover {
+  color: var(--blue--base) !important;
 }
 
 .headline {
@@ -573,6 +587,7 @@ strong:hover {
 
 .paragraph {
   line-height: 2;
+  margin-right: 20px;
 }
 
 .left {
@@ -2224,6 +2239,11 @@ button.btn-view:hover {
   font-size: 13px;
   height: 8rem;
   min-height: 6rem;
+  height: auto; /* Ensures it expands */
+  max-height: 200px; /* Limits excessive growth */
+  overflow-y: auto; /* Adds scrollbar when needed */
+  resize: none; /* Prevents manual resizing */
+  white-space: pre-wrap; /* Keeps new lines intact */
 }
 
 .create-question-file-label {
@@ -2693,7 +2713,7 @@ p.create-question-title {
   gap: 8px;
   text-decoration: none;
   color: #fff;
-  background-color: #4285F4;
+  background-color: #4285f4;
   border-radius: 4px;
   padding: 10px 20px;
   font-weight: bold;
@@ -3018,7 +3038,7 @@ p.made-students {
 }
 
 .home-image {
-  margin-left: auto;
+  margin-left: 5vw;
   width: 100%;
   height: fit-content;
   max-width: 500px;
@@ -3465,6 +3485,13 @@ button#home-start-now.btn.btn-primary:focus {
   to {
     opacity: 1;
   }
+}
+
+#create-question-textbox {
+  overflow-y: auto; /* Allows vertical scrolling */
+  white-space: pre-wrap !important;
+  word-wrap: break-word; /* Ensures long words do not break the design */
+  resize: vertical; /* Allows the user to resize the textarea vertically */
 }
 
 /* Feedback Section Styling */

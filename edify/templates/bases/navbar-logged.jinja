@@ -53,7 +53,7 @@
                                 {% for notification in user.notifications | sort(reverse=true, attribute='created_at') %}
                                     <div class="notification">
                                         <p class="notification-text">
-                                            {{ notification.message }}
+                                            {{ notification.message | safe }}
                                         </p>
 
                                         {% if notification.link %}

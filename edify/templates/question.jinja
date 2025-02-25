@@ -1,5 +1,5 @@
 {% extends "bases/layout.jinja" %}
-{% set increment = 2 %}
+{% set increment = 1 %}
 
 {% block title %}
     Question
@@ -299,7 +299,7 @@
                         {{ question.solve_time }} solve time • {{ question.method }}
                     </p>
                     <p class="question-text">
-                        {{ question.request }}
+                        {{ question.request_html | safe }}
                     </p>
 
                     {% if question.image_url %}
@@ -547,10 +547,10 @@
                             <div class="offer-wrapper">
                                 <div class="offer-body">
                                     <p class="offer-title">
-                                        Make an Offer!
+                                        For what price will you help this student?
                                     </p>
                                     <p class="offer-statement">
-                                        For what price will you help this student?
+                                        Make an Offer!
                                     </p>
                                     <div class="offer-pair">
                                         <p class="make-offer-label">

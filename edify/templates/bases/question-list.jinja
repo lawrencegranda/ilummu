@@ -9,7 +9,7 @@
                     {{ q.solve_time }} solve time • {{ q.method }}
                 </p>
                 <p class="question-preview-description">
-                    {{ q.preview }}
+                    {{ q.preview | safe }}
                 </p>
             </div>
             <div class="question-preview-side">
