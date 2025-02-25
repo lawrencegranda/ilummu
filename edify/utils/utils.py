@@ -17,6 +17,8 @@ from flask_jwt_extended import unset_jwt_cookies
 from marshmallow import Schema, ValidationError
 import phonenumbers
 from werkzeug.test import EnvironBuilder
+from markdown import markdown
+import bleach
 
 # Local Application imports
 from edify.utils.constants import ErrorType, AuthSchema
@@ -501,3 +503,22 @@ def handle_invalid_token() -> ResponseReturnValue:
     response = redirect(url_for("frontend.logout"))
     unset_jwt_cookies(response)
     return response
+
+
+def format_text_to_html(text: str) -> str:
+    """
+    Convert plain text to HTML, preserving whitespace and newlines.
+
+    Args:
+        text: The plain text to convert
+
+    Returns:
+        str: HTML formatted text with preserved whitespace and safe tags
+    """
+    # Convert to markdown-processed HTML
+    html = markdown(text, extensions=["nl2br"])
+
+    # Clean and sanitize the HTML
+    allowed_tags = ["p", "br", "strong", "em", "ul", "ol", "li", "code", "pre"]
+    allowed_attrs = {}
+    return bleach.clean(html, tags=allowed_tags, attributes=allowed_attrs)
