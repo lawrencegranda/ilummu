@@ -1,24 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="description"
               content="Redirecting to ilummu dashboard after authentication" />
         <meta name="keywords" content="ilummu, authentication, login" />
         <title>Redirecting...</title>
+
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+                background-color: #f5f5f5;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                color: #333;
+            }
+
+            .container {
+                text-align: center;
+                padding: 2rem;
+                background-color: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                max-width: 400px;
+                width: 90%;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 1rem;
+                color: #2c3e50;
+            }
+
+            p {
+                color: #666;
+                margin-bottom: 2rem;
+            }
+
+            .loader {
+                width: 48px;
+                height: 48px;
+                border: 5px solid #f3f3f3;
+                border-radius: 50%;
+                border-top: 5px solid #3498db;
+                animation: spin 1s linear infinite;
+                margin: 0 auto 1rem auto;
+            }
+
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+
+            .logo {
+                max-width: 120px;
+                margin-bottom: 2rem;
+            }
+        </style>
+
         <script>
         // Update auth state in localStorage or wherever your frontend stores it
         window.onload = function() {
             // Trigger any necessary auth state updates
             window.localStorage.setItem('isAuthenticated', 'true');
             
-            // Redirect to the dashboard
-            window.location.href = "{{ redirect_url }}";
+            // Add a small delay for better UX
+            setTimeout(function() {
+                window.location.href = "{{ redirect_url }}";
+            }, 1000);
         }
         </script>
     </head>
     <body>
-        <p>
-            Redirecting you to the dashboard...
-        </p>
+        <div class="container">
+            <img src="{{ url_for('static', filename='images/logo.png') }}"
+                 alt="ilummu logo"
+                 class="logo"
+                 width="120"
+                 height="120" />
+            <div class="loader">
+            </div>
+            <h1>
+                Almost there!
+            </h1>
+            <p>
+                Redirecting you to your dashboard...
+            </p>
+        </div>
     </body>
 </html>
