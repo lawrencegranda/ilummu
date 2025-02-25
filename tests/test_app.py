@@ -22,7 +22,7 @@ def create_test_app():
         stdout, stderr = process.communicate()
 
         if process.returncode != 0:
-            print("Error activating environment:", stderr.decode())
+            print("ERROR: Failed to activate environment:", stderr.decode())
             raise RuntimeError("Error.")
 
         # Set environment variables in the current Python environment
@@ -30,7 +30,7 @@ def create_test_app():
             key, _, value = line.partition("=")
             os.environ[key] = value
 
-    print("Environment variables set successfully.")
+    print("ENV: Environment variables set successfully.")
 
     # pylint: disable=import-outside-toplevel
     from edify.config import Config
