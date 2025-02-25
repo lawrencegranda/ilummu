@@ -23,6 +23,42 @@
     <script>
   var errorMsg;
 
+  // Add password requirement checks
+  const passwordRequirements = {
+    length: false,
+    lowercase: false,
+    uppercase: false,
+    number: false,
+    special: false
+  };
+
+  function updatePasswordRequirements(password) {
+    if (!password) {
+      $('.password-requirements').hide();
+      return;
+    }
+    
+    $('.password-requirements').show();
+    
+    passwordRequirements.length = password.length >= 8;
+    passwordRequirements.lowercase = /[a-z]/.test(password);
+    passwordRequirements.uppercase = /[A-Z]/.test(password);
+    passwordRequirements.number = /[0-9]/.test(password);
+    passwordRequirements.special = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+    // Update the visibility of requirements
+    $('#req-length').toggle(!passwordRequirements.length);
+    $('#req-lowercase').toggle(!passwordRequirements.lowercase);
+    $('#req-uppercase').toggle(!passwordRequirements.uppercase);
+    $('#req-number').toggle(!passwordRequirements.number);
+    $('#req-special').toggle(!passwordRequirements.special);
+    
+    // Hide the container if all requirements are met
+    if (Object.values(passwordRequirements).every(req => req)) {
+      $('.password-requirements').hide();
+    }
+  }
+
   // Function to reset error messages
   const reset = () => {
     errorMsg.text("");
@@ -79,6 +115,15 @@
     const errorMap = ["invalid", "invalid country code", "too short", "too long", "invalid"];
     errorMsg = $("#error-msg");
 
+    // Hide requirements initially
+    $('.password-requirements').hide();
+
+    // Add password input listener
+    $("#signup-password").on("input", function() {
+      const password = $(this).val();
+      updatePasswordRequirements(password);
+    });
+
     // Form submission event handler for signup form
     $("#signup-form").on("submit", function (event) {
       event.preventDefault(); // Prevent default form submission
@@ -129,8 +174,12 @@
       if (!password) {
         showError("Password is required.");
         return;
-      } else if (password.length < 8) {
-        showError("Password must be at least 8 characters long.");
+      } else if (!passwordRequirements.length || 
+                 !passwordRequirements.lowercase || 
+                 !passwordRequirements.uppercase || 
+                 !passwordRequirements.number || 
+                 !passwordRequirements.special) {
+        showError("Password does not meet all requirements.");
         return;
       }
 
@@ -228,12 +277,48 @@
 
 {% block headers %}
     <style>
+        :root {
+            --error-red: #dc3545;
+        }
+
         .footer {
             display: none;
         }
 
         body {
             background-color: var(--blue--base);
+        }
+
+        .password-requirements {
+            font-size: 0.9em;
+            color: #666;
+            margin: 10px 0;
+            margin-bottom: 0px;
+            padding: 0 15px;
+        }
+
+        .password-requirements ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .password-requirements li {
+            position: relative;
+            padding-left: 20px;
+            margin: 2px 0;
+            color: var(--error-red);
+        }
+
+        .password-requirements li::before {
+            content: '✕';
+            position: absolute;
+            left: 0;
+            color: var(--error-red);
+        }
+
+        #error-msg {
+            color: var(--error-red);
         }
     </style>
 {% endblock headers %}
@@ -308,6 +393,29 @@
                            minlength="8"
                            placeholder="Password"
                            required />
+
+                    {% if login == false %}
+                        <div class="password-requirements">
+                            <ul>
+                                <li id="req-length">
+                                    At least 8 characters
+                                </li>
+                                <li id="req-lowercase">
+                                    One lowercase letter
+                                </li>
+                                <li id="req-uppercase">
+                                    One uppercase letter
+                                </li>
+                                <li id="req-number">
+                                    One number
+                                </li>
+                                <li id="req-special">
+                                    One special character
+                                </li>
+                            </ul>
+                        </div>
+                    {% endif %}
+
                     <p id="error-msg">
                     </p>
                 </div>
