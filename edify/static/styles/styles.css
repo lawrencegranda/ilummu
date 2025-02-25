@@ -36,8 +36,8 @@
 
 * {
   overflow-wrap: normal !important;
-  word-break: normal !important; 
-  white-space: normal ; 
+  word-break: normal !important;
+  white-space: normal;
 }
 
 select {
@@ -2702,6 +2702,49 @@ p.create-question-title {
   font-size: 19px;
 }
 
+.signup-google {
+  text-align: center;
+  margin-top: 15px;
+}
+.signup-google a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  color: #fff;
+  background-color: #4285f4;
+  border-radius: 4px;
+  padding: 10px 20px;
+  font-weight: bold;
+}
+.signup-google img {
+  height: 20px;
+  width: 20px;
+}
+
+.signup-google a:hover {
+  background-color: var(--blue-hover);
+}
+
+.signup-google a:active {
+  background-color: var(--blue-active);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Adjustments for mobile responsiveness */
+@media only screen and (max-width: 480px) {
+  .signup-google a {
+    font-size: 16px;
+    padding: 10px 15px;
+  }
+
+  .signup-google a img {
+    width: 20px;
+    height: 20px;
+  }
+}
+
 .signup-wrapper {
   position: relative;
   top: 0;
@@ -3444,11 +3487,65 @@ button#home-start-now.btn.btn-primary:focus {
   }
 }
 
-
 #create-question-textbox {
-  
   overflow-y: auto; /* Allows vertical scrolling */
   white-space: pre-wrap !important;
   word-wrap: break-word; /* Ensures long words do not break the design */
   resize: vertical; /* Allows the user to resize the textarea vertically */
+}
+
+/* Feedback Section Styling */
+.feedback-wrapper {
+  margin-top: 30px;
+  padding: 25px;
+  background-color: var(--neutral--100);
+  border-radius: 20px;
+  border: 2px solid var(--neutral--300);
+}
+
+.feedback-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 15px;
+}
+
+.feedback-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--neutral--800);
+  margin: 0;
+}
+
+.feedback-description {
+  font-size: 16px;
+  color: var(--neutral--500);
+  margin: 0;
+}
+
+.feedback-button {
+  min-width: 150px;
+  font-size: 16px;
+  font-weight: 500;
+  margin-top: 10px;
+}
+
+@media only screen and (max-width: 550px) {
+  .feedback-wrapper {
+    padding: 20px;
+  }
+
+  .feedback-title {
+    font-size: 20px;
+  }
+
+  .feedback-description {
+    font-size: 14px;
+  }
+
+  .feedback-button {
+    min-width: 130px;
+    font-size: 14px;
+  }
 }

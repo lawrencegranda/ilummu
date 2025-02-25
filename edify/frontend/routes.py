@@ -29,35 +29,12 @@ from werkzeug.utils import secure_filename
 # Local Application imports
 from edify.utils.constants import ErrorType, QuestionSchema
 from edify.utils.decorators import no_token_allowed
-from edify.utils.utils import error_response, internal_request
+from edify.utils.utils import fetch_data, error_response, internal_request
 
 
 # -----------------------------------------------------------------------------
 # Helper Functions
 # -----------------------------------------------------------------------------
-
-
-def fetch_data(url: str, method: str = "GET") -> List[Any]:
-    """
-    Fetch data from the backend API.
-
-    Parameters:
-        url (str): Endpoint to fetch data from.
-        method (str): HTTP method to use (default is "GET").
-
-    Returns:
-        List: Parsed data returned from the backend or an empty list on error.
-    """
-    response = internal_request(url, method)
-
-    # Parse the response
-    data, status = response.get_json(), response.status_code
-
-    if status != HTTPStatus.OK:
-        print(f"fetch_data: {status}")
-        return []
-
-    return data.get("data", [])
 
 
 def get_user() -> Optional[Dict[str, Any]]:
@@ -269,6 +246,9 @@ def signup() -> ResponseReturnValue:
     majors = fetch_data(url_for("backend.data.fetch_user_majors"), "GET")
     majors.sort(key=lambda d: d["name"])
 
+    # Google OAuth URL
+    oauth_url = url_for("backend.oauth.login", _external=True)
+
     next_url = request.args.get("next_url", url_for("frontend.index"))
     http_method = request.args.get("http_method", "GET")
 
@@ -278,6 +258,7 @@ def signup() -> ResponseReturnValue:
         majors=majors,
         next_url=next_url,
         http_method=http_method,
+        oauth_url=oauth_url,
     )
 
 

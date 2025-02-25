@@ -75,7 +75,7 @@ class User(BaseModel, UserMixin):
 
     # Account password
     # Must be hashed
-    password = db.Column(db.String(90), nullable=False)
+    password = db.Column(db.String(90), nullable=True)
 
     # User's school/university
     # Many-to-One relationship with School model
@@ -118,6 +118,9 @@ class User(BaseModel, UserMixin):
     # Whether or not the user verified it's phone number. NOT IMPLEMENTED
     phone_is_verified = db.Column(db.Boolean, nullable=False, default=False)
 
+    # Whether or not the user is a Google account.
+    is_google_account = db.Column(db.Boolean, nullable=False, default=False)
+
     # Indicates whether the user is a mock user or not.
     is_mock = db.Column(db.Boolean, nullable=False, default=False)
 
@@ -136,7 +139,19 @@ class User(BaseModel, UserMixin):
     image_file = db.Column(db.String(40), nullable=False, default="default.jpg")
 
     def check_password(self, password: str) -> bool:
-        """Verify if provided password matches the hashed password."""
+        """
+        Check if the provided password matches the stored password for the user.
+
+        Args:
+            password (str): The password to check.
+
+        Returns:
+            bool: True if the password is correct, False otherwise.
+        """
+        # If user has no password, they are a Google account and we should not check the password
+        if self.password is None or self.is_google_account is True:
+            return False
+
         return bcrypt.check_password_hash(self.password, password)
 
     @staticmethod
@@ -311,18 +326,33 @@ class User(BaseModel, UserMixin):
     @staticmethod
     def validator(_mapper, _connection, target):
         """Validate user data before insert/update."""
+        # Validate phone number format
         if not validate_phone(target.phone):
             raise ValueError(
                 f'USER MODEL: Invalid phone number format ("{target.phone}").'
             )
 
+        # Validate email format
         if not validate_email(target.email):
             raise ValueError(f'USER MODEL: Invalid email format ("{target.email}").')
 
+        # Ensure update timestamp is after creation
         if target.updated_at and target.updated_at < target.created_at:
             raise ValueError(
                 f'USER MODEL: Creation ("{target.created_at}") must be before '
                 f'update ("{target.updated_at}").'
+            )
+
+        # Google accounts cannot have password
+        if target.is_google_account and target.password:
+            raise ValueError(
+                "USER MODEL: Password should not be set for Google accounts."
+            )
+
+        # Non-Google accounts must have password
+        if (not target.is_google_account) and not target.password:
+            raise ValueError(
+                "USER MODEL: Password is required for non-Google accounts."
             )
 
     @staticmethod

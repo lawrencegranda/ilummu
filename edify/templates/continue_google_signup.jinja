@@ -1,0 +1,219 @@
+{% extends "bases/layout.jinja" %}
+{% set http_method = http_method | default('GET') %}
+{% set next_url = next_url | default(url_for('frontend.dashboard')) %}
+
+{% block title %}
+    Complete Signup
+{% endblock title %}
+
+{% block javascript %}
+    {{ super() }}
+    <script>
+    var errorMsg;
+
+    const reset = () => {
+        errorMsg.text("");
+        errorMsg.hide();
+    };
+
+    const showError = (msg) => {
+        console.log(msg);
+        errorMsg.text(msg);
+        errorMsg.show();
+    };
+
+    function handleError(str) {
+        return function (error) {
+            let error_msg = getErrorResponse(error);
+
+            if (!error_msg) {
+                error_msg = "An error occurred during " + str + ". Please try again.";
+            }
+
+            showError(error_msg);
+        }
+    }
+
+
+    $(document).ready(() => {
+        errorMsg = $("#error-msg");
+        reset();
+
+        const phoneInputField = document.querySelector("#signup-phone");
+        const phoneInput = window.intlTelInput(phoneInputField, {
+            onlyCountries: ["us"],
+            initialCountry: "us",
+            nationalMode: true,
+            separateDialCode: true,
+            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+        });
+
+        const errorMap = ["invalid", "invalid country code", "too short", "too long", "invalid"];
+
+        $("#signup-form").on("submit", function (event) {
+            event.preventDefault();
+            reset();
+
+            const phone = $("#signup-phone").val().trim();
+            if (!phone || !phoneInput.isValidNumber()) {
+                const errorCode = phoneInput.getValidationError();
+                const msg = errorMap[errorCode] || "Invalid";
+                showError("Phone number is " + msg);
+                return;
+            }
+
+            const major = $("#signup-major").val().trim();
+            if (!major || $('option[value="' + major + '"]').length == 0) {
+                showError("Please select a valid major from the list.");
+                return;
+            }
+
+            const gradYear = parseInt($("#signup-grade").val().trim());
+            if (!gradYear || gradYear < 1900 || gradYear > 2100) {
+                showError("Invalid graduation year.");
+                return;
+            }
+
+            const data = {
+                email: "{{ email }}",
+                firstname: "{{ firstname }}",
+                lastname: "{{ lastname }}",
+                phone: phoneInput.getNumber(),
+                major: major,
+                graduation: gradYear + "-05-30",
+            };
+
+            $.ajax({
+                url: '{{ url_for("oauth.google_signup") }}',
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                success: function (response) {
+                    window.location.href = "{{ url_for('frontend.dashboard') }}";
+                },
+                error: handleError("google_signup"),
+            });
+        });
+    });
+    </script>
+{% endblock javascript %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+{% endblock head %}
+
+{% block headers %}
+    <style>
+        .footer {
+            display: none;
+        }
+
+        body {
+            background-color: var(--blue--base);
+        }
+    </style>
+{% endblock headers %}
+
+{% block content %}
+    <div class="signup-wrapper">
+        <div class="signup-container">
+            <form class="signup-body" id="signup-form" method="post">
+                <div class="signup-top">
+                    <div class="logo-wrapper">
+                        <div class="signup-logo">
+                            <a class="brand" href="{{ url_for('frontend.home') }}">
+                                <img class="image brand-image"
+                                     src="{{ url_for('static', filename='logo.svg') }}"
+                                     alt=""
+                                     width="auto"
+                                     height="auto" />
+                            </a>
+                            <div class="brand-name" onclick="location.href='/home';">
+                                ilummu
+                            </div>
+                        </div>
+                        <p class="made-students">
+                            Made by <strong style="color: var(--red)">Cornell</strong> Students
+                        </p>
+                    </div>
+                    <p class="signup-title">
+                        Complete Your Signup
+                    </p>
+                </div>
+                <div class="signup-middle">
+                    <div class="mb-3">
+                        <label>
+                            Email
+                        </label>
+                        <input type="email" class="form-control" value="{{ email }}" readonly required />
+                    </div>
+                    <div class="mb-3">
+                        <label>
+                            First Name
+                        </label>
+                        <input type="text" class="form-control" value="{{ firstname }}" readonly required />
+                    </div>
+                    <div class="mb-3">
+                        <label>
+                            Last Name
+                        </label>
+                        <input type="text" class="form-control" value="{{ lastname }}" readonly required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="signup-phone">
+                            Phone Number
+                        </label>
+                        <input id="signup-phone" type="tel" name="phone" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label for="signup-major">
+                            Major
+                        </label>
+                        <input id="signup-major"
+                               list="majors-list"
+                               name="major"
+                               class="form-control"
+                               placeholder="Select your major"
+                               autocomplete="off"
+                               required />
+                        <datalist id="majors-list">
+
+                            {% for major in majors %}
+                                <option value="{{ major['name'] }}">
+                                </option>
+                            {% endfor %}
+
+                        </datalist>
+                    </div>
+                    <div class="mb-3">
+                        <label for="signup-grade">
+                            Graduation Year
+                        </label>
+                        <input id="signup-grade"
+                               type="number"
+                               min="1900"
+                               max="2099"
+                               step="1"
+                               name="graduation"
+                               class="form-control"
+                               placeholder="Graduation Year (e.g., 2025)"
+                               required />
+                    </div>
+                    <p id="error-msg" class="text-danger">
+                    </p>
+                </div>
+                <div class="signup-bottom">
+                    <button id="signup-button" type="submit" class="btn btn-primary w-100">
+                        Complete Signup
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock content %}
+
+{% block footer %}
+{% endblock footer %}

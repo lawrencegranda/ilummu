@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description"
+              content="Redirecting to ilummu dashboard after authentication" />
+        <meta name="keywords" content="ilummu, authentication, login" />
+        <title>Redirecting...</title>
+
+        <style>
+            :root {
+                --blue--base: #3eacf3;
+                --blue--light: #91cef7;
+                --neutral--100: #f9f9fb;
+                --neutral--200: #ebebef;
+                --neutral--300: #d6d7e0;
+                --neutral--400: #84889a;
+                --neutral--500: #606476;
+                --neutral--600: #3e404c;
+                --neutral--700: #24262d;
+                --neutral--800: #111418;
+                --neutral--900: #030407;
+                --neutral--white: #fff;
+            }
+
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: Inter, sans-serif;
+                background-color: var(--blue--base);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                color: var(--neutral--900);
+                font-size: 14px;
+                line-height: 1.2;
+            }
+
+            .container {
+                text-align: center;
+                padding: 40px;
+                background-color: var(--neutral--white);
+                border-radius: 40px;
+                border: 2px solid var(--neutral--300);
+                max-width: 400px;
+                width: 90%;
+            }
+
+            h1 {
+                font-family: Inter, sans-serif;
+                font-size: 32px;
+                font-weight: 700;
+                letter-spacing: -0.02em;
+                line-height: 1.2;
+                margin-bottom: 10px;
+                color: var(--neutral--900);
+            }
+
+            p {
+                color: var(--neutral--500);
+                font-size: 18px;
+                margin: 0;
+            }
+
+            .loader {
+                width: 48px;
+                height: 48px;
+                border: 5px solid var(--neutral--200);
+                border-radius: 50%;
+                border-top: 5px solid var(--blue--base);
+                animation: spin 1s linear infinite;
+                margin: 20px auto;
+            }
+
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+
+            .logo {
+                width: 67px;
+                height: 67px;
+                margin-bottom: 20px;
+                transition: 1s;
+            }
+
+            .logo:hover {
+                transform: rotate(calc(4 * 180deg));
+            }
+
+            @media only screen and (max-width: 500px) {
+                .container {
+                    padding: 30px;
+                    border-radius: 30px;
+                }
+
+                h1 {
+                    font-size: 25px;
+                }
+
+                p {
+                    font-size: 16px;
+                }
+
+                .loader {
+                    width: 40px;
+                    height: 40px;
+                }
+            }
+        </style>
+
+        <script>
+        // Update auth state in localStorage or wherever your frontend stores it
+        window.onload = function() {
+            // Trigger any necessary auth state updates
+            window.localStorage.setItem('isAuthenticated', 'true');
+            
+            // Add a small delay for better UX
+            setTimeout(function() {
+                window.location.href = "{{ redirect_url }}";
+            }, 1000);
+        }
+        </script>
+    </head>
+    <body>
+        <div class="container">
+            <img src="{{ url_for('static', filename='logo.svg') }}"
+                 alt="ilummu logo"
+                 class="logo"
+                 width="67"
+                 height="67" />
+            <div class="loader">
+            </div>
+            <h1>
+                Almost there!
+            </h1>
+            <p>
+                Redirecting you to your dashboard...
+            </p>
+        </div>
+    </body>
+</html>
