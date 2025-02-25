@@ -277,6 +277,10 @@
 
 {% block headers %}
     <style>
+        :root {
+            --error-red: #dc3545;
+        }
+
         .footer {
             display: none;
         }
@@ -293,10 +297,6 @@
             padding: 0 15px;
         }
 
-        .password-requirements p {
-            margin-bottom: 3px;
-        }
-
         .password-requirements ul {
             list-style: none;
             padding: 0;
@@ -307,14 +307,18 @@
             position: relative;
             padding-left: 20px;
             margin: 2px 0;
-            color: #dc3545;
+            color: var(--error-red);
         }
 
         .password-requirements li::before {
             content: '✕';
             position: absolute;
             left: 0;
-            color: #dc3545;
+            color: var(--error-red);
+        }
+
+        #error-msg {
+            color: var(--error-red);
         }
     </style>
 {% endblock headers %}
@@ -389,20 +393,29 @@
                            minlength="8"
                            placeholder="Password"
                            required />
-                    
+
                     {% if login == false %}
-                    <div class="password-requirements">
-                        <p>Password must contain:</p>
-                        <ul>
-                            <li id="req-length">At least 8 characters</li>
-                            <li id="req-lowercase">One lowercase letter</li>
-                            <li id="req-uppercase">One uppercase letter</li>
-                            <li id="req-number">One number</li>
-                            <li id="req-special">One special character</li>
-                        </ul>
-                    </div>
+                        <div class="password-requirements">
+                            <ul>
+                                <li id="req-length">
+                                    At least 8 characters
+                                </li>
+                                <li id="req-lowercase">
+                                    One lowercase letter
+                                </li>
+                                <li id="req-uppercase">
+                                    One uppercase letter
+                                </li>
+                                <li id="req-number">
+                                    One number
+                                </li>
+                                <li id="req-special">
+                                    One special character
+                                </li>
+                            </ul>
+                        </div>
                     {% endif %}
-                    
+
                     <p id="error-msg">
                     </p>
                 </div>
