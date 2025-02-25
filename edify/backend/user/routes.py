@@ -155,15 +155,9 @@ def login(args: dict) -> ResponseReturnValue:
 
     # Prevent Google accounts from logging in with a password
     if curr_user.is_google_account:
-        return (
-            jsonify(
-                {
-                    "msg": "This account was created using Google. Please log in using Google.",
-                    "type": "UNAUTHORIZED",
-                    "redirect_to": url_for("oauth.login"),
-                }
-            ),
-            ErrorType.INCORRECT_CREDENTIALS.value,
+        return error_response(
+            "This account was created using Google. Please log in using Google",
+            ErrorType.INCORRECT_CREDENTIALS,
         )
 
     # Check if the provided password matches the stored password for the user.
