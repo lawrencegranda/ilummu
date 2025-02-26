@@ -532,6 +532,7 @@ def handle_invalid_token() -> ResponseReturnValue:
 def format_text_to_html(text: str) -> str:
     """
     Convert plain text to HTML, preserving whitespace and newlines.
+    Strips paragraph tags but preserves their content.
 
     Args:
         text: The plain text to convert
@@ -539,10 +540,20 @@ def format_text_to_html(text: str) -> str:
     Returns:
         str: HTML formatted text with preserved whitespace and safe tags
     """
+    print(repr(text))
     # Convert to markdown-processed HTML
     html = markdown(text, extensions=["nl2br"])
 
-    # Clean and sanitize the HTML
-    allowed_tags = ["br", "strong", "em", "ul", "ol", "li", "code"]
+    # Clean and sanitize the HTML with paragraph tags temporarily allowed
+    allowed_tags = ["br", "strong", "em", "ul", "ol", "li", "code", "pre", "p"]
     allowed_attrs = {}
-    return bleach.clean(html, tags=allowed_tags, attributes=allowed_attrs)
+    html = bleach.clean(html, tags=allowed_tags, attributes=allowed_attrs)
+
+    # Strip <p> tags but keep their content, replacing closing p tags with line breaks
+    html = html.replace("<p>", "").replace("</p>", "<br>")
+
+    # Remove any trailing <br> that might have been added
+    if html.endswith("<br>"):
+        html = html[:-4]
+
+    return html
