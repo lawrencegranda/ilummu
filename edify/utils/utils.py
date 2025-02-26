@@ -543,6 +543,6 @@ def format_text_to_html(text: str) -> str:
     html = markdown(text, extensions=["nl2br"])
 
     # Clean and sanitize the HTML
-    allowed_tags = ["p", "br", "strong", "em", "ul", "ol", "li", "code", "pre"]
+    allowed_tags = ["br", "strong", "em", "ul", "ol", "li", "code"]
     allowed_attrs = {}
     return bleach.clean(html, tags=allowed_tags, attributes=allowed_attrs)
