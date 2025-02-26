@@ -1428,10 +1428,16 @@ p.question-status.unsolved {
   height: max-content;
 }
 
-p.question-text {
+.question-text {
   font-size: 18px;
   margin: 0;
   margin-top: 15px;
+  word-break: break-all;
+}
+
+.question-text * {
+  font-size: inherit;
+  margin: 0;
   word-break: break-all;
 }
 
@@ -1507,7 +1513,7 @@ p.question-text {
     font-size: 13px;
   }
 
-  p.question-text {
+  .question-text {
     font-size: 16px;
   }
 

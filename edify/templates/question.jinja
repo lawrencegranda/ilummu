@@ -298,9 +298,9 @@
                     <p class="question-info">
                         {{ question.solve_time }} solve time • {{ question.method }}
                     </p>
-                    <p class="question-text">
+                    <div class="question-text">
                         {{ question.request_html | safe }}
-                    </p>
+                    </div>
 
                     {% if question.image_url %}
                         <div class="question-wrapper-main">
