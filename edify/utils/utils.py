@@ -549,11 +549,11 @@ def format_text_to_html(text: str) -> str:
     allowed_attrs = {}
     html = bleach.clean(html, tags=allowed_tags, attributes=allowed_attrs)
 
-    # Strip <p> tags but keep their content, replacing closing p tags with line breaks
-    html = html.replace("<p>", "").replace("</p>", "<br>")
+    # # Strip <p> tags but keep their content, replacing closing p tags with line breaks
+    # html = html.replace("<p>", "").replace("</p>", "<br>")
 
-    # Remove any trailing <br> that might have been added
-    if html.endswith("<br>"):
-        html = html[:-4]
+    # # Remove any trailing <br> that might have been added
+    # if html.endswith("<br>"):
+    #     html = html[:-4]
 
     return html
