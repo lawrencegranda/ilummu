@@ -2,6 +2,15 @@
 
 This repository contains the API code that runs the application.
 
+## X - Contributors
+
+- [Maiia Tomskaia](https://www.linkedin.com/in/maiia-tomskaia) -- CEO
+- [Lawrence Granda](https://github.com/lawrencegranda) -- CTO and SWE
+- [Ian Urquhart](https://github.com/ian-urqu) -- Backend SWE
+- [Arsh Singh](https://github.com/Arsh-S) -- Backend SWE
+- [Iris Li](https://github.com/irisli0926) -- Designer and Frontend SWE
+- [Ambrose Blay](https://github.com/Ambrose2002) -- Backend SWE
+
 ## A - Python Dependencies
 
 - [pyenv](https://pypi.org/project/pyenv/): Pyenv is a python version manager that lets you easily switch between multiple versions of Python. We use it to configure the python environment.
